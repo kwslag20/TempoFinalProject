@@ -63,14 +63,14 @@ public class MasterController {
     @FXML private Button findNextBtn;
     @FXML private TextField replaceTextEntry;
     @FXML private Menu prefMenu;
-    @FXML private Button scanButton;
-    @FXML private Button scanAndParseButton;
+    @FXML private Button assembleButton;
+    @FXML private Button assembleAndRunButton;
+    @FXML private Button stopButton;
     @FXML private Button refactorButton;
     @FXML private Button checkMainBtn;
     @FXML private Button checkStringBtn;
     @FXML private Button checkLocalVarBtn;
     @FXML private Button scanParseAndCheckBtn;
-
 
 
 
@@ -97,13 +97,18 @@ public class MasterController {
         saveMenuItem.disableProperty().bind(listProperty.emptyProperty());
         saveAsMenuItem.disableProperty().bind(listProperty.emptyProperty());
         closeMenuItem.disableProperty().bind(listProperty.emptyProperty());
-        scanButton.disableProperty().bind(listProperty.emptyProperty());
-        scanAndParseButton.disableProperty().bind(listProperty.emptyProperty());
-        scanParseAndCheckBtn.disableProperty().bind(listProperty.emptyProperty());
+
+
+        assembleButton.disableProperty().bind(listProperty.emptyProperty());
+        assembleAndRunButton.disableProperty().bind(listProperty.emptyProperty());
+        stopButton.disableProperty().bind(listProperty.emptyProperty());
+
+//        scanButton.disableProperty().bind(listProperty.emptyProperty());
+//        scanAndParseButton.disableProperty().bind(listProperty.emptyProperty());
+//        scanParseAndCheckBtn.disableProperty().bind(listProperty.emptyProperty());
 //        checkMainBtn.disableProperty().bind(listProperty.emptyProperty());
 //        checkStringBtn.disableProperty().bind(listProperty.emptyProperty());
 //        checkLocalVarBtn.disableProperty().bind(listProperty.emptyProperty());
-
 
         // this line from JianQuanMarcello project 6
         this.setupContextMenuController();
@@ -121,6 +126,34 @@ public class MasterController {
         this.contextMenuController.setEditMenuController(this.editController);
 
         this.fileController.setContextMenuController(this.contextMenuController);
+    }
+
+    @FXML public void handleAssemble(Event event) throws InterruptedException{
+        this.console.clear();
+        try {
+            this.fileController.handleAssemble(event);
+        } catch (CompilationException e) {
+            this.console.writeLine(e.toString() + "\n", "ERROR");
+            return;
+        }
+
+        List<Error> scanningErrors = fileController.getErrors();
+
+        if (scanningErrors != null) {
+            errorHelper(scanningErrors);
+        }
+        else{
+            this.console.writeLine("Assembly of file was successful.", "CONS");
+
+        }
+    }
+
+    @FXML public void handleAssembleAndRun(){
+        System.out.println(javaTabPane.getTabs().toString());
+    }
+
+    @FXML public void handleStop(){
+        System.out.println(javaTabPane.getSelectionModel().getSelectedItem());
     }
 
     /**
@@ -141,7 +174,6 @@ public class MasterController {
 
     /**
      * Calls handleUnTabbing from the Edit Controller
-     *
      */
     @FXML public void handleUnTabbing() {
         editController.handleUnTabbing();
@@ -322,12 +354,6 @@ public class MasterController {
             this.editController.handleAnDep(this.parseRoot, "field");
         }
     }
-    /**
-     * Scans and parses the file of the current tab and checks to see if there is a
-     * Main class and a main method
-     * @param event
-     * @throws InterruptedException
-     */
     
     /**
      * Handles the find and replace button action.
@@ -372,7 +398,7 @@ public class MasterController {
      */
     @FXML public void handleClose(Event event) {
         fileController.handleClose(event);
-//
+
     }
 
     /**
@@ -469,7 +495,6 @@ public class MasterController {
     @FXML
     public void handleFunMode(){
         handleThemeChange("proj15AhnSlagerZhao/resources/FunMode.css", funModeMenuItem);
-
     }
 
     /**
@@ -526,7 +551,6 @@ public class MasterController {
         }
     }
 
-
     /**
      * Calls handleMatchBracketOrParen() of the editController
      */
@@ -580,7 +604,4 @@ public class MasterController {
     public void handleFocusOnReplaceTextEntry() {
         this.replaceTextEntry.requestFocus();
     }
-
-
-
 }

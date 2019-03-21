@@ -47,13 +47,10 @@ public class EditController {
     private Button nextMatchBtn;
     private TextField replaceTextEntry;
 
-
     private String[] lines;
     private int caretIdxStart;
     private int caretIdxEnd;
     private String selectedText;
-
-
 
     /**
      * Constructor for the class. Initializes
@@ -105,7 +102,8 @@ public class EditController {
      * Handler for the "Paste" menu item in the "Edit" menu.
      */
     @FXML
-    public void handlePaste() { getCurJavaCodeArea().paste();
+    public void handlePaste() {
+        getCurJavaCodeArea().paste();
     }
 
     /**
@@ -123,7 +121,6 @@ public class EditController {
         FindAndReplaceWidget findAndReplace = new FindAndReplaceWidget(this);
         findAndReplace.setupWidget();
     }
-
 
     /**
      * handles the refactoring
@@ -154,6 +151,7 @@ public class EditController {
         Refactor refactor = new Refactor(this, parseRoot);
         refactor.initializeDependencies(type);
     }
+
     /**
      * if a single "{", "}", "[", "]", "(", ")" is highlighted, this will attempt to find
      * the matching opening or closing character and if successful, will highlight the
@@ -266,7 +264,6 @@ public class EditController {
     /**
      * Tabs the selected text
      */
-
     public void handleTabbing() {
         JavaCodeArea curCodeArea = getCurJavaCodeArea();
 
@@ -283,7 +280,6 @@ public class EditController {
     /**
      * Untabs the selected text
      */
-
     public void handleUnTabbing() {
         JavaCodeArea curCodeArea = getCurJavaCodeArea();
 
@@ -327,7 +323,6 @@ public class EditController {
             return;
         }
     }
-
 
     /**
      * searches for the text entered in the "Find" TextField
@@ -402,7 +397,6 @@ public class EditController {
         resetFindMatchingStringData();
         showAlert("NOTHING TO SEARCH FOR");
     }
-
 
     /**
      * highlights the match preceding the currently highlighted match if there are

@@ -73,7 +73,6 @@ public class FileController {
      */
     private ContextMenuController contextMenuController;
 
-
     private Scanner scanner;
     private Parser parser;
     private ErrorHandler errorHandler;
@@ -302,7 +301,6 @@ public class FileController {
         return null;
     }
 
-
     /**
      * Saves the text present in the current tab to a given filename.
      * Used by handleSave, handleSaveAs.
@@ -333,7 +331,6 @@ public class FileController {
         this.javaTabPane.updateTabSavedStatus(curTab, true);
     }
 
-
     /**
      * this method is called when the Scan button is pressed
      * if the file is not saved it prompts the user to save before scanning
@@ -342,7 +339,6 @@ public class FileController {
      */
     public void handleScan(Event event) {
         scanOrParseHelper(event, "SCAN_ONLY" );
-
     }
 
     /**
@@ -353,10 +349,7 @@ public class FileController {
      * @param event press of the Scan button triggering the handleScan method
      */
     public Program handleScanAndParse (Event event) {
-
         return scanOrParseHelper(event, "SCAN_AND_PARSE" );
-
-
     }
 
     /**
@@ -461,6 +454,14 @@ public class FileController {
         return analysis;
     }
 
+    /**
+     * Handles the assembling of mips code
+     * @param event
+     */
+    public void handleAssemble(Event event){
+
+    }
+
     public List<Error> getAnalysisErrors(){
         return analysisErrors.getErrorList();
     }
@@ -504,8 +505,6 @@ public class FileController {
         NumLocalVarsVisitor numLocalVarsVisitor = new NumLocalVarsVisitor();
         return numLocalVarsVisitor.getNumLocalVars(program);
     }
-
-
 
     /**
      *

@@ -103,8 +103,11 @@
     </MenuBar>
 
     <ToolBar>
-        <Button fx:id="scanButton" onAction="#handleScan" text="Scan"/>
-        <Button fx:id="scanAndParseButton" onAction="#handleScanAndParse" text="Scan And Parse"/>
+        <!--<Button fx:id="scanButton" onAction="#handleScan" text="Scan"/>-->
+        <!--<Button fx:id="scanAndParseButton" onAction="#handleScanAndParse" text="Scan And Parse"/>-->
+        <Button fx:id="assembleButton" onAction="#handleAssemble" text="Assemble"/>
+        <Button fx:id="assembleAndRunButton" onAction="#handleAssembleAndRun" text="Assemble And Run"/>
+        <Button fx:id="stopButton" onAction="#handleStop" text="Stop"/>
         <TextField fx:id="findTextEntry" promptText="Find"/>
         <Button fx:id="findButton" onAction="#handleFindText" text="Find"/>
         <Button fx:id="findPrevBtn" onAction="#handleHighlightPrevMatch" text="Previous"/>
@@ -117,7 +120,7 @@
         <!--<Button fx:id="checkMainBtn" onAction="#handleMainCheck" text="Check Main"/>-->
         <!--<Button fx:id="checkStringBtn" onAction="#handleStrConstCheck" text="Check String Constants"/>-->
         <!--<Button fx:id="checkLocalVarBtn" onAction="#handleNumLocVarCheck" text="Check # Local Variables"/>-->
-        <Button fx:id="scanParseAndCheckBtn" onAction="#handleScanParseAndCheck" text="Scan Parse and Check"/>
+        <!--<Button fx:id="scanParseAndCheckBtn" onAction="#handleScanParseAndCheck" text="Scan Parse and Check"/>-->
     </ToolBar>
 
         <SplitPane orientation="VERTICAL" focusTraversable="true" VBox.vgrow="ALWAYS">
