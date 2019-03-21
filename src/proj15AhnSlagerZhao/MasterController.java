@@ -377,6 +377,8 @@ public class MasterController {
      */
     @FXML public void handleNew() {
         fileController.handleNew( null ); // TODO: decide whether to create a new File object or not here
+        assembleButton.disableProperty().bind(this.fileController.isMipsFile());
+        assembleAndRunButton.disableProperty().bind(this.fileController.isMipsFile());
     }
 
     /**
@@ -387,6 +389,8 @@ public class MasterController {
      */
     @FXML public void handleOpen() {
         fileController.handleOpen();
+        assembleButton.disableProperty().bind(this.fileController.isMipsFile());
+        assembleAndRunButton.disableProperty().bind(this.fileController.isMipsFile());
 
     }
 
@@ -410,6 +414,8 @@ public class MasterController {
      */
     @FXML public void handleSave() {
         fileController.handleSave();
+        assembleButton.disableProperty().bind(this.fileController.isMipsFile());
+        assembleAndRunButton.disableProperty().bind(this.fileController.isMipsFile());
     }
 
     /**

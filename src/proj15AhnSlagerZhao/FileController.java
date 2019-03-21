@@ -14,6 +14,10 @@
 
 package proj15AhnSlagerZhao;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.Event;
 
 import java.util.List;
@@ -65,6 +69,7 @@ import proj15AhnSlagerZhao.bantam.util.ErrorHandler;
 public class FileController {
 
     private JavaTabPane javaTabPane;
+    private String extension;
     private HashMap<Tab, String> tabFilepathMap;
     private VBox vBox;
 
@@ -84,6 +89,7 @@ public class FileController {
      */
     public FileController(VBox vBox, JavaTabPane javaTabPane) {
         this.vBox = vBox;
+        this.extension = "";
         this.javaTabPane = javaTabPane;
         this.tabFilepathMap = new HashMap<>();
     }
@@ -129,11 +135,11 @@ public class FileController {
     public void handleNew(File file) {
         this.javaTabPane.createNewTab(this, contextMenuController, file);
         JavaTab t = (JavaTab)this.javaTabPane.getSelectionModel().getSelectedItem();
-
         if (file == null) this.tabFilepathMap.put(t, null);
         else {
             this.tabFilepathMap.put(t, file.getPath());
-
+            String name = file.getName();
+            this.extension = name.substring(name.lastIndexOf("."));
         }
 
     }
@@ -148,7 +154,6 @@ public class FileController {
         fileChooser.setTitle("Open");
         Window stage = this.vBox.getScene().getWindow();
         File file = fileChooser.showOpenDialog(stage);
-
         if (file != null){
             handleNew(file);
         }
@@ -191,6 +196,8 @@ public class FileController {
 
         if (tabFilepathMap.get(curTab) != null){
             File file = new File(tabFilepathMap.get(curTab));    // this is what gets the path
+            String name = file.getName();
+            this.extension = name.substring(name.lastIndexOf("."));
             writeFile(file);
             this.javaTabPane.updateTabSavedStatus(curTab, true);
             return true;
@@ -211,7 +218,8 @@ public class FileController {
         fileChooser.setTitle("Save as...");
         Window stage = this.vBox.getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
-
+        String name = file.getName();
+        this.extension = name.substring(name.lastIndexOf("."));
         if (file == null){
             return false;
         }
@@ -530,4 +538,16 @@ public class FileController {
         javaTabPane.removeTab(curTab);
     }
 
+    public BooleanProperty isMipsFile(){
+        if(this.extension.equals(".s") || this.extension.equals(".asm")){
+            BooleanProperty booleanProperty = new SimpleBooleanProperty(false);
+            return booleanProperty;
+
+        }
+        else{
+            BooleanProperty booleanProperty = new SimpleBooleanProperty(true);
+            return booleanProperty;
+
+        }
+    }
 }

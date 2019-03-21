@@ -12,6 +12,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.CodeArea;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,8 +41,22 @@ public class JavaTab extends Tab {
                    JavaTabPane tabPane, String filename, File file) {
 
         super(filename);
+        String extension = "";
+        if (file != null){
+            String name = file.getName();
+            extension = name.substring(name.lastIndexOf("."));
+        }
 
-        codeArea = new JavaCodeArea(contextMenuController);
+        if(extension.equals(".java")) {
+            codeArea = new JavaCodeArea(contextMenuController);
+        }
+        else if(extension.equals(".asm") || extension.equals(".s")){
+           // codeArea = new MipsCodeArea(contextMenuController);
+        }
+        else{
+            codeArea = new JavaCodeArea(contextMenuController);
+        }
+
 
         // bind code area to method updating its saved status in the tabSavedStatusMap of the TabPane
         codeArea.setOnKeyPressed(
@@ -87,9 +102,10 @@ public class JavaTab extends Tab {
         return content;
     }
 
-    public JavaCodeArea getCodeArea(){
+    public CodeArea getCodeArea(){
         return this.codeArea;
     }
+
 
 
 }
