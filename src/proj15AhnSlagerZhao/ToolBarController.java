@@ -76,43 +76,7 @@ public class ToolBarController {
     private CompileRunWorker compileRunWorker;
 
     /**
-     * Sets the console pane.
-     *
-     * @param console StyleClassedTextArea defined in Main.fxml
-     */
-    public void setConsole(StyleClassedTextArea console) {
-        this.console = console;
-    }
-
-    /**
-     * Sets the FileMenuController.
-     *
-     * @param fileController FileMenuController created in main Controller.
-     */
-    public void setFileController(FileController fileController) {
-        this.fileController = fileController;
-    }
-
-    /**
-     * Gets the CompileWorker.
-     *
-     * @return CompileWorker
-     */
-    public CompileWorker getCompileWorker() {
-        return this.compileWorker;
-    }
-
-    /**
-     * Gets the CompileRunWorker.
-     *
-     * @return CompileRunWorker
-     */
-    public CompileRunWorker getCompileRunWorker() {
-        return this.compileRunWorker;
-    }
-
-    /**
-     * Helper method for running Java Compiler.
+     * Helper method for assembling Mips files.
      */
     public boolean assembleMIPSFile(String fileName) {
         try {
@@ -120,9 +84,8 @@ public class ToolBarController {
                 this.console.clear();
                 this.consoleLength = 0;
             });
+            // adds in the appropriate elements into the PB list
             List<String> processBuilderArgs = new ArrayList<>();
-            String mipsHome = System.getProperty("java.home");
-            String directoryJump = System.getProperty("user.dir");
             processBuilderArgs.add("java");
             processBuilderArgs.add("-jar");
             processBuilderArgs.add("mars.jar");
@@ -137,14 +100,13 @@ public class ToolBarController {
             return this.curProcess.waitFor() == 0;
         } catch (Throwable e) {
             Platform.runLater(() -> {
-                System.out.println("error");
             });
             return false;
         }
     }
 
     /**
-     * Helper method for running Java Program.
+     * Helper method for running Mips Programs.
      */
     public boolean runMIPSFile(String fileName) {
         try {
@@ -152,9 +114,8 @@ public class ToolBarController {
                 this.console.clear();
                 consoleLength = 0;
             });
+            // again adds in needed commands into the PB list
             List<String> processBuilderArgs = new ArrayList<>();
-            String mipsHome = System.getProperty("java.home");
-            String directoryJump = System.getProperty("user.dir");
             processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
             processBuilderArgs.add("-jar");
@@ -171,7 +132,6 @@ public class ToolBarController {
                         mutex.acquire();
                         outputToConsole();
                     } catch (Throwable e) {
-                        System.out.println(e);
                         Platform.runLater(() -> {
                             // print stop message if other thread hasn't
                             if (consoleLength == console.getLength()) {
@@ -188,7 +148,6 @@ public class ToolBarController {
                     try {
                         inputFromConsole();
                     } catch (Throwable e) {
-                        System.out.println(e);
                         Platform.runLater(() -> {
                             // print stop message if other thread hasn't
                             if (consoleLength == console.getLength()) {
@@ -205,7 +164,6 @@ public class ToolBarController {
             return curProcess.waitFor() == 0;
         } catch (Throwable e) {
             Platform.runLater(() -> {
-                System.out.println("error");
             });
             return false;
         }
@@ -300,7 +258,6 @@ public class ToolBarController {
             }
         }
         // write user-entered text to program input
-        System.out.println(this.console.getText().substring(this.consoleLength));
         writer.write(this.console.getText().substring(this.consoleLength));
         writer.flush();
         // update console length to include user input
@@ -337,7 +294,7 @@ public class ToolBarController {
      * Handles the Stop button action.
      */
     public void handleStopButtonAction() {
-        System.out.println("working");
+
         try {
             if (this.curProcess.isAlive()) {
                 this.inThread.interrupt();
@@ -345,7 +302,7 @@ public class ToolBarController {
                 this.curProcess.destroy();
             }
         } catch (Throwable e) {
-            System.out.println("error");
+            console.appendText("Program was Stopped by User\n");
         }
     }
     /**

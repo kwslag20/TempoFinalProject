@@ -71,17 +71,6 @@ public class MasterController {
     @FXML private Button assembleButton;
     @FXML private Button assembleAndRunButton;
     @FXML private Button stopButton;
-    @FXML private Button refactorButton;
-    @FXML private Button checkMainBtn;
-    @FXML private Button checkStringBtn;
-    @FXML private Button checkLocalVarBtn;
-    @FXML private Button scanParseAndCheckBtn;
-
-
-    private Process mipsAssembleProcess, mipsRunProcess;
-    private IOConsole ioConsole;
-    private StackPane ioConsolePane;
-
 
 
     private EditController editController;
@@ -115,13 +104,6 @@ public class MasterController {
         assembleAndRunButton.disableProperty().bind(listProperty.emptyProperty());
         stopButton.disableProperty().bind(listProperty.emptyProperty());
 
-//        scanButton.disableProperty().bind(listProperty.emptyProperty());
-//        scanAndParseButton.disableProperty().bind(listProperty.emptyProperty());
-//        scanParseAndCheckBtn.disableProperty().bind(listProperty.emptyProperty());
-//        checkMainBtn.disableProperty().bind(listProperty.emptyProperty());
-//        checkStringBtn.disableProperty().bind(listProperty.emptyProperty());
-//        checkLocalVarBtn.disableProperty().bind(listProperty.emptyProperty());
-
         // this line from JianQuanMarcello project 6
         this.setupContextMenuController();
 
@@ -143,7 +125,6 @@ public class MasterController {
     @FXML public void handleAssemble(Event event) throws InterruptedException{
         this.console.clear();
         try {
-            //this.mipsAssembleAndRun(false, this.fileController.getFilePath());
             this.toolBarController.handleAssembleAction(event, this.fileController.getFilePath());
         } catch (CompilationException e) {
             this.console.writeLine(e.toString() + "\n", "ERROR");
@@ -164,7 +145,7 @@ public class MasterController {
     @FXML public void handleAssembleAndRun(Event event) throws InterruptedException{
         this.console.clear();
         try {
-            //this.mipsAssembleAndRun(true, this.fileController.getFilePath());
+
             this.toolBarController.handleRunAction(event, this.fileController.getFilePath());
         } catch (CompilationException e) {
             this.console.writeLine(e.toString() + "\n", "ERROR");
@@ -183,7 +164,6 @@ public class MasterController {
     }
 
     @FXML public void handleStop(){
-        System.out.println(javaTabPane.getSelectionModel().getSelectedItem());
         this.toolBarController.handleStopButtonAction();
         this.toolBarController = new ToolBarController(this.console, this.fileController);
     }
@@ -337,6 +317,7 @@ public class MasterController {
         fileController.handleNew( null ); // TODO: decide whether to create a new File object or not here
         assembleButton.disableProperty().bind(this.fileController.isMipsFile());
         assembleAndRunButton.disableProperty().bind(this.fileController.isMipsFile());
+        stopButton.disableProperty().bind(this.fileController.isMipsFile());
     }
 
     /**
@@ -349,6 +330,7 @@ public class MasterController {
         fileController.handleOpen();
         assembleButton.disableProperty().bind(this.fileController.isMipsFile());
         assembleAndRunButton.disableProperty().bind(this.fileController.isMipsFile());
+        stopButton.disableProperty().bind(this.fileController.isMipsFile());
 
     }
 

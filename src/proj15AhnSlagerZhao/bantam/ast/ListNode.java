@@ -68,8 +68,6 @@ public abstract class ListNode extends ASTNode
      * @return the updated list
      */
     public ListNode addElement(ASTNode node) {
-//        System.out.println("adding node: " + node);
-//        System.out.println("VECTOR SIZE: "+ listElements.size());
         listElements.add(node);
         return this;
     }

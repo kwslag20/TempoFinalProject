@@ -148,8 +148,6 @@ public class TypeCheckerVisitor extends Visitor
             registerError(node,"The return type " + node.getReturnType() +
                     " of the method " + node.getName() + " is undefined.");
         }
-        System.out.println(currentClass.getName() + ":" + node.getName());
-
         //create a new scope for the method
         currentSymbolTable.enterScope();
         currentMethod = node;

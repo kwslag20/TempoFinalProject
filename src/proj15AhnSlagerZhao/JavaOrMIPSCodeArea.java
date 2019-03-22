@@ -162,6 +162,7 @@ public class JavaOrMIPSCodeArea extends CodeArea {
      */
     public static StyleSpans<Collection<String>> computeHighlighting(String text, String fileType) {
         Matcher matcher;
+        // checks what type of file is being passed in
         if(".asm".equals(fileType)||".s".equals(fileType)){
             matcher = MIPS_PATTERN.matcher(text);
         }
