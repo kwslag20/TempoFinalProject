@@ -23,6 +23,8 @@ import javafx.concurrent.Service;
 /**
  * ToolbarController handles Toolbar related actions.
  *
+ * updated to handle both the running of mips files in the ide
+ *
  * @author Evan Savillo
  * @author Yi Feng
  * @author Zena Abulhab
@@ -294,17 +296,19 @@ public class ToolBarController {
      * Handles the Stop button action.
      */
     public void handleStopButtonAction() {
-
         try {
-            if (this.curProcess.isAlive()) {
-                this.inThread.interrupt();
+            System.out.println("FIRST");
+            if (this.curProcess.isAlive()){
+                this.inThread.interrupt(); // CURRENTLY BREAKS DOWN HERE
                 this.outThread.interrupt();
                 this.curProcess.destroy();
             }
         } catch (Throwable e) {
-            console.appendText("Program was Stopped by User\n");
+
+            console.appendText("\nProgram was Stopped by User\n");
         }
     }
+
     /**
      * A CompileWorker subclass handling Java program compiling in a separated thread in the background.
      * CompileWorker extends the javafx Service class.
