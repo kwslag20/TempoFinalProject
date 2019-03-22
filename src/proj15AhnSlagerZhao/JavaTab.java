@@ -51,7 +51,9 @@ public class JavaTab extends Tab {
             codeArea = new JavaCodeArea(contextMenuController);
         }
         else if(extension.equals(".asm") || extension.equals(".s")){
-           // codeArea = new MipsCodeArea(contextMenuController);
+            codeArea = new JavaCodeArea(contextMenuController);
+
+            // codeArea = new MipsCodeArea(contextMenuController);
         }
         else{
             codeArea = new JavaCodeArea(contextMenuController);

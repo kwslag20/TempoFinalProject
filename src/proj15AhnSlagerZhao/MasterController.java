@@ -14,18 +14,23 @@
 package proj15AhnSlagerZhao;
 
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleListProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.event.Event;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.awt.Desktop;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import proj15AhnSlagerZhao.bantam.ast.Program;
 import proj15AhnSlagerZhao.bantam.util.CompilationException;
 import proj15AhnSlagerZhao.bantam.util.Error;
@@ -73,9 +78,15 @@ public class MasterController {
     @FXML private Button scanParseAndCheckBtn;
 
 
+    private Process mipsAssembleProcess, mipsRunProcess;
+    private IOConsole ioConsole;
+    private StackPane ioConsolePane;
+
+
 
     private EditController editController;
     private FileController fileController;
+    private ToolBarController toolBarController;
     private Refactor refactor;
     private ErrorHandler errorHandler;
     private Program parseRoot;
@@ -86,6 +97,12 @@ public class MasterController {
 
     @FXML
     public void initialize(){
+
+        ioConsole = new IOConsole();
+        ioConsolePane.getChildren().add(new VirtualizedScrollPane<>(ioConsole));
+        ioConsole.setEditable(false);
+        ioConsole.setWrapText(true);
+        ioConsole.appendLine("Console");
 
         editController = new EditController(javaTabPane, findTextEntry, findPrevBtn, findNextBtn, replaceTextEntry);
         this.fileController = new FileController(vBox,javaTabPane);
@@ -131,7 +148,8 @@ public class MasterController {
     @FXML public void handleAssemble(Event event) throws InterruptedException{
         this.console.clear();
         try {
-            this.fileController.handleAssemble(event);
+            this.mipsAssembleAndRun(false, this.fileController.getFilePath());
+            System.out.println("worked");
         } catch (CompilationException e) {
             this.console.writeLine(e.toString() + "\n", "ERROR");
             return;
@@ -149,7 +167,27 @@ public class MasterController {
     }
 
     @FXML public void handleAssembleAndRun(){
-        System.out.println(javaTabPane.getTabs().toString());
+        this.console.clear();
+        try {
+            this.mipsAssembleAndRun(true, this.fileController.getFilePath());
+            System.out.println("worked");
+        } catch (CompilationException e) {
+            this.console.writeLine(e.toString() + "\n", "ERROR");
+            return;
+        }
+
+        List<Error> scanningErrors = fileController.getErrors();
+
+        if (scanningErrors != null) {
+            System.out.println("errors");
+            errorHelper(scanningErrors);
+        }
+        else{
+            System.out.println("no errors");
+            this.console.writeLine("Assembly of file was successful.", "CONS");
+
+        }
+
     }
 
     @FXML public void handleStop(){
@@ -394,6 +432,102 @@ public class MasterController {
 
     }
 
+    private void mipsAssembleAndRun(boolean both, String fileName) {
+        if (mipsAssembleProcess != null || mipsRunProcess != null) {
+            return; // there is already a process running
+        }
+
+        // run the javac and java processes in a new thread
+        Runnable processThread = () -> {
+            List<String> processBuilderArgs = new ArrayList<>();
+            String mipsHome = System.getProperty("java.home");
+            String directoryJump = System.getProperty("user.dir");
+            String mipsAssembleFilename = "java -jar mars.jar a ";
+            String mipsRunFilename = "java -jar mars.jar ";
+            // run javac
+            if(!both) {
+                processBuilderArgs.add("java");
+                processBuilderArgs.add("-jar");
+                processBuilderArgs.add("mars.jar");
+                processBuilderArgs.add("a");
+                processBuilderArgs.add(fileName);
+                ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
+                builder.directory(new File(directoryJump));
+                try {
+                    mipsAssembleProcess = builder.start();
+                    ioConsole.writeDataFrom(mipsAssembleProcess.getErrorStream());
+                    mipsAssembleProcess.waitFor(); // wait for process to finish
+                } catch (IOException e) {
+                    System.out.println(e);
+                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Could not " +
+                            "do IO."));
+                    return;
+                } catch (InterruptedException e1) {
+                    System.out.println("Error1");
+
+                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "The running "
+                            + "of javac was interrupted."));
+                } finally {
+                    mipsAssembleProcess = null;
+                }
+                Platform.runLater(() -> {
+                    ioConsole.appendLine("Finished compilation.");
+                    ioConsole.requestFollowCaret();
+                    assembleButton.requestFocus();
+                });
+                if (!both) {
+                    stopButton.setDisable(true);
+                    System.out.println("happening");
+                    return;
+                }
+            }
+            else {
+                processBuilderArgs = new ArrayList<>();
+                processBuilderArgs.add("java");
+                processBuilderArgs.add("-jar");
+                processBuilderArgs.add("mars.jar");
+                processBuilderArgs.add(fileName);
+                ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
+
+                try {
+                    builder.redirectErrorStream(true);
+                    mipsRunProcess = builder.start();
+                    System.out.println("this is working");
+                    System.out.println(mipsRunProcess.getOutputStream());
+                    System.out.println(ioConsole);
+                    if(mipsRunProcess.getOutputStream() != null) {
+                        ioConsole.sendInputTo(mipsRunProcess.getOutputStream());
+                    }
+                    if(mipsRunProcess.getInputStream() != null) {
+                        ioConsole.writeDataFrom(mipsRunProcess.getInputStream());
+                    }
+                    //ioConsole.writeDataFrom(javaProcess.getErrorStream());
+                    mipsRunProcess.waitFor(); //when all IO is done, wait for process to finish
+                } catch (IOException e) {
+                    System.out.println(e);
+                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Could not " +
+                            "do IO."));
+                    return;
+                } catch (InterruptedException e1) {
+                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "The running "
+                            + "of java was interrupted."));
+                } finally {
+                    mipsRunProcess = null;
+                }
+            }
+
+            Platform.runLater(() -> {
+                ioConsole.appendLine("Finished execution.");
+                ioConsole.moveTo(ioConsole.getLength());
+                ioConsole.requestFollowCaret();
+                ioConsole.disableInput();
+                //System.out.println(scene.focusOwnerProperty().get());
+                assembleAndRunButton.requestFocus();
+                stopButton.setDisable(true);
+            });
+        };
+        new Thread(processThread).start();
+    }
     /**
      * Handler for the "Close" menu item in the "File" menu.
      * Checks to see if the file has been changed since the last save.
