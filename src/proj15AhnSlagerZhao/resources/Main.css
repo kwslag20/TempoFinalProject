@@ -89,11 +89,11 @@
 }
 
 .mipsComment {
-    -fx-fill: lightgreen;
+    -fx-fill: #33cc33;
 }
 
 .directive {
-    -fx-fill: pink;
+    -fx-fill: #ff33cc;
 }
 
 .register {
