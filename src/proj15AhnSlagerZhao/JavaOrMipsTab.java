@@ -1,5 +1,5 @@
 /*
- * File: JavaTab.java
+ * File: JavaOrMipsTab.java
  * Names: Kevin Ahn, Lucas DeGraw, Jackie Hang, Kyle Slager
  * Class: CS 361
  * Project 9
@@ -19,17 +19,17 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 /**
- * This is the JavaTab class which stores a JavaCodeArea
+ * This is the JavaOrMipsTab class which stores a JavaCodeArea
  *
  * @author Kevin Ahn, Lucas DeGraw, Jackie Hang, Kyle Slager
  * @version 1.0
  * @since 11-20-2018
  */
-public class JavaTab extends Tab {
+public class JavaOrMipsTab extends Tab {
     private JavaOrMIPSCodeArea codeArea;
 
     /**
-     * Constructor for a JavaTab
+     * Constructor for a JavaOrMipsTab
      *
      * @param fileController
      * @param contextMenuController
@@ -37,8 +37,8 @@ public class JavaTab extends Tab {
      * @param filename
      * @param file
      */
-    public JavaTab(FileController fileController, ContextMenuController contextMenuController,
-                   JavaTabPane tabPane, String filename, File file) {
+    public JavaOrMipsTab(FileController fileController, ContextMenuController contextMenuController,
+                         JavaTabPane tabPane, String filename, File file) {
 
         super(filename);
         String extension = "";
@@ -53,7 +53,6 @@ public class JavaTab extends Tab {
         else if(extension.equals(".asm") || extension.equals(".s")){
             codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
 
-            // codeArea = new MipsCodeArea(contextMenuController);
         }
         else{
             codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);

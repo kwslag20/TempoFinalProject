@@ -304,7 +304,6 @@ public class ToolBarController {
                 this.curProcess.destroy();
             }
         } catch (Throwable e) {
-
             console.appendText("\nProgram was Stopped by User\n");
         }
     }

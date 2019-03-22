@@ -15,13 +15,10 @@
 package proj15AhnSlagerZhao;
 
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.Event;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.io.File;
 import java.io.BufferedWriter;
@@ -41,17 +38,8 @@ import javafx.stage.Window;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
-import proj15AhnSlagerZhao.bantam.semant.MainMainVisitor;
-import proj15AhnSlagerZhao.bantam.semant.NumLocalVarsVisitor;
-import proj15AhnSlagerZhao.bantam.semant.SemanticAnalyzer;
-import proj15AhnSlagerZhao.bantam.semant.StringConstantsVisitor;
-import proj15AhnSlagerZhao.bantam.ast.Program;
 import proj15AhnSlagerZhao.bantam.lexer.Scanner;
-import proj15AhnSlagerZhao.bantam.lexer.Token;
 import proj15AhnSlagerZhao.bantam.parser.Parser;
-import proj15AhnSlagerZhao.bantam.treedrawer.Drawer;
-import proj15AhnSlagerZhao.bantam.util.ClassTreeNode;
-import proj15AhnSlagerZhao.bantam.util.CompilationException;
 import proj15AhnSlagerZhao.bantam.util.Error;
 import proj15AhnSlagerZhao.bantam.util.ErrorHandler;
 
@@ -134,7 +122,7 @@ public class FileController {
      */
     public void handleNew(File file) {
         this.javaTabPane.createNewTab(this, contextMenuController, file);
-        JavaTab t = (JavaTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        JavaOrMipsTab t = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
         if (file == null) this.tabFilepathMap.put(t, null);
         else {
             this.tabFilepathMap.put(t, file.getPath());
@@ -169,7 +157,7 @@ public class FileController {
      */
     public void handleClose(Event event) {
 
-        JavaTab curTab = (JavaTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
 
         if (tabFilepathMap.get(curTab) != null) {
             // check if any changes were made
@@ -192,7 +180,7 @@ public class FileController {
      * choose a filename and directory and then store the content of the tab to storage.
      */
     public boolean handleSave() {
-        JavaTab curTab = (JavaTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
 
         if (tabFilepathMap.get(curTab) != null){
             File file = new File(tabFilepathMap.get(curTab));    // this is what gets the path
@@ -213,7 +201,7 @@ public class FileController {
      * Changes the name of the current tab to match the newly saved file's name.
      */
     public boolean handleSaveAs() {
-        JavaTab curTab = (JavaTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save as...");
         Window stage = this.vBox.getScene().getWindow();
@@ -287,7 +275,7 @@ public class FileController {
      * @param file The file object to which the text is written to.
      */
     private void writeFile(File file) {
-        JavaTab curTab = (JavaTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
         VirtualizedScrollPane<CodeArea> scrollPane = (VirtualizedScrollPane<CodeArea>) curTab.getContent();
         CodeArea codeArea = scrollPane.getContent();
         String text = codeArea.getText();
@@ -328,7 +316,7 @@ public class FileController {
         //NOTE: the following three lines has to be in this order removing the tab first would
         //result in calling handleUpdateCurrentTab() because the currently selected tab will
         //change, and thus the wrong File will be removed from the HashMaps
-        JavaTab curTab = (JavaTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
         tabFilepathMap.remove(curTab);
         javaTabPane.removeTab(curTab);
     }

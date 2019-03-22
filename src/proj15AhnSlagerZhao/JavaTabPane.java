@@ -23,7 +23,7 @@ import java.util.HashMap;
 
 public class JavaTabPane extends TabPane {
 
-    HashMap<JavaTab, Boolean> tabSavedStatusMap;
+    HashMap<JavaOrMipsTab, Boolean> tabSavedStatusMap;
 
     public JavaTabPane() {
         super();
@@ -50,7 +50,7 @@ public class JavaTabPane extends TabPane {
             filename = file.getName();
         }
         // create the new tab
-        JavaTab newTab = new JavaTab(fileController, contextMenuController,
+        JavaOrMipsTab newTab = new JavaOrMipsTab(fileController, contextMenuController,
                 this, filename, file);
 
         // add to the list of tabs
@@ -71,7 +71,7 @@ public class JavaTabPane extends TabPane {
      * @param t
      * @param newStatus
      */
-    public void updateTabSavedStatus(JavaTab t, Boolean newStatus) {
+    public void updateTabSavedStatus(JavaOrMipsTab t, Boolean newStatus) {
 
         if (this.tabSavedStatusMap.containsKey(t)) {
             this.tabSavedStatusMap.replace(t, newStatus);
@@ -83,7 +83,7 @@ public class JavaTabPane extends TabPane {
      * @param t
      * @return boolean
      */
-    public boolean getTabSavedStatus(JavaTab t) {
+    public boolean getTabSavedStatus(JavaOrMipsTab t) {
         return this.tabSavedStatusMap.get(t);
     }
 
@@ -92,14 +92,14 @@ public class JavaTabPane extends TabPane {
      * @param t
      * @return
      */
-    public boolean tabIsSaved(JavaTab t) {
+    public boolean tabIsSaved(JavaOrMipsTab t) {
         return this.tabSavedStatusMap.get(t);
     }
 
     /**
-     * Removes a JavaTab from the JavaTabPane
+     * Removes a JavaOrMipsTab from the JavaTabPane
      */
-    public void removeTab(JavaTab t) {
+    public void removeTab(JavaOrMipsTab t) {
         this.getTabs().remove(t);
         this.tabSavedStatusMap.remove(t);
     }
