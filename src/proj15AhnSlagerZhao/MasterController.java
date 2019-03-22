@@ -149,7 +149,6 @@ public class MasterController {
             this.console.writeLine(e.toString() + "\n", "ERROR");
             return;
         }
-
         List<Error> scanningErrors = fileController.getErrors();
 
         if (scanningErrors != null) {
@@ -159,6 +158,7 @@ public class MasterController {
             this.console.writeLine("Assembly of file was successful.", "CONS");
 
         }
+        this.toolBarController = new ToolBarController(this.console, this.fileController);
     }
 
     @FXML public void handleAssembleAndRun(Event event) throws InterruptedException{
@@ -166,7 +166,6 @@ public class MasterController {
         try {
             //this.mipsAssembleAndRun(true, this.fileController.getFilePath());
             this.toolBarController.handleRunAction(event, this.fileController.getFilePath());
-            System.out.println("worked");
         } catch (CompilationException e) {
             this.console.writeLine(e.toString() + "\n", "ERROR");
             return;
@@ -175,20 +174,18 @@ public class MasterController {
         List<Error> scanningErrors = fileController.getErrors();
 
         if (scanningErrors != null) {
-            System.out.println("errors");
             errorHelper(scanningErrors);
         }
         else{
-            System.out.println("no errors");
             this.console.writeLine("Assembly of file was successful.", "CONS");
-
         }
-
+        this.toolBarController = new ToolBarController(this.console, this.fileController);
     }
 
     @FXML public void handleStop(){
         System.out.println(javaTabPane.getSelectionModel().getSelectedItem());
         this.toolBarController.handleStopButtonAction();
+        this.toolBarController = new ToolBarController(this.console, this.fileController);
     }
 
     /**
