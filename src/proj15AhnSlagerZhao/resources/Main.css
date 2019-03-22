@@ -84,4 +84,18 @@
     -fx-text-base-color: black;
 }
 
+.instruction {
+    -fx-fill: blue;
+}
 
+.mipsComment {
+    -fx-fill: lightgreen;
+}
+
+.directive {
+    -fx-fill: pink;
+}
+
+.register {
+    -fx-fill: red;
+}

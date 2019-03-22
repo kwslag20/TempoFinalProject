@@ -462,14 +462,6 @@ public class FileController {
         return analysis;
     }
 
-    /**
-     * Handles the assembling of mips code
-     * @param event
-     */
-    public void handleAssemble(Event event){
-
-    }
-
     public List<Error> getAnalysisErrors(){
         return analysisErrors.getErrorList();
     }

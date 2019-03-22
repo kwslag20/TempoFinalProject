@@ -99,7 +99,6 @@ public class MasterController {
     public void initialize(){
 
         ioConsole = new IOConsole();
-        ioConsolePane.getChildren().add(new VirtualizedScrollPane<>(ioConsole));
         ioConsole.setEditable(false);
         ioConsole.setWrapText(true);
         ioConsole.appendLine("Console");
@@ -343,6 +342,27 @@ public class MasterController {
         }
     }
 
+    @FXML
+    public void handleStop(Event e) {
+        if (mipsRunProcess != null) {
+            mipsRunProcess.destroy();
+            mipsRunProcess = null;
+            ioConsole.appendLine("Compilation was stopped by the user.");
+            ioConsole.moveTo(ioConsole.getLength());
+            ioConsole.requestFollowCaret();
+            ioConsole.disableInput();
+            stopButton.setDisable(true);
+        }
+        if (mipsRunProcess != null) {
+            mipsRunProcess.destroy();
+            mipsRunProcess = null;
+            ioConsole.appendLine("Execution was stopped by the user.");
+            ioConsole.moveTo(ioConsole.getLength());
+            ioConsole.requestFollowCaret();
+            ioConsole.disableInput();
+            stopButton.setDisable(true);
+        }
+    }
     /**
      * handles the jumping to a method
      * @param event

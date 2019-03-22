@@ -26,7 +26,7 @@ import java.util.Scanner;
  * @since 11-20-2018
  */
 public class JavaTab extends Tab {
-    private JavaCodeArea codeArea;
+    private JavaOrMIPSCodeArea codeArea;
 
     /**
      * Constructor for a JavaTab
@@ -48,15 +48,15 @@ public class JavaTab extends Tab {
         }
 
         if(extension.equals(".java")) {
-            codeArea = new JavaCodeArea(contextMenuController);
+            codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);;
         }
         else if(extension.equals(".asm") || extension.equals(".s")){
-            codeArea = new JavaCodeArea(contextMenuController);
+            codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
 
             // codeArea = new MipsCodeArea(contextMenuController);
         }
         else{
-            codeArea = new JavaCodeArea(contextMenuController);
+            codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
         }
 
 

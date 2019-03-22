@@ -179,7 +179,7 @@ public class EditController {
         caretIdxStart = curCodeArea.getCaretPosition();
     }
 
-    private void getFullSelectedText(JavaCodeArea curCodeArea){
+    private void getFullSelectedText(JavaOrMIPSCodeArea curCodeArea){
         if (selectedText.equals("")) {
             curCodeArea.selectLine();
             selectedText = curCodeArea.getSelectedText();
@@ -231,7 +231,7 @@ public class EditController {
      */
     public void handleCommenting() {
 
-        JavaCodeArea curCodeArea = getCurJavaCodeArea();
+        JavaOrMIPSCodeArea curCodeArea = getCurJavaCodeArea();
         // get the start paragraph and the end paragraph of the selection
         Selection<?, ?, ?> selection = curCodeArea.getCaretSelectionBind();
         int startIdx = selection.getStartParagraphIndex();
@@ -265,7 +265,7 @@ public class EditController {
      * Tabs the selected text
      */
     public void handleTabbing() {
-        JavaCodeArea curCodeArea = getCurJavaCodeArea();
+        JavaOrMIPSCodeArea curCodeArea = getCurJavaCodeArea();
 
         selectedText = curCodeArea.getSelectedText();
         getFullSelectedText(curCodeArea);
@@ -281,7 +281,7 @@ public class EditController {
      * Untabs the selected text
      */
     public void handleUnTabbing() {
-        JavaCodeArea curCodeArea = getCurJavaCodeArea();
+        JavaOrMIPSCodeArea curCodeArea = getCurJavaCodeArea();
 
         selectedText = curCodeArea.getSelectedText();
         getFullSelectedText(curCodeArea);
@@ -297,7 +297,7 @@ public class EditController {
      * Tabs a single line
      */
     private void tabSingleLine(int caretIdx) {
-        JavaCodeArea curCodeArea = getCurJavaCodeArea();
+        JavaOrMIPSCodeArea curCodeArea = getCurJavaCodeArea();
         curCodeArea.replaceText(caretIdx, caretIdx, "\t");
     }
 
@@ -306,7 +306,7 @@ public class EditController {
      */
     private void unTabSingleLine(String curLineText, int caretIdx) {
 
-        JavaCodeArea curCodeArea = getCurJavaCodeArea();
+        JavaOrMIPSCodeArea curCodeArea = getCurJavaCodeArea();
 
         // regex to check if current line is tabbed
         if (Pattern.matches("(?:[ \\t].*)", curLineText)) {
@@ -331,7 +331,7 @@ public class EditController {
      */
     public void handleFindText(Boolean showNumMatchesAlert) {
 
-        JavaCodeArea curJavaCodeArea = getCurJavaCodeArea();
+        JavaOrMIPSCodeArea curJavaCodeArea = getCurJavaCodeArea();
         if (curJavaCodeArea == null) {
             showAlert("NO FILES OPEN");
             resetFindMatchingStringData();
@@ -406,7 +406,7 @@ public class EditController {
 
         if (this.canHighlightMatches()) {
 
-            JavaCodeArea curJavaCodeArea = getCurJavaCodeArea();
+            JavaOrMIPSCodeArea curJavaCodeArea = getCurJavaCodeArea();
             if (curJavaCodeArea == null) {
                 showAlert("NO FILES OPEN");
                 return;
@@ -449,7 +449,7 @@ public class EditController {
 
         if (this.canHighlightMatches()) {
 
-            JavaCodeArea curJavaCodeArea = getCurJavaCodeArea();
+            JavaOrMIPSCodeArea curJavaCodeArea = getCurJavaCodeArea();
             if (curJavaCodeArea == null) {
                 showAlert("NO FILES OPEN");
                 return;
@@ -488,7 +488,7 @@ public class EditController {
      * @return true if any matches from Find can currently be highlighted, else false
      */
     private boolean canHighlightMatches() {
-        JavaCodeArea curJavaCodeArea = getCurJavaCodeArea();
+        JavaOrMIPSCodeArea curJavaCodeArea = getCurJavaCodeArea();
         if (curJavaCodeArea == null) {
             showAlert("NO FILES OPEN");
             return false;
@@ -571,13 +571,13 @@ public class EditController {
     /**
      * @return the JavaCodeArea currently in focus of the TabPane
      */
-    public JavaCodeArea getCurJavaCodeArea() {
+    public JavaOrMIPSCodeArea getCurJavaCodeArea() {
 
         if (this.tabPane.getTabs().size() == 0) return null;
 
         Tab curTab = this.tabPane.getSelectionModel().getSelectedItem();
         VirtualizedScrollPane<CodeArea> curPane =
                 (VirtualizedScrollPane<CodeArea>) curTab.getContent();
-        return (JavaCodeArea) curPane.getContent();
+        return (JavaOrMIPSCodeArea) curPane.getContent();
     }
 }
