@@ -98,13 +98,9 @@ public class MasterController {
     @FXML
     public void initialize(){
 
-        ioConsole = new IOConsole();
-        ioConsole.setEditable(false);
-        ioConsole.setWrapText(true);
-        ioConsole.appendLine("Console");
-
         editController = new EditController(javaTabPane, findTextEntry, findPrevBtn, findNextBtn, replaceTextEntry);
         this.fileController = new FileController(vBox,javaTabPane);
+        this.toolBarController = new ToolBarController(console, fileController);
         this.errorHandler = new ErrorHandler();
         this.parseRoot = null;
 
@@ -147,8 +143,8 @@ public class MasterController {
     @FXML public void handleAssemble(Event event) throws InterruptedException{
         this.console.clear();
         try {
-            this.mipsAssembleAndRun(false, this.fileController.getFilePath());
-            System.out.println("worked");
+            //this.mipsAssembleAndRun(false, this.fileController.getFilePath());
+            this.toolBarController.handleAssembleAction(event, this.fileController.getFilePath());
         } catch (CompilationException e) {
             this.console.writeLine(e.toString() + "\n", "ERROR");
             return;
@@ -165,10 +161,11 @@ public class MasterController {
         }
     }
 
-    @FXML public void handleAssembleAndRun(){
+    @FXML public void handleAssembleAndRun(Event event) throws InterruptedException{
         this.console.clear();
         try {
-            this.mipsAssembleAndRun(true, this.fileController.getFilePath());
+            //this.mipsAssembleAndRun(true, this.fileController.getFilePath());
+            this.toolBarController.handleRunAction(event, this.fileController.getFilePath());
             System.out.println("worked");
         } catch (CompilationException e) {
             this.console.writeLine(e.toString() + "\n", "ERROR");
@@ -191,6 +188,7 @@ public class MasterController {
 
     @FXML public void handleStop(){
         System.out.println(javaTabPane.getSelectionModel().getSelectedItem());
+        this.toolBarController.handleStopButtonAction();
     }
 
     /**
@@ -226,81 +224,7 @@ public class MasterController {
 
     }
 
-    @FXML public void handleScanParseAndCheck(Event event ) throws InterruptedException {
-        this.console.clear();
-        try {
-            this.fileController.handleAnalyze(event);
-        } catch (CompilationException e) {
-            this.console.writeLine(e.toString() + "\n", "ERROR");
 
-            return;
-        }
-
-        List<Error> scanningErrors = fileController.getAnalysisErrors();
-
-        if (scanningErrors != null) {
-            errorHelper(scanningErrors);
-        }
-        else{
-            this.console.writeLine("Parse of file was successful.", "CONS");
-
-        }
-    }
-    /**
-     * Scans the file of the current tab for tokens
-     * @param event
-     * @throws InterruptedException
-     */
-    @FXML public void handleScan(Event event) throws InterruptedException {
-
-        this.console.clear();
-        try {
-            this.fileController.handleScan(event);
-        } catch (CompilationException e) {
-            this.console.writeLine(e.toString() + "\n", "ERROR");
-
-            return;
-        }
-
-        List<Error> scanningErrors = fileController.getErrors();
-
-        if (scanningErrors != null) {
-
-            errorHelper(scanningErrors);
-        }
-        else{
-            this.console.writeLine("Scan, Parse and Check of file was successful.", "CONS");
-
-        }
-    }
-
-    /**
-     * Scans and parses the file of the current tab
-     * @param event
-     * @throws InterruptedException
-     */
-    @FXML public void handleScanAndParse(Event event) throws InterruptedException {
-
-        this.console.clear();
-        try {
-            this.parseRoot = this.fileController.handleScanAndParse(event);
-        } catch (CompilationException e) {
-            this.console.writeLine(e.toString() + "\n", "ERROR");
-            return;
-        }
-
-        List<Error> scanningAndParsingErrors = fileController.getErrors();
-
-
-        if (scanningAndParsingErrors != null) {
-
-            errorHelper(scanningAndParsingErrors);
-        }
-        else{
-            this.console.writeLine("Scan and parse of file was successful.", "CONS");
-
-        }
-    }
 
     /**
      * handles the refactoring of a class
@@ -342,27 +266,6 @@ public class MasterController {
         }
     }
 
-    @FXML
-    public void handleStop(Event e) {
-        if (mipsRunProcess != null) {
-            mipsRunProcess.destroy();
-            mipsRunProcess = null;
-            ioConsole.appendLine("Compilation was stopped by the user.");
-            ioConsole.moveTo(ioConsole.getLength());
-            ioConsole.requestFollowCaret();
-            ioConsole.disableInput();
-            stopButton.setDisable(true);
-        }
-        if (mipsRunProcess != null) {
-            mipsRunProcess.destroy();
-            mipsRunProcess = null;
-            ioConsole.appendLine("Execution was stopped by the user.");
-            ioConsole.moveTo(ioConsole.getLength());
-            ioConsole.requestFollowCaret();
-            ioConsole.disableInput();
-            stopButton.setDisable(true);
-        }
-    }
     /**
      * handles the jumping to a method
      * @param event
@@ -452,102 +355,6 @@ public class MasterController {
 
     }
 
-    private void mipsAssembleAndRun(boolean both, String fileName) {
-        if (mipsAssembleProcess != null || mipsRunProcess != null) {
-            return; // there is already a process running
-        }
-
-        // run the javac and java processes in a new thread
-        Runnable processThread = () -> {
-            List<String> processBuilderArgs = new ArrayList<>();
-            String mipsHome = System.getProperty("java.home");
-            String directoryJump = System.getProperty("user.dir");
-            String mipsAssembleFilename = "java -jar mars.jar a ";
-            String mipsRunFilename = "java -jar mars.jar ";
-            // run javac
-            if(!both) {
-                processBuilderArgs.add("java");
-                processBuilderArgs.add("-jar");
-                processBuilderArgs.add("mars.jar");
-                processBuilderArgs.add("a");
-                processBuilderArgs.add(fileName);
-                ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
-                builder.directory(new File(directoryJump));
-                try {
-                    mipsAssembleProcess = builder.start();
-                    ioConsole.writeDataFrom(mipsAssembleProcess.getErrorStream());
-                    mipsAssembleProcess.waitFor(); // wait for process to finish
-                } catch (IOException e) {
-                    System.out.println(e);
-                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Could not " +
-                            "do IO."));
-                    return;
-                } catch (InterruptedException e1) {
-                    System.out.println("Error1");
-
-                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "The running "
-                            + "of javac was interrupted."));
-                } finally {
-                    mipsAssembleProcess = null;
-                }
-                Platform.runLater(() -> {
-                    ioConsole.appendLine("Finished compilation.");
-                    ioConsole.requestFollowCaret();
-                    assembleButton.requestFocus();
-                });
-                if (!both) {
-                    stopButton.setDisable(true);
-                    System.out.println("happening");
-                    return;
-                }
-            }
-            else {
-                processBuilderArgs = new ArrayList<>();
-                processBuilderArgs.add("java");
-                processBuilderArgs.add("-jar");
-                processBuilderArgs.add("mars.jar");
-                processBuilderArgs.add(fileName);
-                ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
-
-                try {
-                    builder.redirectErrorStream(true);
-                    mipsRunProcess = builder.start();
-                    System.out.println("this is working");
-                    System.out.println(mipsRunProcess.getOutputStream());
-                    System.out.println(ioConsole);
-                    if(mipsRunProcess.getOutputStream() != null) {
-                        ioConsole.sendInputTo(mipsRunProcess.getOutputStream());
-                    }
-                    if(mipsRunProcess.getInputStream() != null) {
-                        ioConsole.writeDataFrom(mipsRunProcess.getInputStream());
-                    }
-                    //ioConsole.writeDataFrom(javaProcess.getErrorStream());
-                    mipsRunProcess.waitFor(); //when all IO is done, wait for process to finish
-                } catch (IOException e) {
-                    System.out.println(e);
-                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "Could not " +
-                            "do IO."));
-                    return;
-                } catch (InterruptedException e1) {
-                    Platform.runLater(() -> new Alert(Alert.AlertType.ERROR, "The running "
-                            + "of java was interrupted."));
-                } finally {
-                    mipsRunProcess = null;
-                }
-            }
-
-            Platform.runLater(() -> {
-                ioConsole.appendLine("Finished execution.");
-                ioConsole.moveTo(ioConsole.getLength());
-                ioConsole.requestFollowCaret();
-                ioConsole.disableInput();
-                //System.out.println(scene.focusOwnerProperty().get());
-                assembleAndRunButton.requestFocus();
-                stopButton.setDisable(true);
-            });
-        };
-        new Thread(processThread).start();
-    }
     /**
      * Handler for the "Close" menu item in the "File" menu.
      * Checks to see if the file has been changed since the last save.
