@@ -62,4 +62,13 @@ public class StringConstantsVisitor extends Visitor {
         stringList.add(node.getConstant());
         return null;
     }
+
+    /**
+     * prevents further traversal
+     * @param node the formal list node
+     * @return
+     */
+    public Object visit(FormalList node){
+        return null;
+    }
 }

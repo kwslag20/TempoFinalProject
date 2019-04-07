@@ -130,7 +130,6 @@ public class NumLocalVarsVisitor extends Visitor{
         return null;
     }
 
-
     /**
      * Overrides to avoid visiting
      * @param node the return statement node
@@ -140,7 +139,23 @@ public class NumLocalVarsVisitor extends Visitor{
         return null;
     }
 
+    /**
+     * prevents further traversal
+     * @param node the expression statement node
+     * @return
+     */
+    public Object visit(ExprStmt node){
+        return null;
+    }
 
+    /**
+     * prevents further traversal
+     * @param node the field node
+     * @return
+     */
+    public Object visit(Field node){
+        return null;
+    }
 
 }
 

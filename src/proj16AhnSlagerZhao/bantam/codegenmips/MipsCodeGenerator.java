@@ -148,8 +148,16 @@ public class MipsCodeGenerator
      * a method to add a string constant object to a map to keep track of them
      * @param stringMap map containing the string objects
      */
-    public void genStringConstants(Map<String,String> stringMap){
+    private void genStringConstants(Map<String,String> stringMap){
 
+    }
+
+    private void genClassTableNames(){
+        assemblySupport.genLabel("class_name_table");
+        int numClasses = this.root.getClassMap().values().size();
+        for (int i = 0 ; i < numClasses ; i++){
+            assemblySupport.genLabel();
+        }
     }
 
     public static void main(String[] args) {
