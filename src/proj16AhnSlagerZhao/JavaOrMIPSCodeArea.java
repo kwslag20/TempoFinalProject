@@ -138,7 +138,7 @@ public class JavaOrMIPSCodeArea extends CodeArea {
     };
     //a list of directives in MIPS
     private static final String[] DIRECTIVES = new String[]{
-            "align", "ascii", "asciiz", "byte", "data", "double", "end_macro", "eqv", "extern", "float",
+            "asciiz", "align", "ascii", "asciiz", "byte", "data", "double", "end_macro", "eqv", "extern", "float",
             "globl", "half", "include", "kdata", "ktext", "macro", "set", "text", "word"
     };
     //regex for highlighting in the way of MARS
