@@ -8,6 +8,7 @@
 
 package proj16AhnSlagerZhao.bantam.semant;
 import proj16AhnSlagerZhao.bantam.ast.*;
+import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.visitor.Visitor;
 
 import java.util.ArrayList;
@@ -45,6 +46,14 @@ public class StringConstantsVisitor extends Visitor {
         for(int i = 0; i < stringNum; i++){
             String strConstName = "StringConst_" + Integer.toString(i);
             stringMap.put(strConstName, stringList.get(i));
+        }
+        return stringMap;
+    }
+
+    public Map<String, String> getStringConstants(ClassTreeNode node){
+        Map<String,String> stringMap = new HashMap<>();
+        for(ClassTreeNode classNode: node.getClassMap().values()){
+            classNode.getASTNode().accept(this);
         }
         return stringMap;
     }

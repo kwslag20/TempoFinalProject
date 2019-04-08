@@ -26,6 +26,8 @@
 
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
+import proj16AhnSlagerZhao.bantam.ast.Program;
+import proj16AhnSlagerZhao.bantam.semant.StringConstantsVisitor;
 import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.util.CompilationException;
 import proj16AhnSlagerZhao.bantam.util.Error;
@@ -34,7 +36,7 @@ import proj16AhnSlagerZhao.bantam.util.ErrorHandler;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The <tt>MipsCodeGenerator</tt> class generates mips assembly code
@@ -113,6 +115,9 @@ public class MipsCodeGenerator
     public void generate(ClassTreeNode root, String outFile) {
         this.root = root;
 
+        StringConstantsVisitor stringConstantsVisitor = new StringConstantsVisitor();
+        Map<String, String> stringMap = stringConstantsVisitor.getStringConstants(this.root);
+
         // set up the PrintStream for writing the assembly file.
         try {
             this.out = new PrintStream(new FileOutputStream(outFile));
@@ -140,6 +145,7 @@ public class MipsCodeGenerator
             this.assemblySupport.genWord("0");
         }
 
+        this.genStringConstants(stringMap);
         // STEP 3 GENERATE STRING CONSTANTS
 
     }
@@ -149,14 +155,53 @@ public class MipsCodeGenerator
      * @param stringMap map containing the string objects
      */
     private void genStringConstants(Map<String,String> stringMap){
+        Map<String, String> builtIns = new HashMap<>();
+        builtIns.put("Object", "class_name_0");
+        builtIns.put("String", "class_name_1");
+        builtIns.put("Sys", "class_name_2");
+        builtIns.put("Main", "class_name_3");
+        builtIns.put("TextIO", "class_name_4");
 
+        Set<Map.Entry<String,String>> stringEntrySet = stringMap.entrySet();
+        Iterator<Map.Entry<String,String>> stringIterator = stringEntrySet.iterator();
+        while(stringIterator.hasNext()){
+            String label = stringIterator.next().getValue();
+            String str = stringIterator.next().getKey();
+            generateStringConstantSupport(label,str);
+        }
+        Set<Map.Entry<String,String>> builtInEntrySet = builtIns.entrySet();
+        Iterator<Map.Entry<String,String>> builtInIterator = builtInEntrySet.iterator();
+        Set<String> filenames = new HashSet<>();
+        int fileNum = 0;
+        while(builtInIterator.hasNext()){
+            String label = builtInIterator.next().getValue();
+            String str = builtInIterator.next().getKey();
+            generateStringConstantSupport(label,str);
+            String filename = root.getClassMap().get(str).getName();
+            if (!filenames.contains(filename)) {
+                filenames.add(filename);
+                generateStringConstantSupport("file_name_"+fileNum, filename);
+                fileNum++;
+            }
+        }
     }
+
+    private void generateStringConstantSupport(String label, String str){
+        assemblySupport.genLabel(label);
+        assemblySupport.genWord("1");
+        assemblySupport.genWord(Integer.toString(16 + (int)Math.ceil((str.length() + 1)/4)*4));
+        assemblySupport.genWord("String_dispatch_table");
+        assemblySupport.genWord(Integer.toString(str.length()));
+        assemblySupport.genAscii(str);
+        assemblySupport.genAlign();
+    }
+
 
     private void genClassTableNames(){
         assemblySupport.genLabel("class_name_table");
         int numClasses = this.root.getClassMap().values().size();
         for (int i = 0 ; i < numClasses ; i++){
-            assemblySupport.genLabel();
+            assemblySupport.genLabel("class_name_" + i);
         }
     }
 
