@@ -27,7 +27,6 @@
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
 import proj16AhnSlagerZhao.bantam.ast.Program;
-import proj16AhnSlagerZhao.bantam.semant.StringConstantsVisitor;
 import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.util.CompilationException;
 import proj16AhnSlagerZhao.bantam.util.Error;

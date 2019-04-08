@@ -50,14 +50,6 @@ public class StringConstantsVisitor extends Visitor {
         return stringMap;
     }
 
-    public Map<String, String> getStringConstants(ClassTreeNode node){
-        Map<String,String> stringMap = new HashMap<>();
-        for(ClassTreeNode classNode: node.getClassMap().values()){
-            classNode.getASTNode().accept(this);
-        }
-        return stringMap;
-    }
-
     /**
      * Overrides the visit method that takes in
      * a Constant String Expression.
