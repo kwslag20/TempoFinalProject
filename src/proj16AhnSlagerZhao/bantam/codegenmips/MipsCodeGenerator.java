@@ -26,6 +26,9 @@
 
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
+import proj16AhnSlagerZhao.bantam.ast.Field;
+import proj16AhnSlagerZhao.bantam.ast.Member;
+import proj16AhnSlagerZhao.bantam.ast.MemberList;
 import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.util.CompilationException;
 import proj16AhnSlagerZhao.bantam.util.Error;
@@ -34,6 +37,9 @@ import proj16AhnSlagerZhao.bantam.util.ErrorHandler;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -156,11 +162,47 @@ public class MipsCodeGenerator
         assemblySupport.genLabel("class_name_table");
         int numClasses = this.root.getClassMap().values().size();
         for (int i = 0 ; i < numClasses ; i++){
-            assemblySupport.genLabel();
+            assemblySupport.genLabel(""+i);
+        }
+    }
+
+    public void genObjectTemplate(){
+        assemblySupport.genLabel("Object_template");
+        assemblySupport.genWord("0");
+        assemblySupport.genWord("12");
+        assemblySupport.genWord("Object_dispatch_table");
+
+        int numClasses = this.root.getClassMap().values().size();
+        String className;
+        ClassTreeNode classTreeNode;
+        MemberList memberList;
+        List<Field> fieldList;
+        for (int i = 0 ; i < numClasses ; i++){
+            className = this.root.getClassMap().keys().nextElement();
+            classTreeNode = this.root.getClassMap().get(className);
+            assemblySupport.genLabel(className + "_template");
+            memberList = classTreeNode.getASTNode().getMemberList();
+            fieldList = new ArrayList<Field>();
+            for(Iterator iter = memberList.iterator(); iter.hasNext();){
+                Member member = (Member)iter.next();
+                if(member instanceof Field) {
+                    fieldList.add((Field)member);
+                }
+            }
+
+            assemblySupport.genWord((i+1)+"");
+            assemblySupport.genWord(12+fieldList.size()*4+"");
+            assemblySupport.genWord(className+"_dispatch_table");
+            for(Iterator iter = fieldList.iterator();iter.hasNext();){
+                Field field = (Field)iter.next();
+                assemblySupport.genWord("0");
+            }
         }
     }
 
     public static void main(String[] args) {
         // ... add testing code here ...
     }
+
+
 }
