@@ -93,6 +93,11 @@ public class MipsCodeGenerator {
     private HashMap<String, ArrayList<String>> altMethodsMap;
 
     /**
+     * Built In Hash Map
+     */
+    private Map<String, String> builtIns;
+
+    /**
      * outfile
      */
     private String outFile;
@@ -133,6 +138,15 @@ public class MipsCodeGenerator {
         this.ast = ast;
         this.outFile = outFile;
 
+        //creates a list of builtins that other methods can use, specifically for creating globals
+        this.builtIns = new HashMap<>();
+        this.builtIns.put("Object", "class_name_0");
+        this.builtIns.put("String", "class_name_1");
+        this.builtIns.put("Sys", "class_name_2");
+        this.builtIns.put("Main", "class_name_3");
+        this.builtIns.put("TextIO", "class_name_4");
+
+        //uses the StringConstantsVisitor to create a map of string constants
         StringConstantsVisitor stringConstantsVisitor = new StringConstantsVisitor();
         Map<String, String> stringMap = stringConstantsVisitor.getStringConstants(this.ast);
 
@@ -147,9 +161,6 @@ public class MipsCodeGenerator {
             throw new CompilationException("Couldn't write to output file.");
         }
 
-        // comment out
-        // throw new RuntimeException("MIPS code generator unimplemented");
-
         // add code here...
         // STEP 1 START THE DATA SECTION
         this.assemblySupport.genDataStart();
@@ -162,22 +173,20 @@ public class MipsCodeGenerator {
             this.assemblySupport.genWord("0");
         }
 
+        // STEP 3 GENERATE STRING CONSTANTS
         this.genStringConstants(stringMap);
 
+        // STEP 4 GENERATE THE TABLE NAMES
         this.genClassTableNames();
 
-        this.genObjectTemplate();
-        // STEP 3 GENERATE STRING CONSTANTS
-        this.genClassTableNames();
-
+        // STEP 5 GENERATE THE OBJECT TEMPLATES
         this.genObjectTemplate();
 
+        // STEP 6 GENERATE THE DISPATCH TABLES
         this.altMethodsMap = new HashMap<>();
+        this.genDispatchTables();
 
-        MethodsVisitor methodsVisitor = new MethodsVisitor();
-        //HashMap<String, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
-        this.generateDispatchTables();
-
+        // STEP 7 GENERATE METHOD STUBS AND MINIMUM TEXT SECTION FOR TESTING
         this.assemblySupport.genTextStart();
         this.genStubs();
 
@@ -189,12 +198,6 @@ public class MipsCodeGenerator {
      * @param stringMap map containing the string objects
      */
     private void genStringConstants(Map<String, String> stringMap) {
-        Map<String, String> builtIns = new HashMap<>();
-        builtIns.put("Object", "class_name_0");
-        builtIns.put("String", "class_name_1");
-        builtIns.put("Sys", "class_name_2");
-        builtIns.put("Main", "class_name_3");
-        builtIns.put("TextIO", "class_name_4");
 
         Set<Map.Entry<String, String>> stringEntrySet = stringMap.entrySet();
         Iterator<Map.Entry<String, String>> stringIterator = stringEntrySet.iterator();
@@ -203,7 +206,7 @@ public class MipsCodeGenerator {
             String str = stringIterator.next().getKey();
             generateStringConstantSupport(label, str);
         }
-        Set<Map.Entry<String, String>> builtInEntrySet = builtIns.entrySet();
+        Set<Map.Entry<String, String>> builtInEntrySet = this.builtIns.entrySet();
         Iterator<Map.Entry<String, String>> builtInIterator = builtInEntrySet.iterator();
         Set<String> filenames = new HashSet<>();
         int fileNum = 0;
@@ -218,26 +221,49 @@ public class MipsCodeGenerator {
 
     }
 
+    /**
+     * Support method for the generate string constant function
+     *
+     * @param label label necessary for string constant
+     * @param str content of the string
+     */
     private void generateStringConstantSupport(String label, String str) {
         assemblySupport.genLabel(label);
         assemblySupport.genWord("1");
+        //determines the necessary length of the word
         assemblySupport.genWord(Integer.toString(16 + (int) Math.ceil((str.length() + 1) / 4) * 4));
         assemblySupport.genWord("String_dispatch_table");
         assemblySupport.genWord(Integer.toString(str.length()));
         assemblySupport.genAscii(str);
     }
 
-
+    /**
+     * Method for generating the class table names
+     */
     private void genClassTableNames() {
         assemblySupport.genLabel("class_name_table");
         int numClasses = this.root.getClassMap().values().size();
         for (int i = 0; i < numClasses; i++) {
             assemblySupport.genWord("class_name_" + i);
         }
+        this.out.println("\n");
     }
 
+    /**
+     * Method for generating the object templates
+     */
     private void genObjectTemplate() {
-
+        //creates a map from the custom methods visitor
+        MethodsVisitor methodsVisitor = new MethodsVisitor();
+        Map<Class_, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
+        //adds globals for all user defined class templates
+        for(Map.Entry<Class_, ArrayList<String>> entry : methodsMap.entrySet()){
+            this.assemblySupport.genGlobal(entry.getKey().getName() + "_template");
+        }
+        //adds globals for all the built in class templates
+        for(Map.Entry<String,String> builtIn : this.builtIns.entrySet()){
+            this.assemblySupport.genGlobal(builtIn.getKey() + "_template");
+        }
         int numClasses = this.root.getClassMap().values().size();
         String className;
         ClassTreeNode classTreeNode;
@@ -245,13 +271,13 @@ public class MipsCodeGenerator {
         List<Field> fieldList;
         ArrayList<String> classList = new ArrayList<>();
         classList.addAll(this.root.getClassMap().keySet());
+        //loops through all the classes and generates an object template
         for (int i = 0; i < numClasses; i++) {
             className = classList.get(i);
-            System.out.println(className);
             classTreeNode = this.root.getClassMap().get(className);
             assemblySupport.genLabel(className + "_template");
             memberList = classTreeNode.getASTNode().getMemberList();
-            fieldList = new ArrayList<Field>();
+            fieldList = new ArrayList<>();
             for (Iterator iter = memberList.iterator(); iter.hasNext(); ) {
                 Member member = (Member) iter.next();
                 if (member instanceof Field) {
@@ -262,6 +288,7 @@ public class MipsCodeGenerator {
             assemblySupport.genWord((i + 1) + "");
             assemblySupport.genWord(12 + fieldList.size() * 4 + "");
             assemblySupport.genWord(className + "_dispatch_table");
+            //iterates through the fieldList created by the previous for loop, currently sets value to 0
             for (Iterator iter = fieldList.iterator(); iter.hasNext(); ) {
                 Field field = (Field) iter.next();
                 assemblySupport.genWord("0");
@@ -270,32 +297,40 @@ public class MipsCodeGenerator {
     }
 
     /**
-     * Generator for method stubs in the text section
+     * Generator for method stubs in the text section, necessary right now to make a complete program
      */
     private void genStubs() {
         ArrayList<String> classList = new ArrayList<>();
         classList.addAll(this.root.getClassMap().keySet());
         this.out.print("\n");
+        //creates the init stubs for the classes, including builtins
         for (String className : classList) {
             this.assemblySupport.genLabel(className + "_init");
         }
         this.out.print("\n");
 
+        //creates the map
         MethodsVisitor methodsVisitor = new MethodsVisitor();
         Map<Class_, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
 
+        //loops through the map created by MethodVisitor and creates stub (ex. Main.main)
         for (Map.Entry<Class_, ArrayList<String>> methodList : methodsMap.entrySet()) {
             for (String methodName : methodList.getValue()) {
                 assemblySupport.genLabel(methodList.getKey().getName() + "." + methodName);
             }
         }
-
         this.out.println("\njr $ra");
-
     }
 
-
-    private ArrayList<String> generateDispatchTable(String className, LinkedHashMap<String, String> methodClassMap, ArrayList<String> methodNameList){
+    /**
+     * Method for generating a single Dispatch Table entry
+     *
+     * @param className
+     * @param methodClassMap
+     * @param methodNameList
+     * @return the current list of method names so that it can be provided again as a parameter
+     */
+    private ArrayList<String> genDispatchTable(String className, LinkedHashMap<String, String> methodClassMap, ArrayList<String> methodNameList){
 
         MemberList members;
         String methodName;
@@ -353,54 +388,62 @@ public class MipsCodeGenerator {
 
     }
 
-    private void generateDispatchTables(){
+    /**
+     * Method that implements genDispatchTable to create all the dispatch tables necessary
+     */
+    private void genDispatchTables(){
         ArrayList<String> classList = new ArrayList<>();
         classList.addAll(this.root.getClassMap().keySet());
 
         ArrayList<String> methodNameList = new ArrayList<>();
+        //the linked hash map is necessary because the methods must come out in the correct order
+        //this is not possible with conventional hashmaps as they have no order to them
         LinkedHashMap<String, String> methodClassMap = new LinkedHashMap();
-
 
         MethodsVisitor methodsVisitor = new MethodsVisitor();
         Map<Class_, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
-        this.assemblySupport.genComment("Dispatch Tables:");
 
+        //generates the global dispatch tables for the user created classes
         for(Map.Entry<Class_, ArrayList<String>> entry : methodsMap.entrySet()){
-            this.assemblySupport.genGlobal(entry.getKey() + "_dispatch_table");
+            this.assemblySupport.genGlobal(entry.getKey().getName() + "_dispatch_table");
         }
 
+        //generates the global dispatch tables for the built in classes
+        for(Map.Entry<String,String> builtIn : this.builtIns.entrySet()){
+            this.assemblySupport.genGlobal(builtIn.getKey() + "template");
+        }
+
+        //executes all of the necessary dispatch table creating
         for(String className : classList){
-            methodNameList = generateDispatchTable(className,methodClassMap, methodNameList);
+            methodNameList = genDispatchTable(className,methodClassMap, methodNameList);
 
         }
-
         this.out.print("\n");
-
     }
 
-
-
-
+    /*
+    Main Function used for testing purposes, executes parsing and analyzing before passing the results of those
+    (Program and ClassTreeNode) to the generate method of the class. Catches problems with parsing, analyzing,
+    or compiling the mips code
+     */
     public static void main(String[] args) {
         ErrorHandler errorHandler = new ErrorHandler();
         Parser parser = new Parser(errorHandler);
         SemanticAnalyzer analyzer = new SemanticAnalyzer(errorHandler);
 
-        for (String inFile : args) {
-            System.out.println("\n========== MIPS Code Generation results for " + inFile + " =============");
+        for (String fileNames : args) {
             try {
                 errorHandler.clear();
-                Program program = parser.parse(inFile);
+                Program program = parser.parse(fileNames);
                 ClassTreeNode classTreeNode = analyzer.analyze(program);
-                System.out.println(" Semantic Analysis was successful.");
                 MipsCodeGenerator mipsCodeGenerator = new MipsCodeGenerator(errorHandler, false, false);
-                mipsCodeGenerator.generate(classTreeNode, inFile.replace(".btm", ".asm"), program);
-                System.out.println(" Generation of "+ inFile.replace(".btm", ".asm") + " was successful.");
+                mipsCodeGenerator.generate(classTreeNode, fileNames.replace(".btm", ".asm"), program);
+                System.out.println("MIPS code generation was successful.");
             } catch (CompilationException ex) {
-                System.out.println(" There were errors in generation:");
+                System.out.println("MIPS code generation was not successful:");
                 List<Error> errors = errorHandler.getErrorList();
                 for (Error error : errors) {
-                    System.out.println("\t" + error.toString());
+                    System.out.println(" ,  " + error.toString());
                 }
             }
         }

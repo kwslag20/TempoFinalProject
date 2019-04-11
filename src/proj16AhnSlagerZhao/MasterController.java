@@ -20,6 +20,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.event.Event;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.awt.Desktop;
@@ -172,6 +173,8 @@ public class MasterController {
      */
     @FXML public void handleCompile(Event e) throws InterruptedException{
         this.toolBarController.handleCompile(e, errorHandler);
+        File file = new File(this.fileController.getFilePath().replace("btm", "asm"));
+        this.fileController.handleNew(file);
     }
 
     /**
