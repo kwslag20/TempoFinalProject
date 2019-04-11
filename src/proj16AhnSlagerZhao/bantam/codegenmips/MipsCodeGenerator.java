@@ -329,64 +329,53 @@ public class MipsCodeGenerator {
      * Method for generating a single Dispatch Table entry
      *
      * @param className
-     * @param methodClassMap
+     * @param methodAndClassMap
      * @param methodNameList
      * @return the current list of method names so that it can be provided again as a parameter
      */
-    private ArrayList<String> genDispatchTable(String className, LinkedHashMap<String, String> methodClassMap, ArrayList<String> methodNameList){
-
-        MemberList members;
+    private ArrayList<String> genDispatchTable(String className, LinkedHashMap<String, String> methodAndClassMap, ArrayList<String> methodNameList){
+        MemberList membersList;
         String methodName;
-        ClassTreeNode curNode;
-        Map classMap = this.root.getClassMap();
-
         String curName;
+        ClassTreeNode curClassTreeNode;
+        Map curClassMap = this.root.getClassMap();
+        curClassTreeNode =  (ClassTreeNode)curClassMap.get(className);
 
-            curNode =  (ClassTreeNode)classMap.get(className);
-
-            this.assemblySupport.genLabel("\n"+className+"_dispatch_table");
-            while (curNode != null) {
-
-                curName = curNode.getName();
-
-                // get each one's methods & fields (Members)
-                members = curNode.getASTNode().getMemberList();
-
-                int numMems = members.getSize();
-
-                // loop backwards through the members to add them in the order declared in .btm file
-                for (int i = numMems-1; i >= 0; i--) {
-
-                    // get current member
-                    Member member = (Member)members.get(i);
-
-                    // if it's a method
+            this.assemblySupport.genLabel("\n"+className+"_dispatch_table"); // gens the label itself
+            while (curClassTreeNode != null) { // loops through until the curClassTreeNode is found to be null
+                curName = curClassTreeNode.getName();
+                membersList = curClassTreeNode.getASTNode().getMemberList(); //
+                int memberCount = membersList.getSize();
+                // loops backwards: Methods from classes higher in the class hierarchy tree
+                // (i.e., closer to Object) should appear earlier in the dispatch table
+                for (int i = memberCount-1; i >= 0; i--) {
+                    Member member = (Member)membersList.get(i);
                     if (member instanceof Method) {
-                        methodName = ((Method) member).getName();   // save method name
+                        methodName = ((Method) member).getName();
 
-                        if (methodClassMap.containsKey(methodName)) {   // if method already declared
-                            methodClassMap.remove(methodName);  // remove existing declaration
-                            methodClassMap.put(methodName, className);  // add declaration
+                        // checks if the map already contains the methodName key
+                        if (methodAndClassMap.containsKey(methodName)) {
+                            methodAndClassMap.remove(methodName); // removes it
+                            methodAndClassMap.put(methodName, className); // repopulates map
                         }
-                        else {  // method is not already declared
-                            methodClassMap.put(methodName, curName);   // add new declaration
+                        else {
+                            // populates the map itself
+                            methodAndClassMap.put(methodName, curName);
                         }
                     }
                 }
-                curNode = curNode.getParent();    // reset node
+                curClassTreeNode = curClassTreeNode.getParent(); // grabs the parent to reset
             }
 
-            // save list of keys
-            methodNameList = new ArrayList<>(methodClassMap.keySet());
+            methodNameList = new ArrayList<>(methodAndClassMap.keySet());
 
-            // loop backwards through list of method keys to write in order declared in file
+            // loops backwards for same purpose as above
             for (int i = methodNameList.size()-1; i >= 0; i--) {
-
-                methodName = methodNameList.get(i);
-                curName = methodClassMap.get(methodName);
-                this.assemblySupport.genWord(curName+"."+methodName); // pop & write value of stack
+                methodName = methodNameList.get(i); // gets the current index of the methodName from the list
+                curName = methodAndClassMap.get(methodName); // sets the current name
+                this.assemblySupport.genWord(curName+"."+methodName); // generates the word
             }
-            methodClassMap.clear();
+            methodAndClassMap.clear();
         return methodNameList;
 
     }
