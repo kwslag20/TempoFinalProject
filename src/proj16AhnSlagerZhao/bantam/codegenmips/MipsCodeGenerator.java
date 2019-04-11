@@ -26,10 +26,7 @@
 
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
-import proj16AhnSlagerZhao.bantam.ast.Field;
-import proj16AhnSlagerZhao.bantam.ast.Member;
-import proj16AhnSlagerZhao.bantam.ast.MemberList;
-import proj16AhnSlagerZhao.bantam.ast.Program;
+import proj16AhnSlagerZhao.bantam.ast.*;
 import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.util.CompilationException;
 import proj16AhnSlagerZhao.bantam.util.Error;
@@ -210,7 +207,7 @@ public class MipsCodeGenerator
             assemblySupport.genLabel("class_name_" + i);
         }
     }
-    public void genObjectTemplate(){
+    private void genObjectTemplate(){
         assemblySupport.genLabel("Object_template");
         assemblySupport.genWord("0");
         assemblySupport.genWord("12");
@@ -244,8 +241,54 @@ public class MipsCodeGenerator
         }
     }
 
+    /**
+     * Generates the dispatch table for the given class, and map of pre-existing method
+     * names.
+     * @param curClass    the class to make the table for
+     * @param methodsList     the map of classes to lists of their method names
+     */
+    private void generateDispatchTable(Class_ curClass,
+                                       Map<Class_, List<String>> methodsList) {
+
+        Class_ parentClass = null;
+        // if haven't done parent yet, do parent first
+        if (curClass.getParent() != null) {
+            parentClass = root.lookupClass(curClass.getParent()).getASTNode();
+            if (methodsList.containsKey(parentClass) == false) {
+                generateDispatchTable(parentClass, methodsList);
+            }
+        }
+
+        List<String> currentDispatchTable;
+        if (parentClass != null) {
+            // copy the dispatch table of the parent
+            currentDispatchTable = new ArrayList<>(methodsList.get(parentClass));
+        } else {
+            currentDispatchTable = new ArrayList<>();
+        }
+        assemblySupport.genLabel(curClass.getName() + "_dispatch_table");
+        for (Object o : curClass.getMemberList()) {
+            // if its a method then we'll actually do things
+            if (o instanceof Method) {
+                Method curMethod = (Method) o;
+                for (String str : currentDispatchTable){
+                    //TODO HERE
+                    if (Objects.equals(str.substring(str.indexOf(".")+1), curMethod.getName())) {
+                        str = curClass.getName()+"."+curMethod.getName();
+                    }
+
+                }
+            }
+        }
+        for (String str : currentDispatchTable){
+            assemblySupport.genWord(str);
+        }
+        methodsList.put(curClass, currentDispatchTable);
+    }
+
+
 
     public static void main(String[] args) {
-        // ... add testing code here ...
+
     }
 }
