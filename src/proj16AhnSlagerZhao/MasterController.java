@@ -66,6 +66,7 @@ public class MasterController {
     @FXML private Button assembleButton;
     @FXML private Button assembleAndRunButton;
     @FXML private Button stopButton;
+    @FXML private Button compileButton;
 
 
     private EditController editController;
@@ -163,6 +164,16 @@ public class MasterController {
         this.toolBarController = new ToolBarController(this.console, this.fileController);
     }
 
+
+    /**
+     *
+     * @param e
+     * @throws InterruptedException
+     */
+    @FXML public void handleCompile(Event e) throws InterruptedException{
+        this.handleScanParseAndCheck(e);
+    }
+
     /**
      * Calls toggleSingleComment from the Edit Controller
      *
@@ -196,7 +207,27 @@ public class MasterController {
 
     }
 
+    @FXML public void handleScanParseAndCheck(Event event ) throws InterruptedException {
+        this.console.clear();
+        try {
+            this.fileController.handleAnalyze(event);
+        } catch (CompilationException e) {
+            this.console.writeLine(e.toString() + "\n", "ERROR");
 
+            return;
+        }
+
+        List<Error> scanningErrors = fileController.getAnalysisErrors();
+
+        if (scanningErrors != null) {
+
+            errorHelper(scanningErrors);
+        }
+        else{
+            this.console.writeLine("Parse of file was successful.", "CONS");
+
+        }
+    }
 
     /**
      * handles the refactoring of a class

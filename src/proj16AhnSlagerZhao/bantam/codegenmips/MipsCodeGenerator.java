@@ -239,6 +239,8 @@ public class MipsCodeGenerator
             }
         }
     }
+
+
     public static void main(String[] args) {
         // ... add testing code here ...
     }

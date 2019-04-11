@@ -106,6 +106,7 @@
         <Button fx:id="assembleButton" onAction="#handleAssemble" text="Assemble"/>
         <Button fx:id="assembleAndRunButton" onAction="#handleAssembleAndRun" text="Assemble And Run"/>
         <Button fx:id="stopButton" onAction="#handleStop" text="Stop"/>
+        <Button fx:id="compileButton" onAction="#handleCompile" text="Compile"/>
         <TextField fx:id="findTextEntry" promptText="Find"/>
         <Button fx:id="findButton" onAction="#handleFindText" text="Find"/>
         <Button fx:id="findPrevBtn" onAction="#handleHighlightPrevMatch" text="Previous"/>
