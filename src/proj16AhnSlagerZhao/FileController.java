@@ -38,8 +38,14 @@ import javafx.stage.Window;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
+import proj16AhnSlagerZhao.bantam.ast.Program;
 import proj16AhnSlagerZhao.bantam.lexer.Scanner;
+import proj16AhnSlagerZhao.bantam.lexer.Token;
 import proj16AhnSlagerZhao.bantam.parser.Parser;
+import proj16AhnSlagerZhao.bantam.semant.SemanticAnalyzer;
+import proj16AhnSlagerZhao.bantam.treedrawer.Drawer;
+import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
+import proj16AhnSlagerZhao.bantam.util.CompilationException;
 import proj16AhnSlagerZhao.bantam.util.Error;
 import proj16AhnSlagerZhao.bantam.util.ErrorHandler;
 
@@ -145,9 +151,7 @@ public class FileController {
         if (file != null){
             handleNew(file);
         }
-
     }
-
 
     /**
      * Handler for the "Close" menu item in the "File" menu.
@@ -267,6 +271,36 @@ public class FileController {
         }
     }
 
+    /**
+     * Creates a pop-up window which allows the user to select whether they wish to save
+     * the current file or not.
+     * Used by handleClose.
+     *
+     * @param event the tab closing event that may be consumed
+     */
+    private String askSaveAndScan(Event event) {
+        ShowSaveOptionAlert saveOptions = new ShowSaveOptionAlert();
+        Optional<ButtonType> result = saveOptions.getUserSaveDecision();
+
+        if (result.isPresent()) {
+            if (result.get() == saveOptions.getCancelButton()) {
+                event.consume();
+                return "cancel";
+            }
+            else if (result.get() == saveOptions.getYesButton()){
+                boolean saved = this.handleSave();
+                if (saved) return "yes";
+                event.consume();
+                return null;
+            }
+            else {
+                event.consume();
+                return "no";
+            }
+        }
+        return null;
+    }
+
 
     /**
      * Saves the text present in the current tab to a given filename.
@@ -296,6 +330,94 @@ public class FileController {
         }
 
         this.javaTabPane.updateTabSavedStatus(curTab, true);
+    }
+
+    /**
+     * this method is called when the Scan button is pressed
+     * if the file is not saved it prompts the user to save before scanning
+     * it will scan the file and display the tokens in a new tab
+     * @param event press of the Scan button triggering the handleScan method
+     */
+    public void handleScan(Event event) {
+        scanOrParseHelper(event, "SCAN_ONLY" );
+
+    }
+
+    /**
+     * this method is called when the Scan&Parse button is pressed
+     * if the file is not saved it prompts the user to save before scanning
+     * it will scan and parse the file and display an AST if parse
+     * was successful
+     * @param event press of the Scan button triggering the handleScan method
+     */
+    public void handleScanAndParse (Event event) {
+
+        scanOrParseHelper(event, "SCAN_AND_PARSE" );
+
+
+    }
+
+    /**
+     * Assists with calling just scan or scanning and parsing the
+     * file
+     * @param event press of the Scan button triggering the handleScan and Parse method
+     * @param scanOrParse string "SCAN_ONLY" or "SCAN_AND_PARSE" or "PARSE_NO_TREE_DRAWN"
+     */
+    public Program scanOrParseHelper(Event event, String scanOrParse ){
+        JavaOrMipsTab curTab = (JavaOrMipsTab) this.javaTabPane.getSelectionModel().getSelectedItem();
+
+
+        if (this.javaTabPane.tabIsSaved(curTab)) {
+            String filename = this.tabFilepathMap.get(curTab);
+            try {
+                this.errorHandler = new ErrorHandler();
+                if(scanOrParse.equals("SCAN_ONLY")) {
+                    this.scanner = new Scanner(filename, this.errorHandler);
+                }
+                else{
+                    this.parser = new Parser(this.errorHandler);
+                }
+
+            }
+            catch(CompilationException e){
+                throw e;
+            }
+
+            if(scanOrParse.equals("SCAN_ONLY")) {
+                this.handleNew(null);
+                curTab = (JavaOrMipsTab) this.javaTabPane.getSelectionModel().getSelectedItem();
+                Token nextToken;
+                while ( (nextToken = scanner.scan()).kind != Token.Kind.EOF) {
+                    curTab.getCodeArea().appendText(nextToken.toString()+"\n");
+                }
+                return null;
+            }
+
+            else{
+                Program root = this.parser.parse(filename);
+                if(scanOrParse.equals("SCAN_AND_PARSE")) {
+                    Drawer drawer = new Drawer();
+                    drawer.draw(filename, root);
+                }
+                return root;
+            }
+
+        }
+
+        String saveStatus = this.askSaveAndScan(event);
+        if (saveStatus == "cancel") {
+            this.scanner = null;
+            return null;
+        }
+        else if (saveStatus == "no") {
+            if (tabFilepathMap.get(curTab) == null) {
+                return null;
+            }
+        }
+        else if (saveStatus == "yes"){
+            scanOrParseHelper(event, scanOrParse);
+        }
+        return null;
     }
 
     /**
@@ -332,5 +454,28 @@ public class FileController {
             return booleanProperty;
 
         }
+    }
+
+    /**
+     * Scans and Parses and then checks the program using the semantic analyzer
+     * @param event
+     * @return
+     */
+    public ClassTreeNode handleAnalyze(Event event){
+        Program program;
+        try{
+            program = scanOrParseHelper(event, "SCAN_AND_PARSE");
+        }
+        catch(CompilationException e){
+            throw e;
+        }
+        SemanticAnalyzer analyzer = new SemanticAnalyzer(errorHandler);
+        ClassTreeNode analysis = analyzer.analyze(program);
+        analysisErrors = analyzer.getErrorHandler();
+        return analysis;
+    }
+
+    public List<Error> getAnalysisErrors(){
+        return analysisErrors.getErrorList();
     }
 }
