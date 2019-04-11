@@ -176,6 +176,10 @@ public class FileController {
         }
     }
 
+    public void handleCompile(Event event) {
+
+    }
+
     /**
      * Handler for the "Save" menu item in the "File" menu.
      * If the current tab has been saved before, writes out the content to its corresponding

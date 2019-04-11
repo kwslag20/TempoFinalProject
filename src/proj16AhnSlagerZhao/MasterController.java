@@ -171,7 +171,7 @@ public class MasterController {
      * @throws InterruptedException
      */
     @FXML public void handleCompile(Event e) throws InterruptedException{
-        this.handleScanParseAndCheck(e);
+        this.toolBarController.handleCompile(e, errorHandler);
     }
 
     /**

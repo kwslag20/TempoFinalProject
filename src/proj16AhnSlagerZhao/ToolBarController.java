@@ -19,6 +19,8 @@ import java.io.*;
 
 import javafx.concurrent.Task;
 import javafx.concurrent.Service;
+import proj16AhnSlagerZhao.bantam.codegenmips.MipsCodeGenerator;
+import proj16AhnSlagerZhao.bantam.util.ErrorHandler;
 
 /**
  * ToolbarController handles Toolbar related actions.
@@ -169,6 +171,12 @@ public class ToolBarController {
             });
             return false;
         }
+    }
+
+    public void handleCompile(Event event, ErrorHandler handler) {
+        MipsCodeGenerator mipsCodeGenerator = new MipsCodeGenerator(handler, false, false);
+        String[] files = new String[]{this.fileController.getFilePath()};
+        mipsCodeGenerator.main(files);
     }
 
     /**
