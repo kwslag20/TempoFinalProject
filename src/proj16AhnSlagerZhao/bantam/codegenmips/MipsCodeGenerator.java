@@ -202,8 +202,10 @@ public class MipsCodeGenerator {
         Set<Map.Entry<String, String>> stringEntrySet = stringMap.entrySet();
         Iterator<Map.Entry<String, String>> stringIterator = stringEntrySet.iterator();
         while (stringIterator.hasNext()) {
-            String label = stringIterator.next().getValue();
-            String str = stringIterator.next().getKey();
+            Map.Entry<String, String> curItem = stringIterator.next();
+            String label = curItem.getKey();
+            String str = curItem.getValue();
+            str = str.substring(1, str.length() - 1);
             generateStringConstantSupport(label, str);
         }
         Set<Map.Entry<String, String>> builtInEntrySet = this.builtIns.entrySet();
@@ -294,6 +296,7 @@ public class MipsCodeGenerator {
                 assemblySupport.genWord("0");
             }
         }
+        this.out.println("\n");
     }
 
     /**
@@ -410,7 +413,7 @@ public class MipsCodeGenerator {
 
         //generates the global dispatch tables for the built in classes
         for(Map.Entry<String,String> builtIn : this.builtIns.entrySet()){
-            this.assemblySupport.genGlobal(builtIn.getKey() + "template");
+            this.assemblySupport.genGlobal(builtIn.getKey() + "_template");
         }
 
         //executes all of the necessary dispatch table creating
@@ -418,7 +421,6 @@ public class MipsCodeGenerator {
             methodNameList = genDispatchTable(className,methodClassMap, methodNameList);
 
         }
-        this.out.print("\n");
     }
 
     /*
@@ -441,8 +443,8 @@ public class MipsCodeGenerator {
                 System.out.println("MIPS code generation was successful.");
             } catch (CompilationException ex) {
                 System.out.println("MIPS code generation was not successful:");
-                List<Error> errors = errorHandler.getErrorList();
-                for (Error error : errors) {
+                List<Error> errorList = errorHandler.getErrorList();
+                for (Error error : errorList) {
                     System.out.println(" ,  " + error.toString());
                 }
             }

@@ -2,6 +2,7 @@ class Main{
 	int testInteger; 
 	int numVar;
     	int x = 4; // x comment
+	String j = "hi";
 	void main(){
 		numVar = new int[4];
 		testInteger = 8;
