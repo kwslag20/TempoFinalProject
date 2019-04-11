@@ -88,6 +88,11 @@ public class MipsCodeGenerator {
     private ErrorHandler errorHandler;
 
     /**
+     * hash map
+     */
+    private HashMap<String, ArrayList<String>> altMethodsMap;
+
+    /**
      * outfile
      */
     private String outFile;
@@ -166,6 +171,8 @@ public class MipsCodeGenerator {
         this.genClassTableNames();
 
         this.genObjectTemplate();
+
+        this.altMethodsMap = new HashMap<>();
 
         MethodsVisitor methodsVisitor = new MethodsVisitor();
         //HashMap<String, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
@@ -287,24 +294,19 @@ public class MipsCodeGenerator {
 
     }
 
-    private void generateDispatchTables(){
-        Map classMap = this.root.getClassMap();
-        ArrayList<String> classList = new ArrayList<>();
-        classList.addAll(this.root.getClassMap().keySet());
 
-        List<String> methodNameList;
+    private ArrayList<String> generateDispatchTable(String className, LinkedHashMap<String, String> methodClassMap, ArrayList<String> methodNameList){
 
-        ClassTreeNode curNode;
-        LinkedHashMap<String, String> methodClassMap = new LinkedHashMap();
         MemberList members;
         String methodName;
+        ClassTreeNode curNode;
+        Map classMap = this.root.getClassMap();
 
         String curName;
-        for (String s : classList) {
 
-            curNode =  (ClassTreeNode)classMap.get(s);
+            curNode =  (ClassTreeNode)classMap.get(className);
 
-            this.assemblySupport.genLabel("\n"+s+"_dispatch_table");
+            this.assemblySupport.genLabel("\n"+className+"_dispatch_table");
             while (curNode != null) {
 
                 curName = curNode.getName();
@@ -326,7 +328,7 @@ public class MipsCodeGenerator {
 
                         if (methodClassMap.containsKey(methodName)) {   // if method already declared
                             methodClassMap.remove(methodName);  // remove existing declaration
-                            methodClassMap.put(methodName, s);  // add declaration
+                            methodClassMap.put(methodName, className);  // add declaration
                         }
                         else {  // method is not already declared
                             methodClassMap.put(methodName, curName);   // add new declaration
@@ -347,62 +349,35 @@ public class MipsCodeGenerator {
                 this.assemblySupport.genWord(curName+"."+methodName); // pop & write value of stack
             }
             methodClassMap.clear();
-        }
-        this.out.println("\n");
+        return methodNameList;
+
     }
 
-    /**
-     * Generates the dispatch table for the given class, and map of pre-existing method
-     * names.
-     * @param curClass    the class to make the table for
-     * @param methodsList     the map of classes to lists of their method names
-     */
-    private void genDispatchTable(Class_ curClass, Map<Class_, List<String>> methodsList) {
+    private void generateDispatchTables(){
+        ArrayList<String> classList = new ArrayList<>();
+        classList.addAll(this.root.getClassMap().keySet());
 
-        //Class_ parentClass = null;
-//        if (curClass.getParent() != null) {
-//            if(this.root.lookupClass(curClass.getParent()).getASTNode() != null) {
-//                parentClass = this.root.lookupClass(curClass.getParent()).getASTNode();
-//            }
-//            if (methodsList.containsKey(parentClass) == false) {
-//                genDispatchTable(parentClass, methodsList);
-//            }
-//        }
+        ArrayList<String> methodNameList = new ArrayList<>();
+        LinkedHashMap<String, String> methodClassMap = new LinkedHashMap();
 
-        List<String> currentDispatchTable;
-        //if (parentClass != null) {
-            currentDispatchTable = new ArrayList<>(methodsList.get(curClass));
-        //} else {
-            //currentDispatchTable = new ArrayList<>();
-        //}
-        assemblySupport.genLabel(curClass.getName() + "_dispatch_table");
-        for (Object o : curClass.getMemberList()) {
-            if (o instanceof Method) {
-                Method curMethod = (Method) o;
-                for (String str : currentDispatchTable){
-                    //TODO HERE
-                    if (Objects.equals(str.substring(str.indexOf(".")+1), curMethod.getName())) {
-                        currentDispatchTable.set(currentDispatchTable.indexOf(str), curClass.getName()+"."+curMethod.getName());
-                    }
-                }
-            }
+
+        MethodsVisitor methodsVisitor = new MethodsVisitor();
+        Map<Class_, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
+        this.assemblySupport.genComment("Dispatch Tables:");
+
+        for(Map.Entry<Class_, ArrayList<String>> entry : methodsMap.entrySet()){
+            this.assemblySupport.genGlobal(entry.getKey() + "_dispatch_table");
         }
-        for (String str : currentDispatchTable){
-            assemblySupport.genWord(str);
+
+        for(String className : classList){
+            methodNameList = generateDispatchTable(className,methodClassMap, methodNameList);
+
         }
-        methodsList.put(curClass, currentDispatchTable);
+
+        this.out.print("\n");
+
     }
 
-    /**
-     * Generates the dispatch tables for all the classes in the class tree.
-     */
-    private void genDispatchTables(){
-        // order matters here, do parents first
-        Map<Class_, List<String>> methodNameListMap = new HashMap<>();
-        for(ClassTreeNode node : this.root.getClassMap().values()){
-            genDispatchTable(node.getASTNode(), methodNameListMap);
-        }
-    }
 
 
 
