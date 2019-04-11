@@ -151,9 +151,7 @@ public class FileController {
         if (file != null){
             handleNew(file);
         }
-
     }
-
 
     /**
      * Handler for the "Close" menu item in the "File" menu.

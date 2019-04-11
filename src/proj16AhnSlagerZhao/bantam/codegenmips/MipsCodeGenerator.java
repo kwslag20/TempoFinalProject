@@ -148,6 +148,10 @@ public class MipsCodeGenerator
         }
 
         this.genStringConstants(stringMap);
+
+        this.genClassTableNames();
+
+        this.genObjectTemplate();
         // STEP 3 GENERATE STRING CONSTANTS
 
     }
