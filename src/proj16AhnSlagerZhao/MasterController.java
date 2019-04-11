@@ -119,6 +119,11 @@ public class MasterController {
         this.fileController.setContextMenuController(this.contextMenuController);
     }
 
+    /**
+     * method that handles just assembly of a file
+     * @param event
+     * @throws InterruptedException
+     */
     @FXML public void handleAssemble(Event event) throws InterruptedException{
         this.console.clear();
         try {
@@ -139,6 +144,11 @@ public class MasterController {
         this.toolBarController = new ToolBarController(this.console, this.fileController);
     }
 
+    /**
+     * Method to handle the assembly and running of a bantam file
+     * @param event
+     * @throws InterruptedException
+     */
     @FXML public void handleAssembleAndRun(Event event) throws InterruptedException{
         this.console.clear();
         try {
@@ -167,7 +177,7 @@ public class MasterController {
 
 
     /**
-     *
+     * method to handle the creation of a file to MIPS, writes it to a new tab with the .asm suffix
      * @param e
      * @throws InterruptedException
      */
@@ -201,6 +211,10 @@ public class MasterController {
     }
 
 
+    /**
+     * error helper method to find illegal tokens and report to them to the console
+     * @param scanningErrors
+     */
     private void errorHelper(List<Error> scanningErrors){
         for (Error e : scanningErrors)
             this.console.writeLine(e.toString() + "\n", "ERROR");
@@ -210,6 +224,12 @@ public class MasterController {
 
     }
 
+
+    /**
+     * Method to handle the scanning, parsing, and checking
+     * @param event
+     * @throws InterruptedException
+     */
     @FXML public void handleScanParseAndCheck(Event event ) throws InterruptedException {
         this.console.clear();
         try {

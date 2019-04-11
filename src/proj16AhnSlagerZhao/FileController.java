@@ -176,9 +176,6 @@ public class FileController {
         }
     }
 
-    public void handleCompile(Event event) {
-
-    }
 
     /**
      * Handler for the "Save" menu item in the "File" menu.
@@ -447,6 +444,11 @@ public class FileController {
         javaTabPane.removeTab(curTab);
     }
 
+
+    /**
+     * helper method to determine if a file is a mips file
+     * @return true if it is a mips file
+     */
     public BooleanProperty isMipsFile(){
         if(this.extension.equals(".s") || this.extension.equals(".asm")){
             BooleanProperty booleanProperty = new SimpleBooleanProperty(false);
