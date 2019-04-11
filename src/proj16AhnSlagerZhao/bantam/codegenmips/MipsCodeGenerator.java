@@ -46,8 +46,7 @@ import java.util.*;
  * <p/>
  * This class is incomplete and will need to be implemented by the student.
  */
-public class MipsCodeGenerator
-{
+public class MipsCodeGenerator {
     /**
      * Root of the class hierarchy tree
      */
@@ -97,8 +96,8 @@ public class MipsCodeGenerator
      * MipsCodeGenerator constructor
      *
      * @param errorHandler ErrorHandler to record all errors that occur
-     * @param gc      boolean indicating whether garbage collection is enabled
-     * @param opt     boolean indicating whether optimization is enabled
+     * @param gc           boolean indicating whether garbage collection is enabled
+     * @param opt          boolean indicating whether optimization is enabled
      */
     public MipsCodeGenerator(ErrorHandler errorHandler, boolean gc, boolean opt) {
         this.gc = gc;
@@ -152,10 +151,9 @@ public class MipsCodeGenerator
 
         // STEP 2 GENERATE DATA FOR GC
         this.assemblySupport.genLabel("gc_flag");
-        if (this.gc){
+        if (this.gc) {
             this.assemblySupport.genWord("1");
-        }
-        else{
+        } else {
             this.assemblySupport.genWord("0");
         }
 
@@ -171,7 +169,7 @@ public class MipsCodeGenerator
 
         MethodsVisitor methodsVisitor = new MethodsVisitor();
         //HashMap<String, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
-        this.genDispatchTables();
+        this.generateDispatchTables();
 
         this.assemblySupport.genTextStart();
         this.genStubs();
@@ -180,9 +178,10 @@ public class MipsCodeGenerator
 
     /**
      * a method to add a string constant object to a map to keep track of them
+     *
      * @param stringMap map containing the string objects
      */
-    private void genStringConstants(Map<String,String> stringMap){
+    private void genStringConstants(Map<String, String> stringMap) {
         Map<String, String> builtIns = new HashMap<>();
         builtIns.put("Object", "class_name_0");
         builtIns.put("String", "class_name_1");
@@ -190,45 +189,47 @@ public class MipsCodeGenerator
         builtIns.put("Main", "class_name_3");
         builtIns.put("TextIO", "class_name_4");
 
-        Set<Map.Entry<String,String>> stringEntrySet = stringMap.entrySet();
-        Iterator<Map.Entry<String,String>> stringIterator = stringEntrySet.iterator();
-        while(stringIterator.hasNext()){
+        Set<Map.Entry<String, String>> stringEntrySet = stringMap.entrySet();
+        Iterator<Map.Entry<String, String>> stringIterator = stringEntrySet.iterator();
+        while (stringIterator.hasNext()) {
             String label = stringIterator.next().getValue();
             String str = stringIterator.next().getKey();
-            generateStringConstantSupport(label,str);
+            generateStringConstantSupport(label, str);
         }
-        Set<Map.Entry<String,String>> builtInEntrySet = builtIns.entrySet();
-        Iterator<Map.Entry<String,String>> builtInIterator = builtInEntrySet.iterator();
+        Set<Map.Entry<String, String>> builtInEntrySet = builtIns.entrySet();
+        Iterator<Map.Entry<String, String>> builtInIterator = builtInEntrySet.iterator();
         Set<String> filenames = new HashSet<>();
         int fileNum = 0;
-        while(builtInIterator.hasNext()){
-            Map.Entry<String,String> current = builtInIterator.next();
+        while (builtInIterator.hasNext()) {
+            Map.Entry<String, String> current = builtInIterator.next();
             String label = current.getValue();
             String str = current.getKey();
-            generateStringConstantSupport(label,str);
+            generateStringConstantSupport(label, str);
         }
         generateStringConstantSupport("label0", this.outFile);
+        this.out.println("\n");
 
     }
 
-    private void generateStringConstantSupport(String label, String str){
+    private void generateStringConstantSupport(String label, String str) {
         assemblySupport.genLabel(label);
         assemblySupport.genWord("1");
-        assemblySupport.genWord(Integer.toString(16 + (int)Math.ceil((str.length() + 1)/4)*4));
+        assemblySupport.genWord(Integer.toString(16 + (int) Math.ceil((str.length() + 1) / 4) * 4));
         assemblySupport.genWord("String_dispatch_table");
         assemblySupport.genWord(Integer.toString(str.length()));
         assemblySupport.genAscii(str);
     }
 
 
-    private void genClassTableNames(){
+    private void genClassTableNames() {
         assemblySupport.genLabel("class_name_table");
         int numClasses = this.root.getClassMap().values().size();
-        for (int i = 0 ; i < numClasses ; i++){
+        for (int i = 0; i < numClasses; i++) {
             assemblySupport.genWord("class_name_" + i);
         }
     }
-    private void genObjectTemplate(){
+
+    private void genObjectTemplate() {
 
         int numClasses = this.root.getClassMap().values().size();
         String className;
@@ -237,25 +238,25 @@ public class MipsCodeGenerator
         List<Field> fieldList;
         ArrayList<String> classList = new ArrayList<>();
         classList.addAll(this.root.getClassMap().keySet());
-        for (int i = 0 ; i < numClasses ; i++){
+        for (int i = 0; i < numClasses; i++) {
             className = classList.get(i);
             System.out.println(className);
             classTreeNode = this.root.getClassMap().get(className);
             assemblySupport.genLabel(className + "_template");
             memberList = classTreeNode.getASTNode().getMemberList();
             fieldList = new ArrayList<Field>();
-            for(Iterator iter = memberList.iterator(); iter.hasNext();){
-                Member member = (Member)iter.next();
-                if(member instanceof Field) {
-                    fieldList.add((Field)member);
+            for (Iterator iter = memberList.iterator(); iter.hasNext(); ) {
+                Member member = (Member) iter.next();
+                if (member instanceof Field) {
+                    fieldList.add((Field) member);
                 }
             }
 
-            assemblySupport.genWord((i+1)+"");
-            assemblySupport.genWord(12+fieldList.size()*4+"");
-            assemblySupport.genWord(className+"_dispatch_table");
-            for(Iterator iter = fieldList.iterator();iter.hasNext();){
-                Field field = (Field)iter.next();
+            assemblySupport.genWord((i + 1) + "");
+            assemblySupport.genWord(12 + fieldList.size() * 4 + "");
+            assemblySupport.genWord(className + "_dispatch_table");
+            for (Iterator iter = fieldList.iterator(); iter.hasNext(); ) {
+                Field field = (Field) iter.next();
                 assemblySupport.genWord("0");
             }
         }
@@ -274,16 +275,80 @@ public class MipsCodeGenerator
         this.out.print("\n");
 
         MethodsVisitor methodsVisitor = new MethodsVisitor();
-        Map<Class_,ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
+        Map<Class_, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
 
-        for (Map.Entry<Class_,ArrayList<String>> methodList : methodsMap.entrySet()) {
-            for(String methodName: methodList.getValue()){
+        for (Map.Entry<Class_, ArrayList<String>> methodList : methodsMap.entrySet()) {
+            for (String methodName : methodList.getValue()) {
                 assemblySupport.genLabel(methodList.getKey().getName() + "." + methodName);
             }
         }
 
         this.out.println("\njr $ra");
 
+    }
+
+    private void generateDispatchTables(){
+        Map classMap = this.root.getClassMap();
+        ArrayList<String> classList = new ArrayList<>();
+        classList.addAll(this.root.getClassMap().keySet());
+
+        List<String> methodNameList;
+
+        ClassTreeNode curNode;
+        LinkedHashMap<String, String> methodClassMap = new LinkedHashMap();
+        MemberList members;
+        String methodName;
+
+        String curName;
+        for (String s : classList) {
+
+            curNode =  (ClassTreeNode)classMap.get(s);
+
+            this.assemblySupport.genLabel("\n"+s+"_dispatch_table");
+            while (curNode != null) {
+
+                curName = curNode.getName();
+
+                // get each one's methods & fields (Members)
+                members = curNode.getASTNode().getMemberList();
+
+                int numMems = members.getSize();
+
+                // loop backwards through the members to add them in the order declared in .btm file
+                for (int i = numMems-1; i >= 0; i--) {
+
+                    // get current member
+                    Member member = (Member)members.get(i);
+
+                    // if it's a method
+                    if (member instanceof Method) {
+                        methodName = ((Method) member).getName();   // save method name
+
+                        if (methodClassMap.containsKey(methodName)) {   // if method already declared
+                            methodClassMap.remove(methodName);  // remove existing declaration
+                            methodClassMap.put(methodName, s);  // add declaration
+                        }
+                        else {  // method is not already declared
+                            methodClassMap.put(methodName, curName);   // add new declaration
+                        }
+                    }
+                }
+                curNode = curNode.getParent();    // reset node
+            }
+
+            // save list of keys
+            methodNameList = new ArrayList<>(methodClassMap.keySet());
+
+            // loop backwards through list of method keys to write in order declared in file
+            for (int i = methodNameList.size()-1; i >= 0; i--) {
+
+                methodName = methodNameList.get(i);
+                curName = methodClassMap.get(methodName);
+                this.assemblySupport.genWord(curName+"."+methodName); // pop & write value of stack
+            }
+            methodClassMap.clear();
+        }
+        this.out.println("\n");
     }
 
     /**
