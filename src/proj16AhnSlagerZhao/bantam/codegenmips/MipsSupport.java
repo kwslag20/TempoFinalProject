@@ -848,6 +848,8 @@ public class MipsSupport {
     }
 
     /**
+     *
+     *
      * Generate a direct call
      *
      * @param label label string
