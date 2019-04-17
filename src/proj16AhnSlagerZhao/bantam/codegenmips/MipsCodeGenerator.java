@@ -24,6 +24,16 @@
    PARTICULAR PURPOSE. 
 */
 
+
+/*
+ * File: MipsCodeGenerator.java
+ * Names: Kevin Ahn, Kyle Slager, and Danqing Zhou
+ * Class: CS461
+ * Project 17
+ * Date: April 17, 2019
+ */
+
+
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
 import proj16AhnSlagerZhao.bantam.ast.*;
@@ -143,7 +153,7 @@ public class MipsCodeGenerator {
         this.builtIns.put("Object", "class_name_0");
         this.builtIns.put("String", "class_name_1");
         this.builtIns.put("Sys", "class_name_2");
-        this.builtIns.put("Main", "class_name_3");
+        //this.builtIns.put("Main", "class_name_3");
         this.builtIns.put("TextIO", "class_name_4");
 
         //uses the StringConstantsVisitor to create a map of string constants
@@ -161,7 +171,11 @@ public class MipsCodeGenerator {
             throw new CompilationException("Couldn't write to output file.");
         }
 
-        // add code here...
+        this.assemblySupport.genComment("Authors: Kevin Ahn, Kyle Slager, Danqing Zhou");
+        this.assemblySupport.genComment("Date: Apr 2019");
+        String correctedFile = outFile.replace("asm", "btm");
+        correctedFile = correctedFile.substring(correctedFile.lastIndexOf("/")+1);
+        this.assemblySupport.genComment("Compiled from " + correctedFile);
         // STEP 1 START THE DATA SECTION
         this.assemblySupport.genDataStart();
 
@@ -233,7 +247,8 @@ public class MipsCodeGenerator {
         assemblySupport.genLabel(label);
         assemblySupport.genWord("1");
         //determines the necessary length of the word
-        assemblySupport.genWord(Integer.toString(16 + (int) Math.ceil((str.length() + 1) / 4) * 4));
+        //assemblySupport.genWord(Integer.toString(16 + (int) Math.ceil((str.length() + 1) / 4.0) * 4));
+        assemblySupport.genWord(Integer.toString(str.length() + (4 - str.length()%4)%4));
         assemblySupport.genWord("String_dispatch_table");
         assemblySupport.genWord(Integer.toString(str.length()));
         assemblySupport.genAscii(str);
@@ -270,7 +285,7 @@ public class MipsCodeGenerator {
         String className;
         ClassTreeNode classTreeNode;
         MemberList memberList;
-        List<Field> fieldList;
+        int fieldListSize = 0;
         ArrayList<String> classList = new ArrayList<>();
         classList.addAll(this.root.getClassMap().keySet());
         //loops through all the classes and generates an object template
@@ -279,20 +294,18 @@ public class MipsCodeGenerator {
             classTreeNode = this.root.getClassMap().get(className);
             assemblySupport.genLabel(className + "_template");
             memberList = classTreeNode.getASTNode().getMemberList();
-            fieldList = new ArrayList<>();
             for (Iterator iter = memberList.iterator(); iter.hasNext(); ) {
                 Member member = (Member) iter.next();
                 if (member instanceof Field) {
-                    fieldList.add((Field) member);
+                    fieldListSize += 1;
                 }
             }
 
             assemblySupport.genWord((i + 1) + "");
-            assemblySupport.genWord(12 + fieldList.size() * 4 + "");
+            assemblySupport.genWord(12 + fieldListSize * 4 + "");
             assemblySupport.genWord(className + "_dispatch_table");
             //iterates through the fieldList created by the previous for loop, currently sets value to 0
-            for (Iterator iter = fieldList.iterator(); iter.hasNext(); ) {
-                Field field = (Field) iter.next();
+            for (int j = 0; j < fieldListSize; j++) {
                 assemblySupport.genWord("0");
             }
         }
@@ -348,8 +361,8 @@ public class MipsCodeGenerator {
                 int memberCount = membersList.getSize();
                 // loops backwards: Methods from classes higher in the class hierarchy tree
                 // (i.e., closer to Object) should appear earlier in the dispatch table
-                for (int i = memberCount-1; i >= 0; i--) {
-                    Member member = (Member)membersList.get(i);
+                for (int i = 0; i < memberCount; i++) {
+                    Member member = (Member)membersList.get(memberCount - 1 - i);
                     if (member instanceof Method) {
                         methodName = ((Method) member).getName();
 
@@ -370,8 +383,8 @@ public class MipsCodeGenerator {
             methodNameList = new ArrayList<>(methodAndClassMap.keySet());
 
             // loops backwards for same purpose as above
-            for (int i = methodNameList.size()-1; i >= 0; i--) {
-                methodName = methodNameList.get(i); // gets the current index of the methodName from the list
+            for (int i = 0; i < methodNameList.size(); i++) {
+                methodName = methodNameList.get(methodNameList.size() - 1 - i); // gets the current index of the methodName from the list
                 curName = methodAndClassMap.get(methodName); // sets the current name
                 this.assemblySupport.genWord(curName+"."+methodName); // generates the word
             }

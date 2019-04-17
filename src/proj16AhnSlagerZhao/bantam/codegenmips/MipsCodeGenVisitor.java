@@ -1,3 +1,11 @@
+/*
+ * File: MipsCodeGenVisitor.java
+ * Names: Kevin Ahn, Kyle Slager, and Danqing Zhou
+ * Class: CS461
+ * Project 17
+ * Date: April 17, 2019
+ */
+
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
 import org.reactfx.util.Lists;
@@ -13,7 +21,7 @@ import proj16AhnSlagerZhao.bantam.visitor.Visitor;
 
 import java.io.PrintStream;
 
-public class MipsCodeGenVisitor {
+public class MipsCodeGenVisitor extends Visitor {
 
     private MipsSupport genSupport;
     private static final String[] registers = new String[]{
@@ -69,6 +77,7 @@ public class MipsCodeGenVisitor {
      * @return result of the visit
      */
     public Object visit(Program node) {
+        node.getClassList().accept(this);
         return null;
     }
 
@@ -123,7 +132,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
-     * TODO HARD ONE
+     * TODO Danqing
      * Visit a method node
      *
      * @param node the method node
@@ -174,7 +183,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
-     * TODO HARD ONE
+     * TODO Kyle
      * Visit a declaration statement node
      *
      * @param node the declaration statement node
@@ -225,7 +234,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
-     * TODO HARD ONE
+     * TODO Kevin
      * Visit a break statement node
      *
      * @param node the break statement node
@@ -276,7 +285,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
-     * TODO HARD ONE
+     * TODO Danqing
      * Visit a dispatch expression node
      *
      * @param node the dispatch expression node
@@ -317,7 +326,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
-     * TODO HARD ONE
+     * TODO Kyle
      * Visit a cast expression node
      *
      * @param node the cast expression node
@@ -328,7 +337,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
-     * TODO HARD ONE
+     * TODO Kevin
      * Visit an assignment expression node
      *
      * @param node the assignment expression node
@@ -569,7 +578,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
-     * TODO HARD ONE
+     * TODO Kyle
      * Visit a variable expression node
      *
      * @param node the variable expression node

@@ -1,3 +1,11 @@
+/*
+ * File: MethodsVisitor.java
+ * Names: Kevin Ahn, Kyle Slager, and Danqing Zhou
+ * Class: CS461
+ * Project 17
+ * Date: April 17, 2019
+ */
+
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
 import proj16AhnSlagerZhao.bantam.ast.Class_;
@@ -47,7 +55,6 @@ public class MethodsVisitor extends Visitor {
      */
     public Object visit(Method node){
         methodsMap.get(className).add(node.getName());
-        super.visit(node);
         return null;
     }
 }
