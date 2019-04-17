@@ -68,6 +68,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
+     * TODO HARD ONE
      * Visit a method node
      *
      * @param node the method node
@@ -118,6 +119,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
+     * TODO HARD ONE
      * Visit a declaration statement node
      *
      * @param node the declaration statement node
@@ -168,6 +170,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
+     * TODO HARD ONE
      * Visit a break statement node
      *
      * @param node the break statement node
@@ -218,6 +221,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
+     * TODO HARD ONE
      * Visit a dispatch expression node
      *
      * @param node the dispatch expression node
@@ -258,6 +262,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
+     * TODO HARD ONE
      * Visit a cast expression node
      *
      * @param node the cast expression node
@@ -268,6 +273,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
+     * TODO HARD ONE
      * Visit an assignment expression node
      *
      * @param node the assignment expression node
@@ -508,6 +514,7 @@ public class MipsCodeGenVisitor {
     }
 
     /**
+     * TODO HARD ONE
      * Visit a variable expression node
      *
      * @param node the variable expression node
