@@ -1,11 +1,66 @@
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
+import org.reactfx.util.Lists;
 import proj16AhnSlagerZhao.bantam.ast.*;
 
-import java.util.Iterator;
+import java.util.*;
+
+import proj16AhnSlagerZhao.bantam.ast.*;
+import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
+import proj16AhnSlagerZhao.bantam.codegenmips.Location;
+import proj16AhnSlagerZhao.bantam.util.SymbolTable;
+import proj16AhnSlagerZhao.bantam.visitor.Visitor;
+
+import java.io.PrintStream;
 
 public class MipsCodeGenVisitor {
 
+    private MipsSupport genSupport;
+    private static final String[] registers = new String[]{
+            "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
+            "$t4","$t5","$t6","$t7","$v0","$v1"
+    };
+
+    /**
+     * constructor for the class
+     */
+    public MipsCodeGenVisitor(){
+
+    }
+
+
+    /**
+     * Method caller just before calling the method:
+     * - save on the stack any $a, $v and $t registers with info to be saved (including $a0)
+     * - compute the obj ref and temporarily push it on the stack
+     * - compute & push the params (start of the callee's stack frame)
+     * - load the obj ref into $a0
+     * - compute the location of the method to call (using $a0's dispatch table) & put it in a
+     *   register, say $t0
+     * - call method using jalr $t0
+     */
+    private void generateProlog(int numLocalVars){
+        for (String reg : registers){
+            genSupport.genAdd("$sp", "$sp", -4);
+            genSupport.genStoreWord(reg, 0,"$sp");
+        }
+        genSupport.genAdd("$fp", "$fp",-4*numLocalVars);
+    }
+
+    /**
+     * Method caller after the called method returns:
+     * - the return value, if any, is now in $v0
+     * - pop & throw away the obj ref (recall that the called method is responsible for
+     *   removing any parameters from the stack)
+     * - restore any $v, $a and $t registers that it pushed on the stack
+     */
+    private void generateEpilog(int numLocalVars){
+        genSupport.genAdd("$sp", "$sp", 4*numLocalVars);
+        for (int i = -1; i < registers.length ; i--){
+            genSupport.genLoadWord(registers[i], 0,"$sp");
+            genSupport.genAdd("$sp", "$sp", 4);
+        }
+    }
 
     /**
      * Visit a program node
