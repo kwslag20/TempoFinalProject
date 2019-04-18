@@ -45,7 +45,7 @@ public class StringConstantsVisitor extends Visitor {
         int stringNum = stringList.size();
         for(int i = 0; i < stringNum; i++){
             String strConstName = "StringConst_" + Integer.toString(i);
-            stringMap.put(strConstName, stringList.get(i));
+            stringMap.put(stringList.get(i), strConstName);
         }
         return stringMap;
     }

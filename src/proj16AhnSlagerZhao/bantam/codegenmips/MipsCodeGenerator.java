@@ -24,9 +24,22 @@
    PARTICULAR PURPOSE. 
 */
 
+
+/*
+ * File: MipsCodeGenerator.java
+ * Names: Kevin Ahn, Kyle Slager, and Danqing Zhou
+ * Class: CS461
+ * Project 17
+ * Date: April 17, 2019
+ */
+
+
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
 import proj16AhnSlagerZhao.bantam.ast.*;
+import proj16AhnSlagerZhao.bantam.parser.Parser;
+import proj16AhnSlagerZhao.bantam.semant.SemanticAnalyzer;
+import proj16AhnSlagerZhao.bantam.semant.StringConstantsVisitor;
 import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.util.CompilationException;
 import proj16AhnSlagerZhao.bantam.util.Error;
@@ -43,12 +56,16 @@ import java.util.*;
  * <p/>
  * This class is incomplete and will need to be implemented by the student.
  */
-public class MipsCodeGenerator
-{
+public class MipsCodeGenerator {
     /**
      * Root of the class hierarchy tree
      */
     private ClassTreeNode root;
+
+    /**
+     * AST node for visitor methods implemented
+     */
+    private Program ast;
 
     /**
      * Print stream for output assembly file
@@ -81,11 +98,26 @@ public class MipsCodeGenerator
     private ErrorHandler errorHandler;
 
     /**
+     * hash map
+     */
+    private HashMap<String, ArrayList<String>> altMethodsMap;
+
+    /**
+     * Built In Hash Map
+     */
+    private Map<String, String> builtIns;
+
+    /**
+     * outfile
+     */
+    private String outFile;
+
+    /**
      * MipsCodeGenerator constructor
      *
      * @param errorHandler ErrorHandler to record all errors that occur
-     * @param gc      boolean indicating whether garbage collection is enabled
-     * @param opt     boolean indicating whether optimization is enabled
+     * @param gc           boolean indicating whether garbage collection is enabled
+     * @param opt          boolean indicating whether optimization is enabled
      */
     public MipsCodeGenerator(ErrorHandler errorHandler, boolean gc, boolean opt) {
         this.gc = gc;
@@ -111,11 +143,22 @@ public class MipsCodeGenerator
      * @param root    root of the class hierarchy tree
      * @param outFile filename of the assembly output file
      */
-    public void generate(ClassTreeNode root, String outFile) {
+    public void generate(ClassTreeNode root, String outFile, Program ast) {
         this.root = root;
+        this.ast = ast;
+        this.outFile = outFile;
 
+        //creates a list of builtins that other methods can use, specifically for creating globals
+        this.builtIns = new HashMap<>();
+        this.builtIns.put("Object", "class_name_0");
+        this.builtIns.put("String", "class_name_1");
+        this.builtIns.put("Sys", "class_name_2");
+        //this.builtIns.put("Main", "class_name_3");
+        this.builtIns.put("TextIO", "class_name_4");
+
+        //uses the StringConstantsVisitor to create a map of string constants
         StringConstantsVisitor stringConstantsVisitor = new StringConstantsVisitor();
-        Map<String, String> stringMap = stringConstantsVisitor.getStringConstants(this.root);
+        Map<String, String> stringMap = stringConstantsVisitor.getStringConstants(this.ast);
 
         // set up the PrintStream for writing the assembly file.
         try {
@@ -128,167 +171,285 @@ public class MipsCodeGenerator
             throw new CompilationException("Couldn't write to output file.");
         }
 
-        // comment out
-        // throw new RuntimeException("MIPS code generator unimplemented");
-
-        // add code here...
+        this.assemblySupport.genComment("Authors: Kevin Ahn, Kyle Slager, Danqing Zhou");
+        this.assemblySupport.genComment("Date: Apr 2019");
+        String correctedFile = outFile.replace("asm", "btm");
+        correctedFile = correctedFile.substring(correctedFile.lastIndexOf("/")+1);
+        this.assemblySupport.genComment("Compiled from " + correctedFile);
         // STEP 1 START THE DATA SECTION
         this.assemblySupport.genDataStart();
 
         // STEP 2 GENERATE DATA FOR GC
         this.assemblySupport.genLabel("gc_flag");
-        if (this.gc){
+        if (this.gc) {
             this.assemblySupport.genWord("1");
-        }
-        else{
+        } else {
             this.assemblySupport.genWord("0");
         }
 
+        // STEP 3 GENERATE STRING CONSTANTS
         this.genStringConstants(stringMap);
 
+        // STEP 4 GENERATE THE TABLE NAMES
         this.genClassTableNames();
 
+        // STEP 5 GENERATE THE OBJECT TEMPLATES
         this.genObjectTemplate();
-        // STEP 3 GENERATE STRING CONSTANTS
+
+        // STEP 6 GENERATE THE DISPATCH TABLES
+        this.altMethodsMap = new HashMap<>();
+        this.genDispatchTables();
+
+        // STEP 7 GENERATE METHOD STUBS AND MINIMUM TEXT SECTION FOR TESTING
+        this.assemblySupport.genTextStart();
+        this.genStubs();
 
     }
 
     /**
      * a method to add a string constant object to a map to keep track of them
+     *
      * @param stringMap map containing the string objects
      */
-    private void genStringConstants(Map<String,String> stringMap){
-        Map<String, String> builtIns = new HashMap<>();
-        builtIns.put("Object", "class_name_0");
-        builtIns.put("String", "class_name_1");
-        builtIns.put("Sys", "class_name_2");
-        builtIns.put("Main", "class_name_3");
-        builtIns.put("TextIO", "class_name_4");
+    private void genStringConstants(Map<String, String> stringMap) {
 
-        Set<Map.Entry<String,String>> stringEntrySet = stringMap.entrySet();
-        Iterator<Map.Entry<String,String>> stringIterator = stringEntrySet.iterator();
-        while(stringIterator.hasNext()){
-            String label = stringIterator.next().getValue();
-            String str = stringIterator.next().getKey();
-            generateStringConstantSupport(label,str);
+        Set<Map.Entry<String, String>> stringEntrySet = stringMap.entrySet();
+        Iterator<Map.Entry<String, String>> stringIterator = stringEntrySet.iterator();
+        while (stringIterator.hasNext()) {
+            Map.Entry<String, String> curItem = stringIterator.next();
+            String label = curItem.getKey();
+            String str = curItem.getValue();
+            str = str.substring(1, str.length() - 1);
+            generateStringConstantSupport(label, str);
         }
-        Set<Map.Entry<String,String>> builtInEntrySet = builtIns.entrySet();
-        Iterator<Map.Entry<String,String>> builtInIterator = builtInEntrySet.iterator();
+        Set<Map.Entry<String, String>> builtInEntrySet = this.builtIns.entrySet();
+        Iterator<Map.Entry<String, String>> builtInIterator = builtInEntrySet.iterator();
         Set<String> filenames = new HashSet<>();
         int fileNum = 0;
-        while(builtInIterator.hasNext()){
-            String label = builtInIterator.next().getValue();
-            String str = builtInIterator.next().getKey();
-            generateStringConstantSupport(label,str);
-            String filename = root.getClassMap().get(str).getName();
-            if (!filenames.contains(filename)) {
-                filenames.add(filename);
-                generateStringConstantSupport("file_name_"+fileNum, filename);
-                fileNum++;
-            }
+        while (builtInIterator.hasNext()) {
+            Map.Entry<String, String> current = builtInIterator.next();
+            String label = current.getValue();
+            String str = current.getKey();
+            generateStringConstantSupport(label, str);
         }
+        generateStringConstantSupport("label0", this.outFile);
+        this.out.println("\n");
+
     }
 
-    private void generateStringConstantSupport(String label, String str){
+    /**
+     * Support method for the generate string constant function
+     *
+     * @param label label necessary for string constant
+     * @param str content of the string
+     */
+    private void generateStringConstantSupport(String label, String str) {
         assemblySupport.genLabel(label);
         assemblySupport.genWord("1");
-        assemblySupport.genWord(Integer.toString(16 + (int)Math.ceil((str.length() + 1)/4)*4));
+        //determines the necessary length of the word
+        //assemblySupport.genWord(Integer.toString(16 + (int) Math.ceil((str.length() + 1) / 4.0) * 4));
+        assemblySupport.genWord(Integer.toString(str.length() + (4 - str.length()%4)%4));
         assemblySupport.genWord("String_dispatch_table");
         assemblySupport.genWord(Integer.toString(str.length()));
         assemblySupport.genAscii(str);
-        assemblySupport.genAlign();
     }
 
-
-    private void genClassTableNames(){
+    /**
+     * Method for generating the class table names
+     */
+    private void genClassTableNames() {
         assemblySupport.genLabel("class_name_table");
         int numClasses = this.root.getClassMap().values().size();
-        for (int i = 0 ; i < numClasses ; i++){
-            assemblySupport.genLabel("class_name_" + i);
+        for (int i = 0; i < numClasses; i++) {
+            assemblySupport.genWord("class_name_" + i);
         }
+        this.out.println("\n");
     }
-    private void genObjectTemplate(){
-        assemblySupport.genLabel("Object_template");
-        assemblySupport.genWord("0");
-        assemblySupport.genWord("12");
-        assemblySupport.genWord("Object_dispatch_table");
 
+    /**
+     * Method for generating the object templates
+     */
+    private void genObjectTemplate() {
+        //creates a map from the custom methods visitor
+        MethodsVisitor methodsVisitor = new MethodsVisitor();
+        Map<Class_, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
+        //adds globals for all user defined class templates
+        for(Map.Entry<Class_, ArrayList<String>> entry : methodsMap.entrySet()){
+            this.assemblySupport.genGlobal(entry.getKey().getName() + "_template");
+        }
+        //adds globals for all the built in class templates
+        for(Map.Entry<String,String> builtIn : this.builtIns.entrySet()){
+            this.assemblySupport.genGlobal(builtIn.getKey() + "_template");
+        }
         int numClasses = this.root.getClassMap().values().size();
         String className;
         ClassTreeNode classTreeNode;
         MemberList memberList;
-        List<Field> fieldList;
-        for (int i = 0 ; i < numClasses ; i++){
-            className = this.root.getClassMap().keys().nextElement();
+        int fieldListSize = 0;
+        ArrayList<String> classList = new ArrayList<>();
+        classList.addAll(this.root.getClassMap().keySet());
+        //loops through all the classes and generates an object template
+        for (int i = 0; i < numClasses; i++) {
+            className = classList.get(i);
             classTreeNode = this.root.getClassMap().get(className);
             assemblySupport.genLabel(className + "_template");
             memberList = classTreeNode.getASTNode().getMemberList();
-            fieldList = new ArrayList<Field>();
-            for(Iterator iter = memberList.iterator(); iter.hasNext();){
-                Member member = (Member)iter.next();
-                if(member instanceof Field) {
-                    fieldList.add((Field)member);
+            for (Iterator iter = memberList.iterator(); iter.hasNext(); ) {
+                Member member = (Member) iter.next();
+                if (member instanceof Field) {
+                    fieldListSize += 1;
                 }
             }
 
-            assemblySupport.genWord((i+1)+"");
-            assemblySupport.genWord(12+fieldList.size()*4+"");
-            assemblySupport.genWord(className+"_dispatch_table");
-            for(Iterator iter = fieldList.iterator();iter.hasNext();){
-                Field field = (Field)iter.next();
+            assemblySupport.genWord((i + 1) + "");
+            assemblySupport.genWord(12 + fieldListSize * 4 + "");
+            assemblySupport.genWord(className + "_dispatch_table");
+            //iterates through the fieldList created by the previous for loop, currently sets value to 0
+            for (int j = 0; j < fieldListSize; j++) {
                 assemblySupport.genWord("0");
             }
         }
+        this.out.println("\n");
     }
 
     /**
-     * Generates the dispatch table for the given class, and map of pre-existing method
-     * names.
-     * @param curClass    the class to make the table for
-     * @param methodsList     the map of classes to lists of their method names
+     * Generator for method stubs in the text section, necessary right now to make a complete program
      */
-    private void generateDispatchTable(Class_ curClass,
-                                       Map<Class_, List<String>> methodsList) {
+    private void genStubs() {
+        ArrayList<String> classList = new ArrayList<>();
+        classList.addAll(this.root.getClassMap().keySet());
+        this.out.print("\n");
+        //creates the init stubs for the classes, including builtins
+        for (String className : classList) {
+            this.assemblySupport.genLabel(className + "_init");
+        }
+        this.out.print("\n");
 
-        Class_ parentClass = null;
-        // if haven't done parent yet, do parent first
-        if (curClass.getParent() != null) {
-            parentClass = root.lookupClass(curClass.getParent()).getASTNode();
-            if (methodsList.containsKey(parentClass) == false) {
-                generateDispatchTable(parentClass, methodsList);
+        //creates the map
+        MethodsVisitor methodsVisitor = new MethodsVisitor();
+        Map<Class_, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
+
+        //loops through the map created by MethodVisitor and creates stub (ex. Main.main)
+        for (Map.Entry<Class_, ArrayList<String>> methodList : methodsMap.entrySet()) {
+            for (String methodName : methodList.getValue()) {
+                assemblySupport.genLabel(methodList.getKey().getName() + "." + methodName);
             }
         }
+        this.out.println("\njr $ra");
+    }
 
-        List<String> currentDispatchTable;
-        if (parentClass != null) {
-            // copy the dispatch table of the parent
-            currentDispatchTable = new ArrayList<>(methodsList.get(parentClass));
-        } else {
-            currentDispatchTable = new ArrayList<>();
-        }
-        assemblySupport.genLabel(curClass.getName() + "_dispatch_table");
-        for (Object o : curClass.getMemberList()) {
-            // if its a method then we'll actually do things
-            if (o instanceof Method) {
-                Method curMethod = (Method) o;
-                for (String str : currentDispatchTable){
-                    //TODO HERE
-                    if (Objects.equals(str.substring(str.indexOf(".")+1), curMethod.getName())) {
-                        str = curClass.getName()+"."+curMethod.getName();
+    /**
+     * Method for generating a single Dispatch Table entry
+     *
+     * @param className
+     * @param methodAndClassMap
+     * @param methodNameList
+     * @return the current list of method names so that it can be provided again as a parameter
+     */
+    private ArrayList<String> genDispatchTable(String className, LinkedHashMap<String, String> methodAndClassMap, ArrayList<String> methodNameList){
+        MemberList membersList;
+        String methodName;
+        String curName;
+        ClassTreeNode curClassTreeNode;
+        Map curClassMap = this.root.getClassMap();
+        curClassTreeNode =  (ClassTreeNode)curClassMap.get(className);
+
+            this.assemblySupport.genLabel("\n"+className+"_dispatch_table"); // gens the label itself
+            while (curClassTreeNode != null) { // loops through until the curClassTreeNode is found to be null
+                curName = curClassTreeNode.getName();
+                membersList = curClassTreeNode.getASTNode().getMemberList(); //
+                int memberCount = membersList.getSize();
+                // loops backwards: Methods from classes higher in the class hierarchy tree
+                // (i.e., closer to Object) should appear earlier in the dispatch table
+                for (int i = 0; i < memberCount; i++) {
+                    Member member = (Member)membersList.get(memberCount - 1 - i);
+                    if (member instanceof Method) {
+                        methodName = ((Method) member).getName();
+
+                        // checks if the map already contains the methodName key
+                        if (methodAndClassMap.containsKey(methodName)) {
+                            methodAndClassMap.remove(methodName); // removes it
+                            methodAndClassMap.put(methodName, className); // repopulates map
+                        }
+                        else {
+                            // populates the map itself
+                            methodAndClassMap.put(methodName, curName);
+                        }
                     }
+                }
+                curClassTreeNode = curClassTreeNode.getParent(); // grabs the parent to reset
+            }
 
+            methodNameList = new ArrayList<>(methodAndClassMap.keySet());
+
+            // loops backwards for same purpose as above
+            for (int i = 0; i < methodNameList.size(); i++) {
+                methodName = methodNameList.get(methodNameList.size() - 1 - i); // gets the current index of the methodName from the list
+                curName = methodAndClassMap.get(methodName); // sets the current name
+                this.assemblySupport.genWord(curName+"."+methodName); // generates the word
+            }
+            methodAndClassMap.clear();
+        return methodNameList;
+
+    }
+
+    /**
+     * Method that implements genDispatchTable to create all the dispatch tables necessary
+     */
+    private void genDispatchTables(){
+        ArrayList<String> classList = new ArrayList<>();
+        classList.addAll(this.root.getClassMap().keySet());
+
+        ArrayList<String> methodNameList = new ArrayList<>();
+        //the linked hash map is necessary because the methods must come out in the correct order
+        //this is not possible with conventional hashmaps as they have no order to them
+        LinkedHashMap<String, String> methodClassMap = new LinkedHashMap();
+
+        MethodsVisitor methodsVisitor = new MethodsVisitor();
+        Map<Class_, ArrayList<String>> methodsMap = methodsVisitor.getMethodsMap(this.ast);
+
+        //generates the global dispatch tables for the user created classes
+        for(Map.Entry<Class_, ArrayList<String>> entry : methodsMap.entrySet()){
+            this.assemblySupport.genGlobal(entry.getKey().getName() + "_dispatch_table");
+        }
+
+        //generates the global dispatch tables for the built in classes
+        for(Map.Entry<String,String> builtIn : this.builtIns.entrySet()){
+            this.assemblySupport.genGlobal(builtIn.getKey() + "_template");
+        }
+
+        //executes all of the necessary dispatch table creating
+        for(String className : classList){
+            methodNameList = genDispatchTable(className,methodClassMap, methodNameList);
+
+        }
+    }
+
+    /*
+    Main Function used for testing purposes, executes parsing and analyzing before passing the results of those
+    (Program and ClassTreeNode) to the generate method of the class. Catches problems with parsing, analyzing,
+    or compiling the mips code
+     */
+    public static void main(String[] args) {
+        ErrorHandler errorHandler = new ErrorHandler();
+        Parser parser = new Parser(errorHandler);
+        SemanticAnalyzer analyzer = new SemanticAnalyzer(errorHandler);
+
+        for (String fileNames : args) {
+            try {
+                errorHandler.clear();
+                Program program = parser.parse(fileNames);
+                ClassTreeNode classTreeNode = analyzer.analyze(program);
+                MipsCodeGenerator mipsCodeGenerator = new MipsCodeGenerator(errorHandler, false, false);
+                mipsCodeGenerator.generate(classTreeNode, fileNames.replace(".btm", ".asm"), program);
+                System.out.println("MIPS code generation was successful.");
+            } catch (CompilationException ex) {
+                System.out.println("MIPS code generation was not successful:");
+                List<Error> errorList = errorHandler.getErrorList();
+                for (Error error : errorList) {
+                    System.out.println(" ,  " + error.toString());
                 }
             }
         }
-        for (String str : currentDispatchTable){
-            assemblySupport.genWord(str);
-        }
-        methodsList.put(curClass, currentDispatchTable);
-    }
-
-
-
-    public static void main(String[] args) {
-
     }
 }

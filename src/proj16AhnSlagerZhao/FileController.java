@@ -176,6 +176,7 @@ public class FileController {
         }
     }
 
+
     /**
      * Handler for the "Save" menu item in the "File" menu.
      * If the current tab has been saved before, writes out the content to its corresponding
@@ -443,6 +444,11 @@ public class FileController {
         javaTabPane.removeTab(curTab);
     }
 
+
+    /**
+     * helper method to determine if a file is a mips file
+     * @return true if it is a mips file
+     */
     public BooleanProperty isMipsFile(){
         if(this.extension.equals(".s") || this.extension.equals(".asm")){
             BooleanProperty booleanProperty = new SimpleBooleanProperty(false);
