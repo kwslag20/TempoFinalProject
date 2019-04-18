@@ -24,6 +24,7 @@ import java.io.PrintStream;
 public class MipsCodeGenVisitor extends Visitor {
 
     private MipsSupport genSupport;
+    private SymbolTable symbolTable;
     private static final String[] registers = new String[]{
             "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
             "$t4","$t5","$t6","$t7","$v0","$v1"
@@ -32,8 +33,8 @@ public class MipsCodeGenVisitor extends Visitor {
     /**
      * constructor for the class
      */
-    public MipsCodeGenVisitor(){
-
+    public MipsCodeGenVisitor(MipsSupport genSupport){
+        this.genSupport = genSupport;
     }
 
 
@@ -88,6 +89,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ClassList node) {
+        for (ASTNode aNode : node)
+            aNode.accept(this);
         return null;
     }
 
@@ -98,6 +101,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Class_ node) {
+        node.getMemberList().accept(this);
         return null;
     }
 
@@ -108,11 +112,14 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(MemberList node) {
+        for (ASTNode child : node)
+            child.accept(this);
         return null;
     }
 
     /**
-     * Visit a member node (should never be calle)
+     * TODO QUESTION: DO WE DELETE THINGS THAT THROW RUNTIME EXCEPTIONS?
+     * Visit a member node (should never be called)
      *
      * @param node the member node
      * @return result of the visit
@@ -128,6 +135,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Field node) {
+        if (node.getInit() != null) {
+            node.getInit().accept(this);
+        }
         return null;
     }
 
@@ -241,6 +251,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BreakStmt node) {
+        genSupport.genComment("Generating a break");
+        genSupport.genRetn();
         return null;
     }
 
@@ -344,6 +356,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(AssignExpr node) {
+        node.getExpr().accept(this);
+        genSupport.genComment("GENERATING AN ASSIGN EXPRESSION");
+        Location local = (Location) symbolTable.lookup(node.getName());
+        // Generate a store word instruction
+        genSupport.genStoreWord("$v0",local.getOffset(),local.getBaseReg());
         return null;
     }
 
