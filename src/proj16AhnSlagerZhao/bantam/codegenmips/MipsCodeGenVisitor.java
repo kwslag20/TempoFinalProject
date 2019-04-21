@@ -133,7 +133,7 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(Field node) {
         if (node.getInit() != null) {
             node.getInit().accept(this);
-            this.assemblySupport.genComment("storing field at " + symbolTable.getCurrScopeSize()*4);
+            this.assemblySupport.genComment("storing field " + node.getName() + " at " + symbolTable.getCurrScopeSize()*4);
             this.assemblySupport.genStoreWord("$v0", symbolTable.getCurrScopeSize()*4, "$a0");
         }
         Location location = new Location("$a0", symbolTable.getCurrScopeSize() * 4);
@@ -225,11 +225,13 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(IfStmt node) {
+        symbolTable.enterScope();
         node.getPredExpr().accept(this);
         node.getThenStmt().accept(this);
         if (node.getElseStmt() != null) {
             node.getElseStmt().accept(this);
         }
+        symbolTable.exitScope();
         return null;
     }
 
@@ -240,8 +242,10 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(WhileStmt node) {
+        symbolTable.enterScope();
         node.getPredExpr().accept(this);
         node.getBodyStmt().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
@@ -252,6 +256,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ForStmt node) {
+        symbolTable.enterScope();
         if (node.getInitExpr() != null) {
             node.getInitExpr().accept(this);
         }
@@ -262,6 +267,7 @@ public class MipsCodeGenVisitor extends Visitor {
             node.getUpdateExpr().accept(this);
         }
         node.getBodyStmt().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
@@ -369,14 +375,12 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(AssignExpr node) {
+        this.assemblySupport.genStoreWord("$a0", -4, "$sp");
         node.getExpr().accept(this);
         this.assemblySupport.genComment("GENERATING AN ASSIGN EXPRESSION");
         Location local = (Location) symbolTable.lookup(node.getName());
-        if(local == null){
-            System.out.println("definitely no");
-        }
-        // Generate a store word instruction
         this.assemblySupport.genStoreWord("$v0",local.getOffset(),local.getBaseReg());
+        this.assemblySupport.genLoadWord("$a0", -4, "$sp");
         return null;
     }
 
