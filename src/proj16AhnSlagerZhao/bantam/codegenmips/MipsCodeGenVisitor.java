@@ -59,6 +59,7 @@ public class MipsCodeGenVisitor extends Visitor {
             assemblySupport.genStoreWord(reg, 0,"$sp");
         }
         assemblySupport.genAdd("$fp", "$fp",-4*numLocalVars);
+        assemblySupport.genRetn();
     }
 
     /**
@@ -715,6 +716,7 @@ public class MipsCodeGenVisitor extends Visitor {
 
     /**
      * Visit a constant expression node (should never be called)
+     * TODO QUESTION: DO WE DELETE THINGS THAT THROW RUNTIME EXCEPTIONS?
      *
      * @param node the constant expression node
      * @return result of the visit
@@ -730,6 +732,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ConstIntExpr node) {
+        assemblySupport.genComment("Generating a Constant Int Expression");
+        assemblySupport.genLoadImm("$v0",node.getIntConstant());
         return null;
     }
 
@@ -740,6 +744,15 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ConstBooleanExpr node) {
+        assemblySupport.genComment("Generating Constant Boolean Expression");
+        if (node.getConstant().equals("true")){
+            assemblySupport.genComment("Generating TRUE Constant Boolean Expression");
+            assemblySupport.genLoadImm("$v0", 1);
+        }
+        else {
+            assemblySupport.genComment("Generating FALSE Constant Boolean Expression");
+            assemblySupport.genLoadImm("$v0", 0);
+        }
         return null;
     }
 
