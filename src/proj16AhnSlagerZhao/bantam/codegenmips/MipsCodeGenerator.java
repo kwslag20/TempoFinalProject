@@ -78,6 +78,11 @@ public class MipsCodeGenerator {
     private MipsSupport assemblySupport;
 
     /**
+     * MipsCodeGenVisitor for adding .text section
+     */
+    private MipsCodeGenVisitor mipsCodeGenVisitor;
+
+    /**
      * Boolean indicating whether garbage collection is enabled
      */
     private boolean gc = false;
@@ -203,7 +208,21 @@ public class MipsCodeGenerator {
         // STEP 7 GENERATE METHOD STUBS AND MINIMUM TEXT SECTION FOR TESTING
         this.assemblySupport.genTextStart();
         this.genStubs();
+        if(this.assemblySupport == null){
+            System.out.println("oh no");
+        }
+        this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport);
+        generateText(root, this.mipsCodeGenVisitor);
 
+
+    }
+
+    private void generateText(ClassTreeNode node, MipsCodeGenVisitor mipsCodeGenVisitor){
+        mipsCodeGenVisitor.visit(node.getASTNode());
+        Iterator<ClassTreeNode> iterator = node.getChildrenList();
+        while(iterator.hasNext()){
+            generateText(iterator.next(), mipsCodeGenVisitor);
+        }
     }
 
     /**

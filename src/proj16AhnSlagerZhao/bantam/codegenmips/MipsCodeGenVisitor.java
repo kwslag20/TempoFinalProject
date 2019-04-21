@@ -11,11 +11,15 @@ package proj16AhnSlagerZhao.bantam.codegenmips;
 import org.reactfx.util.Lists;
 import proj16AhnSlagerZhao.bantam.ast.*;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.*;
 
 import proj16AhnSlagerZhao.bantam.ast.*;
 import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.codegenmips.Location;
+import proj16AhnSlagerZhao.bantam.util.CompilationException;
+import proj16AhnSlagerZhao.bantam.util.Error;
 import proj16AhnSlagerZhao.bantam.util.SymbolTable;
 import proj16AhnSlagerZhao.bantam.visitor.Visitor;
 
@@ -23,7 +27,7 @@ import java.io.PrintStream;
 
 public class MipsCodeGenVisitor extends Visitor {
 
-    private MipsSupport genSupport;
+    private MipsSupport assemblySupport;
     private SymbolTable symbolTable;
     private static final String[] registers = new String[]{
             "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
@@ -33,8 +37,9 @@ public class MipsCodeGenVisitor extends Visitor {
     /**
      * constructor for the class
      */
-    public MipsCodeGenVisitor(MipsSupport genSupport){
-        this.genSupport = genSupport;
+    public MipsCodeGenVisitor(MipsSupport assemblySupport){
+        this.symbolTable = new SymbolTable();
+        this.assemblySupport = assemblySupport;
     }
 
 
@@ -50,10 +55,10 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     private void generateProlog(int numLocalVars){
         for (String reg : registers){
-            genSupport.genAdd("$sp", "$sp", -4);
-            genSupport.genStoreWord(reg, 0,"$sp");
+            assemblySupport.genAdd("$sp", "$sp", -4);
+            assemblySupport.genStoreWord(reg, 0,"$sp");
         }
-        genSupport.genAdd("$fp", "$fp",-4*numLocalVars);
+        assemblySupport.genAdd("$fp", "$fp",-4*numLocalVars);
     }
 
     /**
@@ -64,10 +69,10 @@ public class MipsCodeGenVisitor extends Visitor {
      * - restore any $v, $a and $t registers that it pushed on the stack
      */
     private void generateEpilog(int numLocalVars){
-        genSupport.genAdd("$sp", "$sp", 4*numLocalVars);
+        assemblySupport.genAdd("$sp", "$sp", 4*numLocalVars);
         for (int i = -1; i < registers.length ; i--){
-            genSupport.genLoadWord(registers[i], 0,"$sp");
-            genSupport.genAdd("$sp", "$sp", 4);
+            assemblySupport.genLoadWord(registers[i], 0,"$sp");
+            assemblySupport.genAdd("$sp", "$sp", 4);
         }
     }
 
@@ -101,7 +106,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Class_ node) {
+        symbolTable.enterScope();
         node.getMemberList().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
@@ -125,7 +132,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Member node) {
-        return null;
+        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -137,7 +144,11 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(Field node) {
         if (node.getInit() != null) {
             node.getInit().accept(this);
+            this.assemblySupport.genComment("storing field at " + symbolTable.getCurrScopeSize()*4);
+            this.assemblySupport.genStoreWord("$v0", symbolTable.getCurrScopeSize()*4, "$a0");
         }
+        Location location = new Location("$a0", symbolTable.getCurrScopeSize() * 4);
+        symbolTable.add(node.getName(), location);
         return null;
     }
 
@@ -149,6 +160,10 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Method node) {
+        symbolTable.enterScope();
+        node.getFormalList().accept(this);
+        node.getStmtList().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
@@ -159,6 +174,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(FormalList node) {
+        for (Iterator it = node.iterator(); it.hasNext(); ) {
+            Formal param = (Formal) it.next();
+            Location location = new Location("$fp", symbolTable.getCurrScopeSize() * 4);
+            symbolTable.add(param.getName(), location);
+        }
         return null;
     }
 
@@ -179,6 +199,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(StmtList node) {
+        for (Iterator it = node.iterator(); it.hasNext(); )
+            ((Stmt) it.next()).accept(this);
         return null;
     }
 
@@ -189,7 +211,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Stmt node) {
-        return null;
+        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -200,6 +222,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(DeclStmt node) {
+        node.getInit().accept(this);
+        Location location = new Location("$fp", symbolTable.getCurrScopeSize()*4);
+        symbolTable.add(node.getName(), location);
         return null;
     }
 
@@ -210,6 +235,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ExprStmt node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -220,6 +246,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(IfStmt node) {
+        node.getPredExpr().accept(this);
+        node.getThenStmt().accept(this);
+        if (node.getElseStmt() != null) {
+            node.getElseStmt().accept(this);
+        }
         return null;
     }
 
@@ -230,6 +261,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(WhileStmt node) {
+        node.getPredExpr().accept(this);
+        node.getBodyStmt().accept(this);
         return null;
     }
 
@@ -240,6 +273,16 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ForStmt node) {
+        if (node.getInitExpr() != null) {
+            node.getInitExpr().accept(this);
+        }
+        if (node.getPredExpr() != null) {
+            node.getPredExpr().accept(this);
+        }
+        if (node.getUpdateExpr() != null) {
+            node.getUpdateExpr().accept(this);
+        }
+        node.getBodyStmt().accept(this);
         return null;
     }
 
@@ -251,8 +294,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BreakStmt node) {
-        genSupport.genComment("Generating a break");
-        genSupport.genRetn();
+        assemblySupport.genComment("Generating a break");
+        assemblySupport.genRetn();
         return null;
     }
 
@@ -263,6 +306,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BlockStmt node) {
+        node.getStmtList().accept(this);
         return null;
     }
 
@@ -273,6 +317,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ReturnStmt node) {
+        if (node.getExpr() != null) {
+            node.getExpr().accept(this);
+        }
         return null;
     }
 
@@ -283,6 +330,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ExprList node) {
+        for (Iterator it = node.iterator(); it.hasNext(); )
+            ((Expr) it.next()).accept(this);
         return null;
     }
 
@@ -293,7 +342,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Expr node) {
-        return null;
+        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -304,6 +353,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(DispatchExpr node) {
+        if(node.getRefExpr() != null)
+            node.getRefExpr().accept(this);
+        node.getActualList().accept(this);
         return null;
     }
 
@@ -324,6 +376,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(NewArrayExpr node) {
+        node.getSize().accept(this);
         return null;
     }
 
@@ -334,6 +387,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(InstanceofExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -345,6 +399,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(CastExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -357,10 +412,13 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(AssignExpr node) {
         node.getExpr().accept(this);
-        genSupport.genComment("GENERATING AN ASSIGN EXPRESSION");
+        this.assemblySupport.genComment("GENERATING AN ASSIGN EXPRESSION");
         Location local = (Location) symbolTable.lookup(node.getName());
+        if(local == null){
+            System.out.println("definitely no");
+        }
         // Generate a store word instruction
-        genSupport.genStoreWord("$v0",local.getOffset(),local.getBaseReg());
+        this.assemblySupport.genStoreWord("$v0",local.getOffset(),local.getBaseReg());
         return null;
     }
 
@@ -371,6 +429,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ArrayAssignExpr node) {
+        node.getIndex().accept(this);
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -381,7 +441,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryExpr node) {
-        return null;
+        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -391,7 +451,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompExpr node) {
-        return null;
+        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -401,6 +461,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompEqExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -411,8 +473,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompNeExpr node) {
-        return null;
-    }
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
+        return null;    }
 
     /**
      * Visit a binary comparison less than expression node
@@ -421,8 +484,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompLtExpr node) {
-        return null;
-    }
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
+        return null;    }
 
     /**
      * Visit a binary comparison less than or equal to expression node
@@ -431,6 +495,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompLeqExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -441,6 +507,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompGtExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -451,6 +519,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompGeqExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -461,7 +531,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithExpr node) {
-        return null;
+        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -471,6 +541,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithPlusExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -481,6 +553,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithMinusExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -491,6 +565,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithTimesExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -501,8 +577,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithDivideExpr node) {
-        return null;
-    }
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
+        return null;    }
 
     /**
      * Visit a binary arithmetic modulus expression node
@@ -511,6 +588,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithModulusExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -521,7 +600,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryLogicExpr node) {
-        return null;
+        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -531,6 +610,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryLogicAndExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -541,6 +622,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryLogicOrExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -551,7 +634,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryExpr node) {
-        return null;
+        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -561,6 +644,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryNegExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -571,6 +655,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryNotExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -581,6 +666,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryIncrExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -591,6 +677,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryDecrExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -602,6 +689,13 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(VarExpr node) {
+        if(node.getRef() != null){
+            node.getRef().accept(this);
+        }
+        Location location = (Location)symbolTable.lookup(node.getName());
+        if(location != null){
+            assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
         return null;
     }
 
@@ -612,6 +706,10 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ArrayExpr node) {
+        if (node.getRef() != null) {
+            node.getRef().accept(this);
+        }
+        node.getIndex().accept(this);
         return null;
     }
 
@@ -622,7 +720,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ConstExpr node) {
-        return null;
+        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
