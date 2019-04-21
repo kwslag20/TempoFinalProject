@@ -42,7 +42,6 @@ public class MipsCodeGenVisitor extends Visitor {
         this.assemblySupport = assemblySupport;
     }
 
-
     /**
      * Method caller just before calling the method:
      * - save on the stack any $a, $v and $t registers with info to be saved (including $a0)
@@ -126,17 +125,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * TODO QUESTION: DO WE DELETE THINGS THAT THROW RUNTIME EXCEPTIONS?
-     * Visit a member node (should never be called)
-     *
-     * @param node the member node
-     * @return result of the visit
-     */
-    public Object visit(Member node) {
-        throw new RuntimeException("This visitor method should not be called (node is abstract)");
-    }
-
-    /**
      * Visit a field node
      *
      * @param node the field node
@@ -203,16 +191,6 @@ public class MipsCodeGenVisitor extends Visitor {
         for (Iterator it = node.iterator(); it.hasNext(); )
             ((Stmt) it.next()).accept(this);
         return null;
-    }
-
-    /**
-     * Visit a statement node (should never be calle)
-     *
-     * @param node the statement node
-     * @return result of the visit
-     */
-    public Object visit(Stmt node) {
-        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -337,16 +315,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * Visit an expression node (should never be called)
-     *
-     * @param node the expression node
-     * @return result of the visit
-     */
-    public Object visit(Expr node) {
-        throw new RuntimeException("This visitor method should not be called (node is abstract)");
-    }
-
-    /**
      * TODO Danqing
      * Visit a dispatch expression node
      *
@@ -367,17 +335,6 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(NewExpr node) {
-        return null;
-    }
-
-    /**
-     * Visit a new array expression node
-     *
-     * @param node the new array expression node
-     * @return result of the visit
-     */
-    public Object visit(NewArrayExpr node) {
-        node.getSize().accept(this);
         return null;
     }
 
@@ -421,38 +378,6 @@ public class MipsCodeGenVisitor extends Visitor {
         // Generate a store word instruction
         this.assemblySupport.genStoreWord("$v0",local.getOffset(),local.getBaseReg());
         return null;
-    }
-
-    /**
-     * Visit an array assignment expression node
-     *
-     * @param node the array assignment expression node
-     * @return result of the visit
-     */
-    public Object visit(ArrayAssignExpr node) {
-        node.getIndex().accept(this);
-        node.getExpr().accept(this);
-        return null;
-    }
-
-    /**
-     * Visit a binary expression node (should never be called)
-     *
-     * @param node the binary expression node
-     * @return result of the visit
-     */
-    public Object visit(BinaryExpr node) {
-        throw new RuntimeException("This visitor method should not be called (node is abstract)");
-    }
-
-    /**
-     * Visit a binary comparison expression node (should never be called)
-     *
-     * @param node the binary comparison expression node
-     * @return result of the visit
-     */
-    public Object visit(BinaryCompExpr node) {
-        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -526,16 +451,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * Visit a binary arithmetic expression node (should never be called)
-     *
-     * @param node the binary arithmetic expression node
-     * @return result of the visit
-     */
-    public Object visit(BinaryArithExpr node) {
-        throw new RuntimeException("This visitor method should not be called (node is abstract)");
-    }
-
-    /**
      * Visit a binary arithmetic plus expression node
      *
      * @param node the binary arithmetic plus expression node
@@ -595,16 +510,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * Visit a binary logical expression node (should never be called)
-     *
-     * @param node the binary logical expression node
-     * @return result of the visit
-     */
-    public Object visit(BinaryLogicExpr node) {
-        throw new RuntimeException("This visitor method should not be called (node is abstract)");
-    }
-
-    /**
      * Visit a binary logical AND expression node
      *
      * @param node the binary logical AND expression node
@@ -626,16 +531,6 @@ public class MipsCodeGenVisitor extends Visitor {
         node.getLeftExpr().accept(this);
         node.getRightExpr().accept(this);
         return null;
-    }
-
-    /**
-     * Visit a unary expression node
-     *
-     * @param node the unary expression node
-     * @return result of the visit
-     */
-    public Object visit(UnaryExpr node) {
-        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
@@ -698,31 +593,6 @@ public class MipsCodeGenVisitor extends Visitor {
             assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
         }
         return null;
-    }
-
-    /**
-     * Visit an array expression node
-     *
-     * @param node the array expression node
-     * @return result of the visit
-     */
-    public Object visit(ArrayExpr node) {
-        if (node.getRef() != null) {
-            node.getRef().accept(this);
-        }
-        node.getIndex().accept(this);
-        return null;
-    }
-
-    /**
-     * Visit a constant expression node (should never be called)
-     * TODO QUESTION: DO WE DELETE THINGS THAT THROW RUNTIME EXCEPTIONS?
-     *
-     * @param node the constant expression node
-     * @return result of the visit
-     */
-    public Object visit(ConstExpr node) {
-        throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
 
     /**
