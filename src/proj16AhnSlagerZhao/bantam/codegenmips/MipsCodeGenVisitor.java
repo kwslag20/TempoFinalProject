@@ -11,11 +11,15 @@ package proj16AhnSlagerZhao.bantam.codegenmips;
 import org.reactfx.util.Lists;
 import proj16AhnSlagerZhao.bantam.ast.*;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.*;
 
 import proj16AhnSlagerZhao.bantam.ast.*;
 import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.codegenmips.Location;
+import proj16AhnSlagerZhao.bantam.util.CompilationException;
+import proj16AhnSlagerZhao.bantam.util.Error;
 import proj16AhnSlagerZhao.bantam.util.SymbolTable;
 import proj16AhnSlagerZhao.bantam.visitor.Visitor;
 
@@ -23,7 +27,8 @@ import java.io.PrintStream;
 
 public class MipsCodeGenVisitor extends Visitor {
 
-    private MipsSupport genSupport;
+    private MipsSupport assemblySupport;
+    private SymbolTable symbolTable;
     private static final String[] registers = new String[]{
             "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
             "$t4","$t5","$t6","$t7","$v0","$v1"
@@ -32,10 +37,10 @@ public class MipsCodeGenVisitor extends Visitor {
     /**
      * constructor for the class
      */
-    public MipsCodeGenVisitor(){
-
+    public MipsCodeGenVisitor(MipsSupport assemblySupport){
+        this.symbolTable = new SymbolTable();
+        this.assemblySupport = assemblySupport;
     }
-
 
     /**
      * Method caller just before calling the method:
@@ -49,10 +54,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     private void generateProlog(int numLocalVars){
         for (String reg : registers){
-            genSupport.genAdd("$sp", "$sp", -4);
-            genSupport.genStoreWord(reg, 0,"$sp");
+            assemblySupport.genAdd("$sp", "$sp", -4);
+            assemblySupport.genStoreWord(reg, 0,"$sp");
         }
-        genSupport.genAdd("$fp", "$fp",-4*numLocalVars);
+        assemblySupport.genAdd("$fp", "$fp",-4*numLocalVars);
+        assemblySupport.genRetn();
     }
 
     /**
@@ -63,10 +69,10 @@ public class MipsCodeGenVisitor extends Visitor {
      * - restore any $v, $a and $t registers that it pushed on the stack
      */
     private void generateEpilog(int numLocalVars){
-        genSupport.genAdd("$sp", "$sp", 4*numLocalVars);
+        assemblySupport.genAdd("$sp", "$sp", 4*numLocalVars);
         for (int i = -1; i < registers.length ; i--){
-            genSupport.genLoadWord(registers[i], 0,"$sp");
-            genSupport.genAdd("$sp", "$sp", 4);
+            assemblySupport.genLoadWord(registers[i], 0,"$sp");
+            assemblySupport.genAdd("$sp", "$sp", 4);
         }
     }
 
@@ -88,6 +94,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ClassList node) {
+        for (ASTNode aNode : node)
+            aNode.accept(this);
         return null;
     }
 
@@ -98,6 +106,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Class_ node) {
+        symbolTable.enterScope();
+        node.getMemberList().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
@@ -108,16 +119,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(MemberList node) {
-        return null;
-    }
-
-    /**
-     * Visit a member node (should never be calle)
-     *
-     * @param node the member node
-     * @return result of the visit
-     */
-    public Object visit(Member node) {
+        for (ASTNode child : node)
+            child.accept(this);
         return null;
     }
 
@@ -128,6 +131,13 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Field node) {
+        if (node.getInit() != null) {
+            node.getInit().accept(this);
+            this.assemblySupport.genComment("storing field " + node.getName() + " at " + symbolTable.getCurrScopeSize()*4);
+            this.assemblySupport.genStoreWord("$v0", symbolTable.getCurrScopeSize()*4, "$a0");
+        }
+        Location location = new Location("$a0", symbolTable.getCurrScopeSize() * 4);
+        symbolTable.add(node.getName(), location);
         return null;
     }
 
@@ -139,6 +149,10 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Method node) {
+        symbolTable.enterScope();
+        node.getFormalList().accept(this);
+        node.getStmtList().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
@@ -149,6 +163,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(FormalList node) {
+        for (Iterator it = node.iterator(); it.hasNext(); ) {
+            Formal param = (Formal) it.next();
+            Location location = new Location("$fp", symbolTable.getCurrScopeSize() * 4);
+            symbolTable.add(param.getName(), location);
+        }
         return null;
     }
 
@@ -169,16 +188,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(StmtList node) {
-        return null;
-    }
-
-    /**
-     * Visit a statement node (should never be calle)
-     *
-     * @param node the statement node
-     * @return result of the visit
-     */
-    public Object visit(Stmt node) {
+        for (Iterator it = node.iterator(); it.hasNext(); )
+            ((Stmt) it.next()).accept(this);
         return null;
     }
 
@@ -190,6 +201,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(DeclStmt node) {
+        node.getInit().accept(this);
+        Location location = new Location("$fp", symbolTable.getCurrScopeSize()*4);
+        symbolTable.add(node.getName(), location);
         return null;
     }
 
@@ -200,6 +214,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ExprStmt node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -210,6 +225,37 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(IfStmt node) {
+        node.getPredExpr().accept(this);
+        String ifTrueBody = assemblySupport.getLabel();
+        String elseBody = assemblySupport.getLabel();
+        String afterIf = assemblySupport.getLabel();
+
+        assemblySupport.genComment("Jumping to else statement if 'if' is false");
+        assemblySupport.genCondBeq("$v0","$zero", elseBody);
+
+        // generates the label if the statement is true
+        assemblySupport.genComment("Generating the THEN label instructions");
+        assemblySupport.genLabel(ifTrueBody);
+        // enters the scope for the body of the if statement
+        symbolTable.enterScope();
+        node.getThenStmt().accept(this);
+        symbolTable.exitScope();
+
+        // breaks to the label after the if statement has been executed
+        assemblySupport.genUncondBr(afterIf);
+
+
+        // generates the label for the elseStatement body
+        assemblySupport.genComment("Generating the ELSE label instructions");
+        assemblySupport.genLabel(elseBody);
+        if (node.getElseStmt() != null) {
+            // enters the scope of the else statement
+            symbolTable.enterScope();
+            node.getElseStmt().accept(this);
+            symbolTable.exitScope();
+        }
+        // again, goes to the label after the if statement
+        assemblySupport.genLabel(afterIf);
         return null;
     }
 
@@ -220,16 +266,38 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(WhileStmt node) {
+        symbolTable.enterScope();
+        node.getPredExpr().accept(this);
+        node.getBodyStmt().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
     /**
+     *
+     * INCOMPLETE
      * Visit a for statement node
      *
      * @param node the for statement node
      * @return result of the visit
      */
     public Object visit(ForStmt node) {
+        symbolTable.enterScope();
+        String beforeLoop = assemblySupport.getLabel();
+        String afterLoop = assemblySupport.getLabel();
+        if (node.getInitExpr() != null) {
+            node.getInitExpr().accept(this);
+        }
+        assemblySupport.genLabel(beforeLoop);
+        if (node.getPredExpr() != null) {
+            node.getPredExpr().accept(this);
+        }
+
+        if (node.getUpdateExpr() != null) {
+            node.getUpdateExpr().accept(this);
+        }
+        node.getBodyStmt().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
@@ -241,6 +309,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BreakStmt node) {
+        assemblySupport.genComment("Generating a break");
+        assemblySupport.genRetn();
         return null;
     }
 
@@ -251,6 +321,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BlockStmt node) {
+        symbolTable.enterScope();
+        node.getStmtList().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
@@ -261,6 +334,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ReturnStmt node) {
+        if (node.getExpr() != null) {
+            node.getExpr().accept(this);
+        }
         return null;
     }
 
@@ -271,16 +347,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ExprList node) {
-        return null;
-    }
-
-    /**
-     * Visit an expression node (should never be called)
-     *
-     * @param node the expression node
-     * @return result of the visit
-     */
-    public Object visit(Expr node) {
+        for (Iterator it = node.iterator(); it.hasNext(); )
+            ((Expr) it.next()).accept(this);
         return null;
     }
 
@@ -292,6 +360,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(DispatchExpr node) {
+        if(node.getRefExpr() != null)
+            node.getRefExpr().accept(this);
+        node.getActualList().accept(this);
         return null;
     }
 
@@ -306,22 +377,13 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * Visit a new array expression node
-     *
-     * @param node the new array expression node
-     * @return result of the visit
-     */
-    public Object visit(NewArrayExpr node) {
-        return null;
-    }
-
-    /**
      * Visit an instanceof expression node
      *
      * @param node the instanceof expression node
      * @return result of the visit
      */
     public Object visit(InstanceofExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -333,6 +395,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(CastExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -344,36 +407,12 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(AssignExpr node) {
-        return null;
-    }
-
-    /**
-     * Visit an array assignment expression node
-     *
-     * @param node the array assignment expression node
-     * @return result of the visit
-     */
-    public Object visit(ArrayAssignExpr node) {
-        return null;
-    }
-
-    /**
-     * Visit a binary expression node (should never be called)
-     *
-     * @param node the binary expression node
-     * @return result of the visit
-     */
-    public Object visit(BinaryExpr node) {
-        return null;
-    }
-
-    /**
-     * Visit a binary comparison expression node (should never be called)
-     *
-     * @param node the binary comparison expression node
-     * @return result of the visit
-     */
-    public Object visit(BinaryCompExpr node) {
+        this.assemblySupport.genStoreWord("$a0", -4, "$sp");
+        node.getExpr().accept(this);
+        this.assemblySupport.genComment("GENERATING AN ASSIGN EXPRESSION");
+        Location local = (Location) symbolTable.lookup(node.getName());
+        this.assemblySupport.genStoreWord("$v0",local.getOffset(),local.getBaseReg());
+        this.assemblySupport.genLoadWord("$a0", -4, "$sp");
         return null;
     }
 
@@ -384,6 +423,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompEqExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -394,8 +435,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompNeExpr node) {
-        return null;
-    }
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
+        return null;    }
 
     /**
      * Visit a binary comparison less than expression node
@@ -404,8 +446,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompLtExpr node) {
-        return null;
-    }
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
+        return null;    }
 
     /**
      * Visit a binary comparison less than or equal to expression node
@@ -414,6 +457,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompLeqExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -424,6 +469,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompGtExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -434,16 +481,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompGeqExpr node) {
-        return null;
-    }
-
-    /**
-     * Visit a binary arithmetic expression node (should never be called)
-     *
-     * @param node the binary arithmetic expression node
-     * @return result of the visit
-     */
-    public Object visit(BinaryArithExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -454,6 +493,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithPlusExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -464,6 +505,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithMinusExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -474,6 +517,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithTimesExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -484,8 +529,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithDivideExpr node) {
-        return null;
-    }
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
+        return null;    }
 
     /**
      * Visit a binary arithmetic modulus expression node
@@ -494,16 +540,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithModulusExpr node) {
-        return null;
-    }
-
-    /**
-     * Visit a binary logical expression node (should never be called)
-     *
-     * @param node the binary logical expression node
-     * @return result of the visit
-     */
-    public Object visit(BinaryLogicExpr node) {
+        node.getLeftExpr().accept(this);
+        node.getRightExpr().accept(this);
         return null;
     }
 
@@ -514,6 +552,13 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryLogicAndExpr node) {
+        assemblySupport.genComment("generating AND instruction");
+        node.getLeftExpr().accept(this);
+        //Lazy AND evaluation if the left is true, check right,
+        String afterAndLabel = assemblySupport.getLabel();
+        assemblySupport.genCondBeq("$v0", "$zero",afterAndLabel);
+        node.getRightExpr().accept(this);
+        assemblySupport.genLabel(afterAndLabel);
         return null;
     }
 
@@ -524,16 +569,14 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryLogicOrExpr node) {
-        return null;
-    }
-
-    /**
-     * Visit a unary expression node
-     *
-     * @param node the unary expression node
-     * @return result of the visit
-     */
-    public Object visit(UnaryExpr node) {
+        assemblySupport.genComment("generating OR instruction");
+        assemblySupport.genLoadImm("$v0", 1);
+        node.getLeftExpr().accept(this);
+        //Lazy OR evaluation if the left is true, check right,
+        String afterORLabel = assemblySupport.getLabel();
+        assemblySupport.genCondBeq("$v1", "$v0",afterORLabel);
+        node.getRightExpr().accept(this);
+        assemblySupport.genLabel(afterORLabel);
         return null;
     }
 
@@ -544,6 +587,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryNegExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -554,6 +598,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryNotExpr node) {
+        node.getExpr().accept(this);
         return null;
     }
 
@@ -564,6 +609,12 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryIncrExpr node) {
+        node.getExpr().accept(this);
+        String varName = ((VarExpr) node.getExpr()).getName();
+        Location location = (Location) symbolTable.lookup(varName);
+        assemblySupport.genComment("Generating UNARY INCREMENT instruction");
+        assemblySupport.genAdd("$v0","$v0", 1);
+        assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
         return null;
     }
 
@@ -574,6 +625,12 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryDecrExpr node) {
+        node.getExpr().accept(this);
+        String varName = ((VarExpr) node.getExpr()).getName();
+        Location location = (Location) symbolTable.lookup(varName);
+        assemblySupport.genComment("Generating UNARY DECREMENT instruction");
+        assemblySupport.genSub("$v0","$v0", 1);
+        assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
         return null;
     }
 
@@ -585,26 +642,13 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(VarExpr node) {
-        return null;
-    }
-
-    /**
-     * Visit an array expression node
-     *
-     * @param node the array expression node
-     * @return result of the visit
-     */
-    public Object visit(ArrayExpr node) {
-        return null;
-    }
-
-    /**
-     * Visit a constant expression node (should never be called)
-     *
-     * @param node the constant expression node
-     * @return result of the visit
-     */
-    public Object visit(ConstExpr node) {
+        if(node.getRef() != null){
+            node.getRef().accept(this);
+        }
+        Location location = (Location)symbolTable.lookup(node.getName());
+        if(location != null){
+            assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
         return null;
     }
 
@@ -615,6 +659,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ConstIntExpr node) {
+        assemblySupport.genComment("Generating a Constant Int Expression");
+        assemblySupport.genLoadImm("$v0", node.getIntConstant());
         return null;
     }
 
@@ -625,6 +671,15 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ConstBooleanExpr node) {
+        assemblySupport.genComment("Generating Constant Boolean Expression");
+        if (node.getConstant().equals("true")){
+            assemblySupport.genComment("Generating TRUE Constant Boolean Expression");
+            assemblySupport.genLoadImm("$v0", 1);
+        }
+        else {
+            assemblySupport.genComment("Generating FALSE Constant Boolean Expression");
+            assemblySupport.genLoadImm("$v0", 0);
+        }
         return null;
     }
 
