@@ -225,13 +225,37 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(IfStmt node) {
-        symbolTable.enterScope();
         node.getPredExpr().accept(this);
+        String ifTrueBody = assemblySupport.getLabel();
+        String elseBody = assemblySupport.getLabel();
+        String afterIf = assemblySupport.getLabel();
+
+        assemblySupport.genComment("Jumping to else statement if 'if' is false");
+        assemblySupport.genCondBeq("$v0","$zero", elseBody);
+
+        // generates the label if the statement is true
+        assemblySupport.genComment("Generating the THEN label instructions");
+        assemblySupport.genLabel(ifTrueBody);
+        // enters the scope for the body of the if statement
+        symbolTable.enterScope();
         node.getThenStmt().accept(this);
-        if (node.getElseStmt() != null) {
-            node.getElseStmt().accept(this);
-        }
         symbolTable.exitScope();
+
+        // breaks to the label after the if statement has been executed
+        assemblySupport.genUncondBr(afterIf);
+
+
+        // generates the label for the elseStatement body
+        assemblySupport.genComment("Generating the ELSE label instructions");
+        assemblySupport.genLabel(elseBody);
+        if (node.getElseStmt() != null) {
+            // enters the scope of the else statement
+            symbolTable.enterScope();
+            node.getElseStmt().accept(this);
+            symbolTable.exitScope();
+        }
+        // again, goes to the label after the if statement
+        assemblySupport.genLabel(afterIf);
         return null;
     }
 
@@ -250,6 +274,8 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
+     *
+     * INCOMPLETE
      * Visit a for statement node
      *
      * @param node the for statement node
@@ -257,12 +283,16 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(ForStmt node) {
         symbolTable.enterScope();
+        String beforeLoop = assemblySupport.getLabel();
+        String afterLoop = assemblySupport.getLabel();
         if (node.getInitExpr() != null) {
             node.getInitExpr().accept(this);
         }
+        assemblySupport.genLabel(beforeLoop);
         if (node.getPredExpr() != null) {
             node.getPredExpr().accept(this);
         }
+
         if (node.getUpdateExpr() != null) {
             node.getUpdateExpr().accept(this);
         }
@@ -291,7 +321,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BlockStmt node) {
+        symbolTable.enterScope();
         node.getStmtList().accept(this);
+        symbolTable.exitScope();
         return null;
     }
 
