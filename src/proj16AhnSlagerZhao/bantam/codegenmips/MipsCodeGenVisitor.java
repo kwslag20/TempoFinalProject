@@ -8,6 +8,7 @@
 
 package proj16AhnSlagerZhao.bantam.codegenmips;
 
+import javafx.scene.Node;
 import org.reactfx.util.Lists;
 import proj16AhnSlagerZhao.bantam.ast.*;
 
@@ -54,8 +55,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     private void generateProlog(int numLocalVars){
         for (String reg : registers){
-            assemblySupport.genAdd("$sp", "$sp", -4);
-            assemblySupport.genStoreWord(reg, 0,"$sp");
+            this.generatePush(reg);
         }
         assemblySupport.genAdd("$fp", "$fp",-4*numLocalVars);
         assemblySupport.genRetn();
@@ -71,9 +71,18 @@ public class MipsCodeGenVisitor extends Visitor {
     private void generateEpilog(int numLocalVars){
         assemblySupport.genAdd("$sp", "$sp", 4*numLocalVars);
         for (int i = -1; i < registers.length ; i--){
-            assemblySupport.genLoadWord(registers[i], 0,"$sp");
-            assemblySupport.genAdd("$sp", "$sp", 4);
+            this.generatePop(registers[i]);
         }
+    }
+
+    private void generatePush(String source){
+        assemblySupport.genAdd("$sp", "$sp", -4);
+        assemblySupport.genStoreWord(source, 0, "$sp");
+    }
+
+    private void generatePop(String destination){
+        assemblySupport.genLoadWord(destination, 0, "$sp");
+        assemblySupport.genAdd("$sp", "$sp", 4);
     }
 
     /**
