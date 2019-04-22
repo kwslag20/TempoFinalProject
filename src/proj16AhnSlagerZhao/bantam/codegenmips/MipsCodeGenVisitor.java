@@ -30,6 +30,7 @@ public class MipsCodeGenVisitor extends Visitor {
 
     private MipsSupport assemblySupport;
     private SymbolTable symbolTable;
+    private PrintStream printStream;
     private static final String[] registers = new String[]{
             "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
             "$t4","$t5","$t6","$t7","$v0","$v1"
@@ -38,9 +39,10 @@ public class MipsCodeGenVisitor extends Visitor {
     /**
      * constructor for the class
      */
-    public MipsCodeGenVisitor(MipsSupport assemblySupport){
+    public MipsCodeGenVisitor(MipsSupport assemblySupport, PrintStream printStream){
         this.symbolTable = new SymbolTable();
         this.assemblySupport = assemblySupport;
+        this.printStream = printStream;
     }
 
     /**
@@ -433,7 +435,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(BinaryCompEqExpr node) {
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genMove("$v1", "$v0");
         node.getRightExpr().accept(this);
+        generatePush("$v0");
+        this.printStream.println("\tseq $v0 $v0 $v1");
         return null;
     }
 
@@ -445,7 +451,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(BinaryCompNeExpr node) {
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genMove("$v1", "$v0");
         node.getRightExpr().accept(this);
+        generatePush("$v0");
+        this.printStream.println("\tsne $v0 $v1 $v0");
         return null;    }
 
     /**
@@ -456,7 +466,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(BinaryCompLtExpr node) {
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genMove("$v1", "$v0");
         node.getRightExpr().accept(this);
+        generatePush("$v0");
+        this.printStream.println("\tslt $v0 $v1 $v0");
         return null;    }
 
     /**
@@ -467,7 +481,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(BinaryCompLeqExpr node) {
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genMove("$v1", "$v0");
         node.getRightExpr().accept(this);
+        generatePush("$v0");
+        this.printStream.println("\tsle $v0 $v1 $v0");
         return null;
     }
 
@@ -479,7 +497,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(BinaryCompGtExpr node) {
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genMove("$v1", "$v0");
         node.getRightExpr().accept(this);
+        generatePush("$v0");
+        this.printStream.println("\tsgt $v0 $v1 $v0");
         return null;
     }
 
@@ -491,7 +513,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(BinaryCompGeqExpr node) {
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genMove("$v1", "$v0");
         node.getRightExpr().accept(this);
+        generatePush("$v0");
+        this.printStream.println("\tsge");
         return null;
     }
 
