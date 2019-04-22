@@ -1,15 +1,10 @@
 class Main{   
-	int testInteger; 
-	String thisString;
-	int numVar;
-    	int x = 4; // x comment
 	void main(){
-		numVar = new int[4];
-		testInteger = 8;
-	}
-}
-
-class SecondMain{
-	void testMethod(){
+		int a = 3;
+		int b = 4;
+		int c = 5;
+		if(b > a){
+			c = 6;
+		}
 	}
 }

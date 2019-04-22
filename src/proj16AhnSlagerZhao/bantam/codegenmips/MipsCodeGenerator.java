@@ -211,7 +211,7 @@ public class MipsCodeGenerator {
         if(this.assemblySupport == null){
             System.out.println("oh no");
         }
-        this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport);
+        this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport, this.out);
         generateText(root, this.mipsCodeGenVisitor);
 
 
@@ -434,7 +434,7 @@ public class MipsCodeGenerator {
 
         //generates the global dispatch tables for the built in classes
         for(Map.Entry<String,String> builtIn : this.builtIns.entrySet()){
-            this.assemblySupport.genGlobal(builtIn.getKey() + "_template");
+            this.assemblySupport.genGlobal(builtIn.getKey() + "_dispatch_table");
         }
 
         //executes all of the necessary dispatch table creating
