@@ -211,6 +211,12 @@ public class MipsCodeGenVisitor extends Visitor {
      *
      * @param node the if statement node
      * @return result of the visit
+     *
+     * Bantam java manual instructions for If stmt:
+     * the <predicate> is a boolean expression, the <then statement>
+     * is a statement that is evaluated if the predicate evaluates
+     * to true, and the <else statement> is a statement that is evaluated
+     * if the predicate evaluates to false. As in Java, the else statement is optional.
      */
     public Object visit(IfStmt node) {
         node.getPredExpr().accept(this);
@@ -252,11 +258,36 @@ public class MipsCodeGenVisitor extends Visitor {
      *
      * @param node the while statement node
      * @return result of the visit
+     *
+     * Bantam java manual instructions for while stmt:
+     * The while loop is evaluated by first evaluating the predicate,
+     * and if this is true then evaluating the statement, and repeating the process.
+     * The loop stops once the predicate evaluates to false. Each time the statement
+     * within the loop executes is called a loop iteration.
      */
     public Object visit(WhileStmt node) {
         symbolTable.enterScope();
+        String predicateLabel = assemblySupport.getLabel();
+        String postWhileLabel = assemblySupport.getLabel(); // have to save for the break stmt
+
+        generatePush("$ra"); // push return address
+        assemblySupport.genLoadAddr("$ra", postWhileLabel);
+
+        assemblySupport.genComment("Generating the PREDICATE label");
+        assemblySupport.genLabel(predicateLabel);
         node.getPredExpr().accept(this);
+
+        assemblySupport.genComment("Generating a CONDITIONAL BREAK to the postWhile label if predicate is false");
+        assemblySupport.genCondBeq("$v0", "$zero", postWhileLabel);
         node.getBodyStmt().accept(this);
+
+        assemblySupport.genComment("Generating an UNCONDITIONAL BREAK back to the predicate label");
+        assemblySupport.genUncondBr(predicateLabel); // heads to next iteration
+
+        // generate the postLabel and then pop the return address
+        assemblySupport.genLabel(postWhileLabel);
+        generatePop("$ra");
+
         symbolTable.exitScope();
         return null;
     }
@@ -268,6 +299,13 @@ public class MipsCodeGenVisitor extends Visitor {
      *
      * @param node the for statement node
      * @return result of the visit
+     *
+     * Bantam java manual instructions for For stmt:
+     * The for loop is evaluated by first evaluating the initialization expression,
+     * which is not a part of the loop. Then the predicate is evaluated, and if it is true,
+     * another iteration of the loop is performed, otherwise, the loop terminates.
+     * Each iteration of the loop, the statement is executed followed by the update expression.
+     * If the predicate expression is omitted, then the predicate expression true (which is always true) is used.
      */
     public Object visit(ForStmt node) {
         symbolTable.enterScope();
@@ -347,6 +385,17 @@ public class MipsCodeGenVisitor extends Visitor {
      *
      * @param node the dispatch expression node
      * @return result of the visit
+     *
+     * NOTES FROM CLASS
+     * DispatchExpr
+     * 	<E1>.foo(<E2>, <E3>);
+     * 1. Visit E1 + put result in a0
+     * 2. Check if e1 is null, is so error
+     * 3. Visit E2 + push on stack
+     * 4. Visit E3 + push on stack
+     * 5. Save any $t + $v registers
+     * 6. Restore any saved registers
+     * 7. The return value is in $v0
      */
     public Object visit(DispatchExpr node) {
         if(node.getRefExpr() != null)
@@ -569,14 +618,26 @@ public class MipsCodeGenVisitor extends Visitor {
 
     /**
      * Visit a binary arithmetic divide expression node
+     * must deal with division by zero errors
      *
      * @param node the binary arithmetic divide expression node
      * @return result of the visit
      */
     public Object visit(BinaryArithDivideExpr node) {
+        //String divByZero = assemblySupport.getLabel();
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
-        return null;    }
+        generatePop("$v1");
+
+        // conditionally breaks if there is a divsion by zero
+       // assemblySupport.genCondBeq("$v0", "$zero", divByZero);
+        assemblySupport.genComment("Generating DIV instruction");
+        assemblySupport.genDiv("$v0","$v0","$v1");
+        return null;
+    }
 
     /**
      * Visit a binary arithmetic modulus expression node
@@ -585,8 +646,14 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithModulusExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
+        generatePop("$v1");
+        assemblySupport.genComment("Generating MOD instruction");
+        assemblySupport.genMod("$v0","$v0","$v1");
         return null;
     }
 
