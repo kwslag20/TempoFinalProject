@@ -520,8 +520,13 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryLogicAndExpr node) {
+        assemblySupport.genComment("generating AND instruction");
         node.getLeftExpr().accept(this);
+        //Lazy AND evaluation if the left is true, check right,
+        String afterAndLabel = assemblySupport.getLabel();
+        assemblySupport.genCondBeq("$v0", "$zero",afterAndLabel);
         node.getRightExpr().accept(this);
+        assemblySupport.genLabel(afterAndLabel);
         return null;
     }
 
@@ -532,8 +537,14 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryLogicOrExpr node) {
+        assemblySupport.genComment("generating OR instruction");
+        assemblySupport.genLoadImm("$v0", 1);
         node.getLeftExpr().accept(this);
+        //Lazy OR evaluation if the left is true, check right,
+        String afterORLabel = assemblySupport.getLabel();
+        assemblySupport.genCondBeq("$v1", "$v0",afterORLabel);
         node.getRightExpr().accept(this);
+        assemblySupport.genLabel(afterORLabel);
         return null;
     }
 
@@ -567,6 +578,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(UnaryIncrExpr node) {
         node.getExpr().accept(this);
+        String varName = ((VarExpr) node.getExpr()).getName();
+        Location location = (Location) symbolTable.lookup(varName);
+        assemblySupport.genComment("Generating UNARY INCREMENT instruction");
+        assemblySupport.genAdd("$v0","$v0", 1);
+        assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
         return null;
     }
 
@@ -578,6 +594,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(UnaryDecrExpr node) {
         node.getExpr().accept(this);
+        String varName = ((VarExpr) node.getExpr()).getName();
+        Location location = (Location) symbolTable.lookup(varName);
+        assemblySupport.genComment("Generating UNARY DECREMENT instruction");
+        assemblySupport.genSub("$v0","$v0", 1);
+        assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
         return null;
     }
 
@@ -607,7 +628,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(ConstIntExpr node) {
         assemblySupport.genComment("Generating a Constant Int Expression");
-        assemblySupport.genLoadImm("$v0",node.getIntConstant());
+        assemblySupport.genLoadImm("$v0", node.getIntConstant());
         return null;
     }
 
