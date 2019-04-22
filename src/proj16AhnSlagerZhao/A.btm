@@ -1,11 +1,10 @@
 class Main{   
-	int testInteger; 
-	int numVar;
+	int y = 3;
     	int x = 4; // x comment
-	String j = "hi";
 	void main(){
-		numVar = new int[4];
-		testInteger = 8;
+		if(x>y){
+		x = 5;
+		}
 	}
 }
 

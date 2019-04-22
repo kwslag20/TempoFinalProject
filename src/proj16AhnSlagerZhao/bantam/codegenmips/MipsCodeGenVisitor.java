@@ -193,18 +193,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * Visit a list node of statements
-     *
-     * @param node the statement list node
-     * @return result of the visit
-     */
-    public Object visit(StmtList node) {
-        for (Iterator it = node.iterator(); it.hasNext(); )
-            ((Stmt) it.next()).accept(this);
-        return null;
-    }
-
-    /**
      * TODO Kyle
      * Visit a declaration statement node
      *
@@ -215,17 +203,6 @@ public class MipsCodeGenVisitor extends Visitor {
         node.getInit().accept(this);
         Location location = new Location("$fp", symbolTable.getCurrScopeSize()*4);
         symbolTable.add(node.getName(), location);
-        return null;
-    }
-
-    /**
-     * Visit an expression statement node
-     *
-     * @param node the expression statement node
-     * @return result of the visit
-     */
-    public Object visit(ExprStmt node) {
-        node.getExpr().accept(this);
         return null;
     }
 
@@ -420,6 +397,8 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(AssignExpr node) {
         this.assemblySupport.genStoreWord("$a0", -4, "$sp");
         node.getExpr().accept(this);
+        System.out.println(node.getName());
+        System.out.println(node.getRefName());
         this.assemblySupport.genComment("GENERATING AN ASSIGN EXPRESSION");
         Location local = (Location) symbolTable.lookup(node.getName());
         this.assemblySupport.genStoreWord("$v0",local.getOffset(),local.getBaseReg());

@@ -211,7 +211,7 @@ public class MipsCodeGenerator {
         if(this.assemblySupport == null){
             System.out.println("oh no");
         }
-        this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport);
+        this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport, this.out);
         generateText(root, this.mipsCodeGenVisitor);
 
 
