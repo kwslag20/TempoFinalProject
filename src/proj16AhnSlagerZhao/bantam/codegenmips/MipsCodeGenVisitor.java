@@ -337,6 +337,7 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(ExprList node) {
         for (Iterator it = node.iterator(); it.hasNext(); )
             ((Expr) it.next()).accept(this);
+
         return null;
     }
 
@@ -413,9 +414,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompEqExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
         generatePush("$v0");
         assemblySupport.genMove("$v1", "$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
         generatePush("$v0");
         this.printStream.println("\tseq $v0 $v0 $v1");
@@ -429,9 +432,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompNeExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
         generatePush("$v0");
         assemblySupport.genMove("$v1", "$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
         generatePush("$v0");
         this.printStream.println("\tsne $v0 $v1 $v0");
@@ -444,9 +449,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompLtExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
         generatePush("$v0");
         assemblySupport.genMove("$v1", "$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
         generatePush("$v0");
         this.printStream.println("\tslt $v0 $v1 $v0");
@@ -459,9 +466,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompLeqExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
         generatePush("$v0");
         assemblySupport.genMove("$v1", "$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
         generatePush("$v0");
         this.printStream.println("\tsle $v0 $v1 $v0");
@@ -475,9 +484,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompGtExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
         generatePush("$v0");
         assemblySupport.genMove("$v1", "$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
         generatePush("$v0");
         this.printStream.println("\tsgt $v0 $v1 $v0");
@@ -491,9 +502,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryCompGeqExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
         generatePush("$v0");
         assemblySupport.genMove("$v1", "$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
         generatePush("$v0");
         this.printStream.println("\tsge");
@@ -507,8 +520,14 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithPlusExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
+        generatePop("$v1");
+        assemblySupport.genComment("Generating ADD instruction");
+        assemblySupport.genAdd("$v0","$v0","$v1");
         return null;
     }
 
@@ -519,8 +538,14 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithMinusExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
+        generatePop("$v1");
+        assemblySupport.genComment("Generating SUB instruction");
+        assemblySupport.genSub("$v0","$v0","$v1");
         return null;
     }
 
@@ -531,8 +556,14 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithTimesExpr node) {
+        assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
+        generatePush("$v0");
+        assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
+        generatePop("$v1");
+        assemblySupport.genComment("Generating MUL instruction");
+        assemblySupport.genMul("$v0","$v0","$v1");
         return null;
     }
 
@@ -560,6 +591,7 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
+     * Lazy Eval?
      * Visit a binary logical AND expression node
      *
      * @param node the binary logical AND expression node
@@ -568,7 +600,7 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(BinaryLogicAndExpr node) {
         assemblySupport.genComment("generating AND instruction");
         node.getLeftExpr().accept(this);
-        //Lazy AND evaluation if the left is true, check right,
+        //Lazy AND evaluation if the left is true, check right, just like IF statement
         String afterAndLabel = assemblySupport.getLabel();
         assemblySupport.genCondBeq("$v0", "$zero",afterAndLabel);
         node.getRightExpr().accept(this);
@@ -577,6 +609,7 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
+     * QUESTION: OR has lazy eval correct?
      * Visit a binary logical OR expression node
      *
      * @param node the binary logical OR expression node
