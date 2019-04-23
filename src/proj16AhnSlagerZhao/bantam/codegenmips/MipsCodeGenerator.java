@@ -113,6 +113,10 @@ public class MipsCodeGenerator {
     private Map<String, String> builtIns;
 
     /**
+     *
+     */
+    private HashMap<String, ArrayList<String>> dispatchTable;
+    /**
      * outfile
      */
     private String outFile;
@@ -128,6 +132,7 @@ public class MipsCodeGenerator {
         this.gc = gc;
         this.opt = opt;
         this.errorHandler = errorHandler;
+        this.dispatchTable = new HashMap<>();
     }
 
     /**
@@ -158,7 +163,7 @@ public class MipsCodeGenerator {
         this.builtIns.put("Object", "class_name_0");
         this.builtIns.put("String", "class_name_1");
         this.builtIns.put("Sys", "class_name_2");
-        //this.builtIns.put("Main", "class_name_3");
+        this.builtIns.put("Main", "class_name_3");
         this.builtIns.put("TextIO", "class_name_4");
 
         //uses the StringConstantsVisitor to create a map of string constants
@@ -207,24 +212,12 @@ public class MipsCodeGenerator {
 
         // STEP 7 GENERATE METHOD STUBS AND MINIMUM TEXT SECTION FOR TESTING
         this.assemblySupport.genTextStart();
-        this.genStubs();
-        if(this.assemblySupport == null){
-            System.out.println("oh no");
-        }
-        this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport, this.out);
+        //this.genStubs();
+
+        this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport, this.out, stringMap, this.root, this.dispatchTable);
         this.mipsCodeGenVisitor.visit(this.ast);
-        //generateText(ast, this.mipsCodeGenVisitor);
-
-
     }
 
-//    private void generateText(Program node, MipsCodeGenVisitor mipsCodeGenVisitor){
-//        mipsCodeGenVisitor.visit(node);
-//        Iterator<ClassTreeNode> iterator = node.getChildrenList();
-//        while(iterator.hasNext()){
-//            generateText(iterator.next(), mipsCodeGenVisitor);
-//        }
-//    }
 
     /**
      * a method to add a string constant object to a map to keep track of them
@@ -368,50 +361,50 @@ public class MipsCodeGenerator {
      */
     private ArrayList<String> genDispatchTable(String className, LinkedHashMap<String, String> methodAndClassMap, ArrayList<String> methodNameList){
         MemberList membersList;
-        String methodName;
-        String curName;
-        ClassTreeNode curClassTreeNode;
-        Map curClassMap = this.root.getClassMap();
-        curClassTreeNode =  (ClassTreeNode)curClassMap.get(className);
+    String methodName;
+    String curName;
+    ClassTreeNode curClassTreeNode;
+    Map curClassMap = this.root.getClassMap();
+    curClassTreeNode =  (ClassTreeNode)curClassMap.get(className);
 
             this.assemblySupport.genLabel("\n"+className+"_dispatch_table"); // gens the label itself
             while (curClassTreeNode != null) { // loops through until the curClassTreeNode is found to be null
-                curName = curClassTreeNode.getName();
-                membersList = curClassTreeNode.getASTNode().getMemberList(); //
-                int memberCount = membersList.getSize();
-                // loops backwards: Methods from classes higher in the class hierarchy tree
-                // (i.e., closer to Object) should appear earlier in the dispatch table
-                for (int i = 0; i < memberCount; i++) {
-                    Member member = (Member)membersList.get(memberCount - 1 - i);
-                    if (member instanceof Method) {
-                        methodName = ((Method) member).getName();
+        curName = curClassTreeNode.getName();
+        membersList = curClassTreeNode.getASTNode().getMemberList(); //
+        int memberCount = membersList.getSize();
+        // loops backwards: Methods from classes higher in the class hierarchy tree
+        // (i.e., closer to Object) should appear earlier in the dispatch table
+        for (int i = 0; i < memberCount; i++) {
+            Member member = (Member)membersList.get(memberCount - 1 - i);
+            if (member instanceof Method) {
+                methodName = ((Method) member).getName();
 
-                        // checks if the map already contains the methodName key
-                        if (methodAndClassMap.containsKey(methodName)) {
-                            methodAndClassMap.remove(methodName); // removes it
-                            methodAndClassMap.put(methodName, className); // repopulates map
-                        }
-                        else {
-                            // populates the map itself
-                            methodAndClassMap.put(methodName, curName);
-                        }
-                    }
+                // checks if the map already contains the methodName key
+                if (methodAndClassMap.containsKey(methodName)) {
+                    methodAndClassMap.remove(methodName); // removes it
+                    methodAndClassMap.put(methodName, className); // repopulates map
                 }
-                curClassTreeNode = curClassTreeNode.getParent(); // grabs the parent to reset
+                else {
+                    // populates the map itself
+                    methodAndClassMap.put(methodName, curName);
+                }
             }
+        }
+        curClassTreeNode = curClassTreeNode.getParent(); // grabs the parent to reset
+    }
 
-            methodNameList = new ArrayList<>(methodAndClassMap.keySet());
+    methodNameList = new ArrayList<>(methodAndClassMap.keySet());
 
-            // loops backwards for same purpose as above
+    // loops backwards for same purpose as above
             for (int i = 0; i < methodNameList.size(); i++) {
-                methodName = methodNameList.get(methodNameList.size() - 1 - i); // gets the current index of the methodName from the list
-                curName = methodAndClassMap.get(methodName); // sets the current name
-                this.assemblySupport.genWord(curName+"."+methodName); // generates the word
-            }
+        methodName = methodNameList.get(methodNameList.size() - 1 - i); // gets the current index of the methodName from the list
+        curName = methodAndClassMap.get(methodName); // sets the current name
+        this.assemblySupport.genWord(curName+"."+methodName); // generates the word
+    }
             methodAndClassMap.clear();
         return methodNameList;
 
-    }
+}
 
     /**
      * Method that implements genDispatchTable to create all the dispatch tables necessary
@@ -431,6 +424,7 @@ public class MipsCodeGenerator {
         //generates the global dispatch tables for the user created classes
         for(Map.Entry<Class_, ArrayList<String>> entry : methodsMap.entrySet()){
             this.assemblySupport.genGlobal(entry.getKey().getName() + "_dispatch_table");
+            dispatchTable.put(entry.getKey().getName(), methodsMap.get(entry.getKey()));
         }
 
         //generates the global dispatch tables for the built in classes
