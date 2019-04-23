@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.*;
 
 import proj16AhnSlagerZhao.bantam.ast.*;
+import proj16AhnSlagerZhao.bantam.semant.NumLocalVarsVisitor;
 import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.codegenmips.Location;
 import proj16AhnSlagerZhao.bantam.util.CompilationException;
@@ -31,6 +32,8 @@ public class MipsCodeGenVisitor extends Visitor {
     private MipsSupport assemblySupport;
     private SymbolTable symbolTable;
     private PrintStream printStream;
+    private Map<String,Integer> localVarsMap;
+    private String currentClass;
     private static final String[] registers = new String[]{
             "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
             "$t4","$t5","$t6","$t7","$v0","$v1"
@@ -72,7 +75,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     private void generateEpilog(int numLocalVars){
         assemblySupport.genAdd("$sp", "$sp", 4*numLocalVars);
-        for (int i = -1; i < registers.length ; i--){
+        for (int i = (registers.length - 1); i > -1 ; i--){
             this.generatePop(registers[i]);
         }
     }
@@ -94,6 +97,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Program node) {
+        NumLocalVarsVisitor numLocalVarsVisitor = new NumLocalVarsVisitor();
+        this.localVarsMap = numLocalVarsVisitor.getNumLocalVars(node);
+        System.out.println("im visited");
         node.getClassList().accept(this);
         return null;
     }
@@ -118,6 +124,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(Class_ node) {
         symbolTable.enterScope();
+        this.currentClass = node.getName();
         node.getMemberList().accept(this);
         symbolTable.exitScope();
         return null;
@@ -160,9 +167,11 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Method node) {
+        generateProlog(this.localVarsMap.get(this.currentClass+"."+node.getName()));
         symbolTable.enterScope();
         node.getFormalList().accept(this);
         node.getStmtList().accept(this);
+        generateEpilog(this.localVarsMap.get(this.currentClass+"."+node.getName()));
         symbolTable.exitScope();
         return null;
     }

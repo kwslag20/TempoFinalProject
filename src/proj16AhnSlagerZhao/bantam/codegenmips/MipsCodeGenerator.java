@@ -212,18 +212,19 @@ public class MipsCodeGenerator {
             System.out.println("oh no");
         }
         this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport, this.out);
-        generateText(root, this.mipsCodeGenVisitor);
+        this.mipsCodeGenVisitor.visit(this.ast);
+        //generateText(ast, this.mipsCodeGenVisitor);
 
 
     }
 
-    private void generateText(ClassTreeNode node, MipsCodeGenVisitor mipsCodeGenVisitor){
-        mipsCodeGenVisitor.visit(node.getASTNode());
-        Iterator<ClassTreeNode> iterator = node.getChildrenList();
-        while(iterator.hasNext()){
-            generateText(iterator.next(), mipsCodeGenVisitor);
-        }
-    }
+//    private void generateText(Program node, MipsCodeGenVisitor mipsCodeGenVisitor){
+//        mipsCodeGenVisitor.visit(node);
+//        Iterator<ClassTreeNode> iterator = node.getChildrenList();
+//        while(iterator.hasNext()){
+//            generateText(iterator.next(), mipsCodeGenVisitor);
+//        }
+//    }
 
     /**
      * a method to add a string constant object to a map to keep track of them
