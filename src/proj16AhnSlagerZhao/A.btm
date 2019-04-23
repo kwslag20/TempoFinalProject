@@ -5,10 +5,10 @@ class Main{
 		if(x>y){
 		x = 5;
 		}
-	}
-}
-
-class SecondMain{
-	void testMethod(){
+		for(x = 0; x < 5; x++){
+			while(x < 5){
+				y++;
+			}
+		}
 	}
 }

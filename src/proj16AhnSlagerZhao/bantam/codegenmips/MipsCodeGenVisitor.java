@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.*;
 
 import proj16AhnSlagerZhao.bantam.ast.*;
+import proj16AhnSlagerZhao.bantam.semant.NumLocalVarsVisitor;
 import proj16AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj16AhnSlagerZhao.bantam.codegenmips.Location;
 import proj16AhnSlagerZhao.bantam.util.CompilationException;
@@ -31,6 +32,10 @@ public class MipsCodeGenVisitor extends Visitor {
     private MipsSupport assemblySupport;
     private SymbolTable symbolTable;
     private PrintStream printStream;
+    private Map<String,Integer> localVarsMap;
+    private String currentClass;
+    private Map<String, String> strMap;
+    private NumLocalVarsVisitor numLocalVars;
     private static final String[] registers = new String[]{
             "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
             "$t4","$t5","$t6","$t7","$v0","$v1"
@@ -39,10 +44,11 @@ public class MipsCodeGenVisitor extends Visitor {
     /**
      * constructor for the class
      */
-    public MipsCodeGenVisitor(MipsSupport assemblySupport, PrintStream printStream){
+    public MipsCodeGenVisitor(MipsSupport assemblySupport, PrintStream printStream, Map<String, String> strMap){
         this.symbolTable = new SymbolTable();
         this.assemblySupport = assemblySupport;
         this.printStream = printStream;
+        this.strMap = strMap;
     }
 
     /**
@@ -72,7 +78,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     private void generateEpilog(int numLocalVars){
         assemblySupport.genAdd("$sp", "$sp", 4*numLocalVars);
-        for (int i = -1; i < registers.length ; i--){
+        for (int i = (registers.length - 1); i > -1 ; i--){
             this.generatePop(registers[i]);
         }
     }
@@ -94,6 +100,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Program node) {
+        NumLocalVarsVisitor numLocalVarsVisitor = new NumLocalVarsVisitor();
+        this.localVarsMap = numLocalVarsVisitor.getNumLocalVars(node);
+        System.out.println("im visited");
         node.getClassList().accept(this);
         return null;
     }
@@ -118,6 +127,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(Class_ node) {
         symbolTable.enterScope();
+        this.currentClass = node.getName();
         node.getMemberList().accept(this);
         symbolTable.exitScope();
         return null;
@@ -259,7 +269,7 @@ public class MipsCodeGenVisitor extends Visitor {
     /**
      * Visit a while statement node
      *
-             * @param node the while statement node
+     * @param node the while statement node
      * @return result of the visit
      *
      * Bantam java manual instructions for while stmt:
@@ -314,6 +324,8 @@ public class MipsCodeGenVisitor extends Visitor {
         symbolTable.enterScope();
         String beforeLoop = assemblySupport.getLabel();
         String afterLoop = assemblySupport.getLabel();
+        generatePush("$ra"); // push return address
+        assemblySupport.genLoadAddr("$ra", afterLoop);
         if (node.getInitExpr() != null) {
             node.getInitExpr().accept(this);
         }
@@ -321,11 +333,14 @@ public class MipsCodeGenVisitor extends Visitor {
         if (node.getPredExpr() != null) {
             node.getPredExpr().accept(this);
         }
-
+        assemblySupport.genCondBeq("$v0", "$zero", afterLoop);
+        assemblySupport.genLabel(afterLoop);
+        node.getBodyStmt().accept(this);
         if (node.getUpdateExpr() != null) {
             node.getUpdateExpr().accept(this);
         }
-        node.getBodyStmt().accept(this);
+        assemblySupport.genLabel(afterLoop);
+        generatePop("$ra");
         symbolTable.exitScope();
         return null;
     }
@@ -339,7 +354,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(BreakStmt node) {
         assemblySupport.genComment("Generating a break");
-        assemblySupport.genRetn();
+        assemblySupport.genRetn(); // gens a JR with a return address that should be stored in the stack
         return null;
     }
 
@@ -821,6 +836,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ConstStringExpr node) {
+        // load in the address of the string constant
+        assemblySupport.genLoadAddr("$v0",strMap.get(node.getConstant()));
         return null;
     }
 }
