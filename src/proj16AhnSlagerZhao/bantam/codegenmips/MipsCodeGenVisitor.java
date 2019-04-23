@@ -45,7 +45,8 @@ public class MipsCodeGenVisitor extends Visitor {
     /**
      * constructor for the class
      */
-    public MipsCodeGenVisitor(MipsSupport assemblySupport, PrintStream printStream, Map<String, String> strMap, ClassTreeNode root, HashMap<String, ArrayList<String>> dispatchTable){
+    public MipsCodeGenVisitor(MipsSupport assemblySupport, PrintStream printStream, Map<String, String> strMap,
+                                    ClassTreeNode root, HashMap<String, ArrayList<String>> dispatchTable){
         this.symbolTable = new SymbolTable();
         this.assemblySupport = assemblySupport;
         this.printStream = printStream;
@@ -657,8 +658,8 @@ public class MipsCodeGenVisitor extends Visitor {
         node.getRightExpr().accept(this);
         generatePop("$v1");
 
-        // conditionally breaks if there is a divsion by zero
-       // assemblySupport.genCondBeq("$v0", "$zero", divByZero);
+        // conditionally breaks if there is a division by zero
+        assemblySupport.genCondBeq("$v0", "$zero", "_divide_zero_error");
         assemblySupport.genComment("Generating DIV instruction");
         assemblySupport.genDiv("$v0","$v0","$v1");
         return null;
@@ -677,6 +678,7 @@ public class MipsCodeGenVisitor extends Visitor {
         assemblySupport.genComment("Generating RIGHT side of expression");
         node.getRightExpr().accept(this);
         generatePop("$v1");
+        assemblySupport.genCondBeq("$v0", "$zero", "_divide_zero_error");
         assemblySupport.genComment("Generating MOD instruction");
         assemblySupport.genMod("$v0","$v0","$v1");
         return null;
