@@ -34,6 +34,8 @@ public class MipsCodeGenVisitor extends Visitor {
     private PrintStream printStream;
     private Map<String,Integer> localVarsMap;
     private String currentClass;
+    private Map<String, String> strMap;
+    private NumLocalVarsVisitor numLocalVars;
     private static final String[] registers = new String[]{
             "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
             "$t4","$t5","$t6","$t7","$v0","$v1"
@@ -42,10 +44,11 @@ public class MipsCodeGenVisitor extends Visitor {
     /**
      * constructor for the class
      */
-    public MipsCodeGenVisitor(MipsSupport assemblySupport, PrintStream printStream){
+    public MipsCodeGenVisitor(MipsSupport assemblySupport, PrintStream printStream, Map<String, String> strMap){
         this.symbolTable = new SymbolTable();
         this.assemblySupport = assemblySupport;
         this.printStream = printStream;
+        this.strMap = strMap;
     }
 
     /**
@@ -169,6 +172,7 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(Method node) {
         generateProlog(this.localVarsMap.get(this.currentClass+"."+node.getName()));
         symbolTable.enterScope();
+
         node.getFormalList().accept(this);
         node.getStmtList().accept(this);
         generateEpilog(this.localVarsMap.get(this.currentClass+"."+node.getName()));
@@ -320,6 +324,8 @@ public class MipsCodeGenVisitor extends Visitor {
         symbolTable.enterScope();
         String beforeLoop = assemblySupport.getLabel();
         String afterLoop = assemblySupport.getLabel();
+        generatePush("$ra"); // push return address
+        assemblySupport.genLoadAddr("$ra", afterLoop);
         if (node.getInitExpr() != null) {
             node.getInitExpr().accept(this);
         }
@@ -327,11 +333,14 @@ public class MipsCodeGenVisitor extends Visitor {
         if (node.getPredExpr() != null) {
             node.getPredExpr().accept(this);
         }
-
+        assemblySupport.genCondBeq("$v0", "$zero", afterLoop);
+        assemblySupport.genLabel(afterLoop);
+        node.getBodyStmt().accept(this);
         if (node.getUpdateExpr() != null) {
             node.getUpdateExpr().accept(this);
         }
-        node.getBodyStmt().accept(this);
+        assemblySupport.genLabel(afterLoop);
+        generatePop("$ra");
         symbolTable.exitScope();
         return null;
     }
@@ -345,7 +354,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(BreakStmt node) {
         assemblySupport.genComment("Generating a break");
-        assemblySupport.genRetn();
+        assemblySupport.genRetn(); // gens a JR with a return address that should be stored in the stack
         return null;
     }
 
@@ -813,6 +822,8 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ConstStringExpr node) {
+        // load in the address of the string constant
+        assemblySupport.genLoadAddr("$v0",strMap.get(node.getConstant()));
         return null;
     }
 }
