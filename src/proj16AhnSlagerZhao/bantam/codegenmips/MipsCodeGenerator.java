@@ -27,7 +27,7 @@
 
 /*
  * File: MipsCodeGenerator.java
- * Names: Kevin Ahn, Kyle Slager, and Danqing Zhou
+ * Names: Kevin Ahn, Kyle Slager, and Danqing Zhao
  * Class: CS461
  * Project 17
  * Date: April 17, 2019
@@ -143,6 +143,7 @@ public class MipsCodeGenerator {
      * 2 - generate data for the garbage collector
      * 3 - generate string constants
      * 4 - generate class name table
+     * 5 - generate object templates
      * 5 - generate object templates
      * 6 - generate dispatch tables
      * 7 - start the text section
