@@ -153,13 +153,16 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * TODO Danqing
+     * Incomplete
      * Visit a method node
      *
      * @param node the method node
      * @return result of the visit
      */
     public Object visit(Method node) {
+        Location location = new Location("$a0", symbolTable.getCurrScopeSize()*4);
+        symbolTable.add(node.getName(), location);
+        assemblySupport.genLabel(node.getName());
         symbolTable.enterScope();
         node.getFormalList().accept(this);
         node.getStmtList().accept(this);
@@ -256,7 +259,7 @@ public class MipsCodeGenVisitor extends Visitor {
     /**
      * Visit a while statement node
      *
-     * @param node the while statement node
+             * @param node the while statement node
      * @return result of the visit
      *
      * Bantam java manual instructions for while stmt:
@@ -390,7 +393,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * DispatchExpr
      * 	<E1>.foo(<E2>, <E3>);
      * 1. Visit E1 + put result in a0
-     * 2. Check if e1 is null, is so error
+     * 2. Check if e1 is null, is so error ??
      * 3. Visit E2 + push on stack
      * 4. Visit E3 + push on stack
      * 5. Save any $t + $v registers
@@ -398,9 +401,23 @@ public class MipsCodeGenVisitor extends Visitor {
      * 7. The return value is in $v0
      */
     public Object visit(DispatchExpr node) {
-        if(node.getRefExpr() != null)
+
+        if(node.getRefExpr() != null) {
             node.getRefExpr().accept(this);
-        node.getActualList().accept(this);
+            assemblySupport.genMove("$a0", "$v0");
+        }
+        else{
+            //raise error
+        }
+        for (Iterator it = node.getActualList().iterator(); it.hasNext(); ) {
+            ((Expr) it.next()).accept(this);
+            generatePush("$v0");
+        }
+        generateProlog(symbolTable.getCurrScopeSize());
+        Location loc = (Location) symbolTable.lookup(node.getMethodName());
+        assemblySupport.genLoadWord("$t0",loc.getOffset(), "$a0");
+        assemblySupport.genInDirCall("$t0");
+        generateEpilog(symbolTable.getCurrScopeSize());
         return null;
     }
 
