@@ -459,7 +459,7 @@ public class MipsCodeGenVisitor extends Visitor {
         node.getActualList().accept(this);
         generateProlog(symbolTable.getCurrScopeSize());
         System.out.println(node.getMethodName() + " hi ");
-        ArrayList<String> methodList = dispatchTable.get(node.getRefExpr());
+        ArrayList<String> methodList = this.dispatchTable.get(node.getRefExpr());
 
         Location loc = (Location) symbolTable.lookup(node.getRefExpr().getExprType());
         assemblySupport.genLoadWord("$t0",loc.getOffset()+ 4*methodList.indexOf(node.getMethodName()), "$a0");
