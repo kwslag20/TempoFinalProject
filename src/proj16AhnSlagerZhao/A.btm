@@ -2,7 +2,7 @@ class Main{
 	int y = 3;
     	int x = 4; // x comment
 	void main(){
-		if(x>y){k
+		if(x>y){
 		x = 5;
 		}
 		for(x = 0; x < 5; x++){

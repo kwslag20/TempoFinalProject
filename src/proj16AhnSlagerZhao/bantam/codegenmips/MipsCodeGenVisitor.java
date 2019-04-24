@@ -410,6 +410,7 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
+     * TODO
      * Visit a list node of expressions
      *
      * @param node the expression list node
@@ -418,7 +419,7 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(ExprList node) {
         for (Iterator it = node.iterator(); it.hasNext(); )
             ((Expr) it.next()).accept(this);
-
+            generatePush("$v0");
         return null;
     }
 
@@ -487,6 +488,7 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
+     * TODO Kyle
      * Visit an instanceof expression node
      *
      * @param node the instanceof expression node
@@ -526,7 +528,7 @@ public class MipsCodeGenVisitor extends Visitor {
             location = (Location)symbolTable.lookup(node.getName());
             this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
         }
-        if(node.getRefName().equals("this") || node.getRefName().equals("super")){
+        else if(node.getRefName().equals("this") || node.getRefName().equals("super")){
             refName = node.getRefName();
             this.assemblySupport.genComment("GENERATING AN AssignExpr with " + refName);
             if(refName.equals("this")){
@@ -796,7 +798,7 @@ public class MipsCodeGenVisitor extends Visitor {
         node.getExpr().accept(this);
         String varName = ((VarExpr) node.getExpr()).getName();
         Location location = (Location) symbolTable.lookup(varName);
-        assemblySupport.genComment("Generating UNARY INCREMENT instruction");
+        assemblySupport.genComment("Generating UNARY NEG instruction");
         assemblySupport.genNeg("$v0", "$v0");
         assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
         return null;
