@@ -767,7 +767,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(UnaryNegExpr node) {
         node.getExpr().accept(this);
+        String varName = ((VarExpr) node.getExpr()).getName();
+        Location location = (Location) symbolTable.lookup(varName);
+        assemblySupport.genComment("Generating UNARY INCREMENT instruction");
         assemblySupport.genNeg("$v0", "$v0");
+        assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
         return null;
     }
 
@@ -779,7 +783,11 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(UnaryNotExpr node) {
         node.getExpr().accept(this);
+        String varName = ((VarExpr) node.getExpr()).getName();
+        Location location = (Location) symbolTable.lookup(varName);
+        assemblySupport.genComment("Generating UNARY INCREMENT instruction");
         assemblySupport.genNot("$v0","$v0");
+        assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
         return null;
     }
 
