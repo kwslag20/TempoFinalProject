@@ -426,9 +426,8 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(DispatchExpr node) {
 
-        if(node.getRefExpr() != null) {
-        System.out.println("called");
-        if(node.getRefExpr() != null)
+
+        if(node.getRefExpr() != null){
             node.getRefExpr().accept(this);
             assemblySupport.genMove("$a0", "$v0");
         }
@@ -745,6 +744,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(UnaryNegExpr node) {
         node.getExpr().accept(this);
+        assemblySupport.genNeg("$v0", "$v0");
         return null;
     }
 
@@ -756,6 +756,7 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(UnaryNotExpr node) {
         node.getExpr().accept(this);
+        assemblySupport.genNot("$v0","$v0");
         return null;
     }
 
