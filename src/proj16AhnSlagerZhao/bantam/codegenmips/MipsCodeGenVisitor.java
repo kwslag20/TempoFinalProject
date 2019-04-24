@@ -95,8 +95,11 @@ public class MipsCodeGenVisitor extends Visitor {
         this.assemblySupport.genComment("END EPILOGUE");
     }
 
-    private void generateMethodProlog(){
-        generatePush()
+    private void generateMethodProlog(int numLocalVars){
+        generatePush("$ra");
+        generatePush("$fp");
+        this.assemblySupport.genAdd("$fp", "$sp", -4 * numLocalVars);
+        this.assemblySupport.genMove("$sp", "$fp");
     }
 
     private void generatePush(String source){
