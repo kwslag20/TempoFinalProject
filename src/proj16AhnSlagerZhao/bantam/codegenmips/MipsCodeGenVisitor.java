@@ -95,6 +95,10 @@ public class MipsCodeGenVisitor extends Visitor {
         this.assemblySupport.genComment("END EPILOGUE");
     }
 
+    private void generateMethodProlog(){
+        generatePush()
+    }
+
     private void generatePush(String source){
         assemblySupport.genAdd("$sp", "$sp", -4);
         assemblySupport.genStoreWord(source, 0, "$sp");
@@ -766,6 +770,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(UnaryNegExpr node) {
+        Expr ref = ((VarExpr)node.getExpr()).getRef();
         node.getExpr().accept(this);
         assemblySupport.genNeg("$v0", "$v0");
         return null;
