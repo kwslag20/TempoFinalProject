@@ -432,7 +432,7 @@ public class MipsCodeGenVisitor extends Visitor {
             assemblySupport.genMove("$a0", "$v0");
         }
         else{
-            //raise error
+            assemblySupport.genDirCall("_null_pointer_error");
         }
         for (Iterator it = node.getActualList().iterator(); it.hasNext(); ) {
             ((Expr) it.next()).accept(this);
