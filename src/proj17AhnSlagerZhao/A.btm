@@ -1,0 +1,19 @@
+class Main{   
+	int y = 3;
+    	int x = 4; // x comment
+	void main(){
+		if(x>y){
+		x = 5;
+		}
+		for(x = 0; x < 5; x++){
+			while(x < 5){
+				y++;
+				print(y);
+			}
+		}
+	}
+	void tool(int j, int k){
+		int p = 0;
+		x = j + k;
+	}
+}
