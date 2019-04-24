@@ -35,7 +35,8 @@ public class MipsCodeGenVisitor extends Visitor {
     private Map<String,Integer> localVarsMap;
     private String currentClass;
     private Map<String, String> strMap;
-    private NumLocalVarsVisitor numLocalVars;
+    private int parameterCount;
+    private int localVarCount;
     private static final String[] registers = new String[]{
             "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
             "$t4","$t5","$t6","$t7","$v0","$v1"
@@ -53,6 +54,9 @@ public class MipsCodeGenVisitor extends Visitor {
         this.strMap = strMap;
         this.root = root;
         this.dispatchTable = dispatchTable;
+        this.parameterCount = 0;
+        this.localVarCount = 0;
+
     }
 
     /**
@@ -166,6 +170,7 @@ public class MipsCodeGenVisitor extends Visitor {
         }
         Location location = new Location("$a0", symbolTable.getCurrScopeSize() * 4);
         symbolTable.add(node.getName(), location);
+        this.localVarCount++;
         return null;
     }
 
@@ -179,6 +184,7 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(Method node) {
         Location location = new Location("$a0", symbolTable.getCurrScopeSize()*4);
         symbolTable.add(node.getName(), location);
+        this.localVarCount++;
         assemblySupport.genLabel(node.getName());
         symbolTable.enterScope();
         node.getFormalList().accept(this);
@@ -195,11 +201,9 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(FormalList node) {
+        this.parameterCount = 0;
         for (Iterator it = node.iterator(); it.hasNext(); ) {
-            Formal param = (Formal) it.next();
-            //TODO
-//            Location location = new Location("$fp", symbolTable.getCurrScopeSize() * 4);
-//            symbolTable.add(param.getName(), location);
+            ((Formal)it.next()).accept(this);
         }
         return null;
     }
@@ -211,6 +215,10 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Formal node) {
+        Location location = new Location("$fp", this.localVarsMap.size()*4 + parameterCount*4);
+        this.symbolTable.add(node.getName(), location);
+        this.localVarCount++;
+        this.parameterCount++;
         return null;
     }
 
@@ -225,6 +233,7 @@ public class MipsCodeGenVisitor extends Visitor {
         this.assemblySupport.genComment("Generating a DeclStmt to $v0 to " + symbolTable.getCurrScopeSize()*4);
         Location location = new Location("$fp", symbolTable.getCurrScopeSize()*4);
         symbolTable.add(node.getName(), location);
+        this.localVarCount++;
         return null;
     }
 
@@ -434,15 +443,13 @@ public class MipsCodeGenVisitor extends Visitor {
         else{
             //raise error
         }
-        for (Iterator it = node.getActualList().iterator(); it.hasNext(); ) {
-            ((Expr) it.next()).accept(this);
-            generatePush("$v0");
-        }
-        generateProlog(symbolTable.getCurrScopeSize());
+        node.getActualList().accept(this);
+        //generateProlog(symbolTable.getCurrScopeSize());
+        System.out.println(node.getMethodName() + " hi ");
         Location loc = (Location) symbolTable.lookup(node.getMethodName());
         assemblySupport.genLoadWord("$t0",loc.getOffset(), "$a0");
         assemblySupport.genInDirCall("$t0");
-        generateEpilog(symbolTable.getCurrScopeSize());
+        //generateEpilog(symbolTable.getCurrScopeSize());
         return null;
     }
 
@@ -488,12 +495,28 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(AssignExpr node) {
-        this.assemblySupport.genStoreWord("$a0", -4, "$sp");
+        this.generatePush("$a0");
         node.getExpr().accept(this);
-        this.assemblySupport.genComment("GENERATING AN ASSIGN EXPRESSION");
-        Location local = (Location) symbolTable.lookup(node.getName());
-        this.assemblySupport.genStoreWord("$v0",local.getOffset(),local.getBaseReg());
-        this.assemblySupport.genLoadWord("$a0", -4, "$sp");
+        Location location = null;
+        String refName = "";
+        if(node.getRefName() == null) {
+            this.assemblySupport.genComment("GENERATING AN AssignExpr with NULL");
+            location = (Location)symbolTable.lookup(node.getName());
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
+        if(node.getRefName().equals("this") || node.getRefName().equals("super")){
+            refName = node.getRefName();
+            this.assemblySupport.genComment("GENERATING AN AssignExpr with " + refName);
+            if(refName.equals("this")){
+                location = (Location)symbolTable.lookup(node.getName(), symbolTable.getCurrScopeLevel());
+            }
+            else if(refName.equals("super")){
+                location = (Location)symbolTable.lookup(node.getName(), symbolTable.getCurrScopeLevel() - 1);
+            }
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
+        this.assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
+        this.generatePop("$a0");
         return null;
     }
 
@@ -802,19 +825,15 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(VarExpr node) {
         this.assemblySupport.genComment("Generating VAREXPR");
         Location location = (Location)symbolTable.lookup(node.getName());
-        String refName = "";
-        Boolean userDefined = false;
+        String refName;
         this.generatePush("$a0");
-        if(node.getRef() != null) {
-            refName = ((VarExpr) node.getRef()).getName();
-            userDefined = !refName.equals("this") && !refName.equals("super");
-        }
-        else{
+        if(node.getRef() == null){
             this.assemblySupport.genComment("VarExpr with NULL");
             location = (Location)symbolTable.lookup(node.getName());
             this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
         }
-        if(!userDefined){
+        else if(((VarExpr)node.getRef()).getName().equals("this") || ((VarExpr)node.getRef()).getName().equals("super")){
+            refName = ((VarExpr)node.getRef()).getName();
             this.assemblySupport.genComment("VarExpr with" + refName);
             if(refName.equals("this")){
                 location = (Location)symbolTable.lookup(node.getName(), symbolTable.getCurrScopeLevel());
