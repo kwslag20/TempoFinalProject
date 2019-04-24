@@ -32,6 +32,7 @@ public class MipsCodeGenVisitor extends Visitor {
     private PrintStream printStream;
     private Map<String,Integer> localVarsMap;
     private String currentClass;
+    private Class_ currentClassNode;
     private Map<String, String> strMap;
     private int parameterCount;
     private int localVarCount;
@@ -147,6 +148,7 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(Class_ node) {
         symbolTable.enterScope();
         this.currentClass = node.getName();
+        this.currentClassNode = node;
         node.getMemberList().accept(this);
         symbolTable.exitScope();
         return null;
@@ -459,8 +461,13 @@ public class MipsCodeGenVisitor extends Visitor {
         node.getActualList().accept(this);
         generateProlog(symbolTable.getCurrScopeSize());
         System.out.println(node.getMethodName() + " hi ");
-        ArrayList<String> methodList = this.dispatchTable.get(node.getRefExpr());
-
+        ArrayList<String> methodList = new ArrayList<>();
+        Iterator<ASTNode> memberListIt = this.currentClassNode.getMemberList().iterator();
+        while(memberListIt.hasNext()){
+            if(memberListIt.next() instanceof Method){
+                methodList.add(((Method)memberListIt.next()).getName());
+            }
+        }
         Location loc = (Location) symbolTable.lookup(node.getRefExpr().getExprType());
         assemblySupport.genLoadWord("$t0",loc.getOffset()+ 4*methodList.indexOf(node.getMethodName()), "$a0");
         assemblySupport.genInDirCall("$t0");
@@ -539,10 +546,11 @@ public class MipsCodeGenVisitor extends Visitor {
             refName = node.getRefName();
             this.assemblySupport.genComment("GENERATING AN AssignExpr with " + refName);
             if(refName.equals("this")){
-                location = (Location)symbolTable.lookup(node.getName(), symbolTable.getCurrScopeLevel());
+                location = (Location)symbolTable.lookup(node.getName(), 1);
             }
             else if(refName.equals("super")){
-                location = (Location)symbolTable.lookup(node.getName(), symbolTable.getCurrScopeLevel() - 1);
+                int level = this.symbolTable.getScopeLevel(this.currentClassNode.getParent().getClass().getName());
+                location = (Location)symbolTable.lookup(node.getName(), level);
             }
             this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
         }
@@ -813,10 +821,11 @@ public class MipsCodeGenVisitor extends Visitor {
             refName = ((VarExpr) node.getExpr()).getName();
             this.assemblySupport.genComment("GENERATING AN AssignExpr with " + refName);
             if(refName.equals("this")){
-                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel());
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), 1);
             }
             else if(refName.equals("super")){
-                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel() - 1);
+                int level = this.symbolTable.getScopeLevel(this.currentClassNode.getParent().getClass().getName());
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), level);
             }
             this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
         }
@@ -950,10 +959,11 @@ public class MipsCodeGenVisitor extends Visitor {
             refName = ((VarExpr)node.getRef()).getName();
             this.assemblySupport.genComment("VarExpr with" + refName);
             if(refName.equals("this")){
-                location = (Location)symbolTable.lookup(node.getName(), symbolTable.getCurrScopeLevel());
+                location = (Location)symbolTable.lookup(node.getName(), 1);
             }
             else if(refName.equals("super")){
-                location = (Location)symbolTable.lookup(node.getName(), symbolTable.getCurrScopeLevel() - 1);
+                int level = this.symbolTable.getScopeLevel(this.currentClassNode.getParent().getClass().getName());
+                location = (Location)symbolTable.lookup(node.getName(), level);
             }
             this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
         }
