@@ -13,6 +13,7 @@ class Main{
 		}
 	}
 	void tool(int j, int k){
+		int p = 0;
 		x = j + k;
 	}
 }

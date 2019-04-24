@@ -41,19 +41,14 @@ public class MipsCodeGenVisitor extends Visitor {
             "$a0", "$a1","$a2","$a3","$t0","$t1","$t2","$t3",
             "$t4","$t5","$t6","$t7","$v0","$v1"
     };
-    private ClassTreeNode root;
-    private HashMap<String, ArrayList<String>> dispatchTable;
     /**
      * constructor for the class
      */
-    public MipsCodeGenVisitor(MipsSupport assemblySupport, PrintStream printStream, Map<String, String> strMap,
-                                    ClassTreeNode root, HashMap<String, ArrayList<String>> dispatchTable){
+    public MipsCodeGenVisitor(MipsSupport assemblySupport, PrintStream printStream, Map<String, String> strMap){
         this.symbolTable = new SymbolTable();
         this.assemblySupport = assemblySupport;
         this.printStream = printStream;
         this.strMap = strMap;
-        this.root = root;
-        this.dispatchTable = dispatchTable;
         this.parameterCount = 0;
         this.localVarCount = 0;
 
@@ -102,6 +97,13 @@ public class MipsCodeGenVisitor extends Visitor {
         this.assemblySupport.genMove("$sp", "$fp");
     }
 
+    private void generateMethodEpilog(int numLocalVars){
+        this.assemblySupport.genMove("$fp", "$sp");
+        this.assemblySupport.genAdd("$fp", "$sp", 4*numLocalVars);
+        generatePop("$fp");
+        generatePop("$ra");
+    }
+
     private void generatePush(String source){
         assemblySupport.genAdd("$sp", "$sp", -4);
         assemblySupport.genStoreWord(source, 0, "$sp");
@@ -121,7 +123,9 @@ public class MipsCodeGenVisitor extends Visitor {
     public Object visit(Program node) {
         NumLocalVarsVisitor numLocalVarsVisitor = new NumLocalVarsVisitor();
         this.localVarsMap = numLocalVarsVisitor.getNumLocalVars(node);
+        generateProlog(this.localVarsMap.size());
         node.getClassList().accept(this);
+        generateEpilog(this.localVarsMap.size());
         return null;
     }
 
@@ -173,16 +177,15 @@ public class MipsCodeGenVisitor extends Visitor {
         if (node.getInit() != null) {
             node.getInit().accept(this);
             this.assemblySupport.genComment("storing field " + node.getName() + " at " + symbolTable.getCurrScopeSize()*4);
-            this.assemblySupport.genStoreWord("$v0", symbolTable.getCurrScopeSize()*4, "$a0");
+            this.assemblySupport.genStoreWord("$v0", this.localVarCount*4, "$a0");
         }
-        Location location = new Location("$a0", symbolTable.getCurrScopeSize() * 4);
+        Location location = new Location("$a0", this.localVarCount*4);
         symbolTable.add(node.getName(), location);
         this.localVarCount++;
         return null;
     }
 
     /**
-     * Incomplete
      * Visit a method node
      *
      * @param node the method node
@@ -194,9 +197,11 @@ public class MipsCodeGenVisitor extends Visitor {
         this.localVarCount++;
         assemblySupport.genLabel(node.getName());
         symbolTable.enterScope();
+        generateMethodProlog(this.symbolTable.getCurrScopeSize());
         node.getFormalList().accept(this);
         this.assemblySupport.genLabel(this.currentClass+"."+node.getName());
         node.getStmtList().accept(this);
+        generateMethodEpilog(this.symbolTable.getCurrScopeSize());
         symbolTable.exitScope();
         return null;
     }
@@ -222,7 +227,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Formal node) {
-        Location location = new Location("$fp", this.localVarsMap.size()*4 + parameterCount*4);
+        Location location = new Location("$fp", this.localVarCount*4 + parameterCount*4);
         this.symbolTable.add(node.getName(), location);
         this.localVarCount++;
         this.parameterCount++;
@@ -237,8 +242,8 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(DeclStmt node) {
         node.getInit().accept(this);
-        this.assemblySupport.genComment("Generating a DeclStmt to $v0 to " + symbolTable.getCurrScopeSize()*4);
-        Location location = new Location("$fp", symbolTable.getCurrScopeSize()*4);
+        this.assemblySupport.genComment("Generating a DeclStmt to $v0 to " + this.localVarCount*4);
+        Location location = new Location("$fp", this.localVarCount*4);
         symbolTable.add(node.getName(), location);
         this.localVarCount++;
         return null;
@@ -331,8 +336,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     *
-     * INCOMPLETE
      * Visit a for statement node
      *
      * @param node the for statement node
@@ -371,7 +374,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * TODO Kevin
      * Visit a break statement node
      *
      * @param node the break statement node
@@ -416,14 +418,15 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(ExprList node) {
-        for (Iterator it = node.iterator(); it.hasNext(); )
+        for (Iterator it = node.iterator(); it.hasNext(); ) {
             ((Expr) it.next()).accept(this);
+            generatePush("$v0");
+        }
 
         return null;
     }
 
     /**
-     * TODO Danqing
      * Visit a dispatch expression node
      *
      * @param node the dispatch expression node
@@ -498,7 +501,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * TODO Kyle
      * Visit a cast expression node
      *
      * @param node the cast expression node
@@ -510,7 +512,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * TODO Kevin
      * Visit an assignment expression node
      *
      * @param node the assignment expression node
@@ -526,7 +527,7 @@ public class MipsCodeGenVisitor extends Visitor {
             location = (Location)symbolTable.lookup(node.getName());
             this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
         }
-        if(node.getRefName().equals("this") || node.getRefName().equals("super")){
+        else if(node.getRefName().equals("this") || node.getRefName().equals("super")){
             refName = node.getRefName();
             this.assemblySupport.genComment("GENERATING AN AssignExpr with " + refName);
             if(refName.equals("this")){
@@ -795,7 +796,24 @@ public class MipsCodeGenVisitor extends Visitor {
         Expr ref = ((VarExpr)node.getExpr()).getRef();
         node.getExpr().accept(this);
         String varName = ((VarExpr) node.getExpr()).getName();
-        Location location = (Location) symbolTable.lookup(varName);
+        Location location = null;
+        String refName;
+        if(((VarExpr) node.getExpr()).getRef() == null) {
+            this.assemblySupport.genComment("GENERATING AN UNARYNEGEXPR with NULL");
+            location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName());
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
+        else if(((VarExpr) node.getExpr()).getRef().equals("this") || ((VarExpr) node.getExpr()).getRef().equals("super")){
+            refName = ((VarExpr) node.getExpr()).getName();
+            this.assemblySupport.genComment("GENERATING AN AssignExpr with " + refName);
+            if(refName.equals("this")){
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel());
+            }
+            else if(refName.equals("super")){
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel() - 1);
+            }
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
         assemblySupport.genComment("Generating UNARY INCREMENT instruction");
         assemblySupport.genNeg("$v0", "$v0");
         assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
@@ -859,7 +877,6 @@ public class MipsCodeGenVisitor extends Visitor {
     }
 
     /**
-     * TODO Kyle
      * Visit a variable expression node
      *
      * @param node the variable expression node

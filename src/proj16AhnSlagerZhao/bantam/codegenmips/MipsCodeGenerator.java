@@ -103,23 +103,16 @@ public class MipsCodeGenerator {
     private ErrorHandler errorHandler;
 
     /**
-     * hash map
-     */
-    private HashMap<String, ArrayList<String>> altMethodsMap;
-
-    /**
      * Built In Hash Map
      */
     private Map<String, String> builtIns;
 
     /**
-     *
-     */
-    private HashMap<String, ArrayList<String>> dispatchTable;
-    /**
      * outfile
      */
     private String outFile;
+
+    private ArrayList<String> classList;
 
     /**
      * MipsCodeGenerator constructor
@@ -132,7 +125,6 @@ public class MipsCodeGenerator {
         this.gc = gc;
         this.opt = opt;
         this.errorHandler = errorHandler;
-        this.dispatchTable = new HashMap<>();
     }
 
     /**
@@ -198,9 +190,8 @@ public class MipsCodeGenerator {
             this.assemblySupport.genWord("0");
         }
 
-        ArrayList<String> classList = new ArrayList<>();
-        classList.addAll(this.root.getClassMap().keySet());
-        System.out.println(classList);
+        this.classList = new ArrayList<>();
+        this.classList.addAll(this.root.getClassMap().keySet());
 
         // STEP 3 GENERATE STRING CONSTANTS
         this.genStringConstants(stringMap);
@@ -212,14 +203,12 @@ public class MipsCodeGenerator {
         this.genObjectTemplate();
 
         // STEP 6 GENERATE THE DISPATCH TABLES
-        this.altMethodsMap = new HashMap<>();
         this.genDispatchTables();
 
         // STEP 7 GENERATE METHOD STUBS AND MINIMUM TEXT SECTION FOR TESTING
         this.assemblySupport.genTextStart();
-        //this.genStubs();
 
-        this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport, this.out, stringMap, this.root, this.dispatchTable);
+        this.mipsCodeGenVisitor = new MipsCodeGenVisitor(this.assemblySupport, this.out, stringMap);
         this.mipsCodeGenVisitor.visit(this.ast);
     }
 
@@ -233,24 +222,28 @@ public class MipsCodeGenerator {
 
         Set<Map.Entry<String, String>> stringEntrySet = stringMap.entrySet();
         Iterator<Map.Entry<String, String>> stringIterator = stringEntrySet.iterator();
+        int totalLabels = 0;
         while (stringIterator.hasNext()) {
             Map.Entry<String, String> curItem = stringIterator.next();
             String label = curItem.getKey();
             String str = curItem.getValue();
             str = str.substring(1, str.length() - 1);
             generateStringConstantSupport(label, str);
+            totalLabels++;
         }
         Set<Map.Entry<String, String>> builtInEntrySet = this.builtIns.entrySet();
         Iterator<Map.Entry<String, String>> builtInIterator = builtInEntrySet.iterator();
-        Set<String> filenames = new HashSet<>();
-        int fileNum = 0;
         while (builtInIterator.hasNext()) {
             Map.Entry<String, String> current = builtInIterator.next();
             String label = current.getValue();
             String str = current.getKey();
             generateStringConstantSupport(label, str);
+            totalLabels++;
         }
-        generateStringConstantSupport("label0", this.outFile);
+        for(String curClass : this.classList){
+            generateStringConstantSupport("class_name_"+totalLabels, curClass);
+        }
+        generateStringConstantSupport("label" + totalLabels, this.outFile);
         this.out.println("\n");
 
     }
@@ -429,7 +422,6 @@ public class MipsCodeGenerator {
         //generates the global dispatch tables for the user created classes
         for(Map.Entry<Class_, ArrayList<String>> entry : methodsMap.entrySet()){
             this.assemblySupport.genGlobal(entry.getKey().getName() + "_dispatch_table");
-            dispatchTable.put(entry.getKey().getName(), methodsMap.get(entry.getKey()));
         }
 
         //generates the global dispatch tables for the built in classes
