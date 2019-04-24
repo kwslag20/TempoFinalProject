@@ -451,12 +451,14 @@ public class MipsCodeGenVisitor extends Visitor {
             assemblySupport.genDirCall("_null_pointer_error");
         }
         node.getActualList().accept(this);
-        //generateProlog(symbolTable.getCurrScopeSize());
+        generateProlog(symbolTable.getCurrScopeSize());
         System.out.println(node.getMethodName() + " hi ");
-        Location loc = (Location) symbolTable.lookup(node.getMethodName());
-        assemblySupport.genLoadWord("$t0",loc.getOffset(), "$a0");
+        ArrayList<String> methodList = dispatchTable.get(node.getRefExpr());
+
+        Location loc = (Location) symbolTable.lookup(node.getRefExpr().getExprType());
+        assemblySupport.genLoadWord("$t0",loc.getOffset()+ 4*methodList.indexOf(node.getMethodName()), "$a0");
         assemblySupport.genInDirCall("$t0");
-        //generateEpilog(symbolTable.getCurrScopeSize());
+        generateEpilog(symbolTable.getCurrScopeSize());
         return null;
     }
 
@@ -494,6 +496,9 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(InstanceofExpr node) {
         node.getExpr().accept(this);
+        Location loc = (Location) symbolTable.lookup(node.getType());
+
+
         return null;
     }
 
