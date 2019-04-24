@@ -198,6 +198,10 @@ public class MipsCodeGenerator {
             this.assemblySupport.genWord("0");
         }
 
+        ArrayList<String> classList = new ArrayList<>();
+        classList.addAll(this.root.getClassMap().keySet());
+        System.out.println(classList);
+
         // STEP 3 GENERATE STRING CONSTANTS
         this.genStringConstants(stringMap);
 

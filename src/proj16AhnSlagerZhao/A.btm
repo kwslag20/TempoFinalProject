@@ -8,8 +8,10 @@ class Main{
 		for(x = 0; x < 5; x++){
 			while(x < 5){
 				y++;
-				print(y);
 			}
 		}
+	}
+	void tool(int j, int k){
+		x = j + k;
 	}
 }
