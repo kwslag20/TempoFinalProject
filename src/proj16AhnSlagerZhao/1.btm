@@ -1,10 +1,6 @@
-class Main{   
+class Main{  
+	var x = 4; 
 	void main(){
-		int a = 3;
-		int b = 4;
-		int c = 5;
-		if(b > a){
-			c = 6;
-		}
+	int x = 4;
 	}
 }

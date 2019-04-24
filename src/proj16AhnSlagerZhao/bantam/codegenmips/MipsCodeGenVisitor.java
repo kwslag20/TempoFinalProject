@@ -95,6 +95,13 @@ public class MipsCodeGenVisitor extends Visitor {
         this.assemblySupport.genComment("END EPILOGUE");
     }
 
+    private void generateMethodProlog(int numLocalVars){
+        generatePush("$ra");
+        generatePush("$fp");
+        this.assemblySupport.genAdd("$fp", "$sp", -4 * numLocalVars);
+        this.assemblySupport.genMove("$sp", "$fp");
+    }
+
     private void generatePush(String source){
         assemblySupport.genAdd("$sp", "$sp", -4);
         assemblySupport.genStoreWord(source, 0, "$sp");
@@ -460,7 +467,22 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(NewExpr node) {
-        System.out.println("visited");
+
+        // load in the address to $a0
+        assemblySupport.genLoadAddr("$a0", node.getType()+"_template");
+
+        // code generator should generate code to call Object.clone
+        // to create a clone of the appropriate _template object
+        assemblySupport.genDirCall("Object.clone");
+
+        // generator should generate code to put that pointer in $a0
+        assemblySupport.genMove("$a0", "$v0");
+
+        // call the appropriate _init method to initialize the fields in the clone
+        assemblySupport.genDirCall(node.getType() + "_init");
+
+        // need the number of local variables to get the offset
+        assemblySupport.genLoadWord("$v0",4*localVarCount,"$fp");
         return null;
     }
 
@@ -688,7 +710,6 @@ public class MipsCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(BinaryArithDivideExpr node) {
-        //String divByZero = assemblySupport.getLabel();
         assemblySupport.genComment("Generating LEFT side of expression");
         node.getLeftExpr().accept(this);
         generatePush("$v0");
@@ -764,8 +785,14 @@ public class MipsCodeGenVisitor extends Visitor {
      *
      * @param node the unary negation expression node
      * @return result of the visit
+     * The format of the unary operator is:
+     *      - <expression>
+     * where <expression> is an int expression.
+     * This operation computes the arithmetic negation of the expression.
+     * The resulting type is an int.
      */
     public Object visit(UnaryNegExpr node) {
+        Expr ref = ((VarExpr)node.getExpr()).getRef();
         node.getExpr().accept(this);
         String varName = ((VarExpr) node.getExpr()).getName();
         Location location = (Location) symbolTable.lookup(varName);
@@ -780,6 +807,14 @@ public class MipsCodeGenVisitor extends Visitor {
      *
      * @param node the unary NOT expression node
      * @return result of the visit
+     *
+     * The format of the unary operator is:
+     *      ! <expression>
+     * where <expression> is a boolean expression.
+     * ! computes the complement of the expression.
+     * If the expression evaluates to false, the result is true.
+     * If the expression evaluates to true, the result is false.
+     * The resulting type of these expressions is a boolean.
      */
     public Object visit(UnaryNotExpr node) {
         node.getExpr().accept(this);
