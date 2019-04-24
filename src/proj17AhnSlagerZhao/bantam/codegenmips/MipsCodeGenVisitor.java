@@ -1,6 +1,6 @@
 /*
  * File: MipsCodeGenVisitor.java
- * Names: Kevin Ahn, Kyle Slager, and Danqing Zhou
+ * Names: Kevin Ahn, Kyle Slager, and Danqing Zhao
  * Class: CS461
  * Project 17
  * Date: April 17, 2019
@@ -19,6 +19,12 @@ import proj17AhnSlagerZhao.bantam.visitor.Visitor;
 
 import java.io.PrintStream;
 
+/**
+ * class that extends the visitor class to visit all of
+ * the nodes and generate the proper mips code.
+ *
+ * @author KevinAhn KyleSlager Danqing Zhao
+ */
 public class MipsCodeGenVisitor extends Visitor {
 
     private MipsSupport assemblySupport;
@@ -43,7 +49,6 @@ public class MipsCodeGenVisitor extends Visitor {
         this.strMap = strMap;
         this.parameterCount = 0;
         this.localVarCount = 0;
-
     }
 
     /**
@@ -791,9 +796,7 @@ public class MipsCodeGenVisitor extends Visitor {
      * The resulting type is an int.
      */
     public Object visit(UnaryNegExpr node) {
-        Expr ref = ((VarExpr)node.getExpr()).getRef();
         node.getExpr().accept(this);
-        String varName = ((VarExpr) node.getExpr()).getName();
         Location location = null;
         String refName;
         if(((VarExpr) node.getExpr()).getRef() == null) {
@@ -812,7 +815,7 @@ public class MipsCodeGenVisitor extends Visitor {
             }
             this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
         }
-        assemblySupport.genComment("Generating UNARY INCREMENT instruction");
+        assemblySupport.genComment("Generating UNARY NEG instruction");
         assemblySupport.genNeg("$v0", "$v0");
         assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
         return null;
@@ -834,9 +837,25 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(UnaryNotExpr node) {
         node.getExpr().accept(this);
-        String varName = ((VarExpr) node.getExpr()).getName();
-        Location location = (Location) symbolTable.lookup(varName);
-        assemblySupport.genComment("Generating UNARY INCREMENT instruction");
+        Location location = null;
+        String refName;
+        if(((VarExpr) node.getExpr()).getRef() == null) {
+            this.assemblySupport.genComment("GENERATING AN UNARY NOT EXPR with NULL");
+            location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName());
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
+        else if(((VarExpr) node.getExpr()).getRef().equals("this") || ((VarExpr) node.getExpr()).getRef().equals("super")){
+            refName = ((VarExpr) node.getExpr()).getName();
+            this.assemblySupport.genComment("GENERATING AN UNARY NOT with " + refName);
+            if(refName.equals("this")){
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel());
+            }
+            else if(refName.equals("super")){
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel() - 1);
+            }
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
+        assemblySupport.genComment("Generating UNARY NOT instruction");
         assemblySupport.genNot("$v0","$v0");
         assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
         return null;
@@ -850,8 +869,24 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(UnaryIncrExpr node) {
         node.getExpr().accept(this);
-        String varName = ((VarExpr) node.getExpr()).getName();
-        Location location = (Location) symbolTable.lookup(varName);
+        Location location = null;
+        String refName;
+        if(((VarExpr) node.getExpr()).getRef() == null) {
+            this.assemblySupport.genComment("GENERATING AN UNARY INC EXPR with NULL");
+            location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName());
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
+        else if(((VarExpr) node.getExpr()).getRef().equals("this") || ((VarExpr) node.getExpr()).getRef().equals("super")){
+            refName = ((VarExpr) node.getExpr()).getName();
+            this.assemblySupport.genComment("GENERATING AN UNARY INC with " + refName);
+            if(refName.equals("this")){
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel());
+            }
+            else if(refName.equals("super")){
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel() - 1);
+            }
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
         assemblySupport.genComment("Generating UNARY INCREMENT instruction");
         assemblySupport.genAdd("$v0","$v0", 1);
         assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
@@ -866,8 +901,24 @@ public class MipsCodeGenVisitor extends Visitor {
      */
     public Object visit(UnaryDecrExpr node) {
         node.getExpr().accept(this);
-        String varName = ((VarExpr) node.getExpr()).getName();
-        Location location = (Location) symbolTable.lookup(varName);
+        Location location = null;
+        String refName;
+        if(((VarExpr) node.getExpr()).getRef() == null) {
+            this.assemblySupport.genComment("GENERATING AN UNARY DECR EXPR with NULL");
+            location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName());
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
+        else if(((VarExpr) node.getExpr()).getRef().equals("this") || ((VarExpr) node.getExpr()).getRef().equals("super")){
+            refName = ((VarExpr) node.getExpr()).getName();
+            this.assemblySupport.genComment("GENERATING UNARY DECR with " + refName);
+            if(refName.equals("this")){
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel());
+            }
+            else if(refName.equals("super")){
+                location = (Location)symbolTable.lookup(((VarExpr) node.getExpr()).getName(), symbolTable.getCurrScopeLevel() - 1);
+            }
+            this.assemblySupport.genLoadWord("$v0", location.getOffset(), location.getBaseReg());
+        }
         assemblySupport.genComment("Generating UNARY DECREMENT instruction");
         assemblySupport.genSub("$v0","$v0", 1);
         assemblySupport.genStoreWord("$v0",location.getOffset(),location.getBaseReg());
