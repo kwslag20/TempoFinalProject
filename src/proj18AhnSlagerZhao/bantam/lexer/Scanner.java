@@ -1,5 +1,5 @@
 /*
- * File: Scanner.java
+ * File: MUSICScanner.java
  * Names: Kevin Ahn, Lucas DeGraw, Jackie Hang, Kyle Slager
  * Class: CS 361
  * Project 9
