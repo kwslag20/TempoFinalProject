@@ -121,7 +121,7 @@ public class Scanner
             case('a'):
                 currentChar = sourceFile.getNextChar();
                 curString += tempChar;
-                checkCurString();
+                checkCurString(tempChar);
                 if(isNote){
                     return new Token(Token.Kind.PITCH, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
                 }
@@ -135,13 +135,13 @@ public class Scanner
             case('o'):
                 currentChar = sourceFile.getNextChar();
                 curString += tempChar;
-                checkCurString();
+                checkCurString(tempChar);
                 if(currentChar.equals('n')){
                     currentChar = sourceFile.getNextChar();
                     isNote = true;
                     return new Token(Token.Kind.NOTE, tempChar.toString()+'n', this.sourceFile.getCurrentLineNumber());
                 }
-            case('/'): return this.getCommentOrMulDivToken();
+            case('/'): return this.getDivToken();
 
             case('-'): return this.getMinusToken();
 
@@ -183,7 +183,7 @@ public class Scanner
             default:
 
                 if (Character.isDigit(currentChar)) return getIntConstToken();
-                else if (Character.isLetter(currentChar)) return checkCurString();
+                else if (Character.isLetter(currentChar)) return checkCurString(tempChar);
                 else {
                     currentChar = sourceFile.getNextChar();
                     this.errorHandler.register(Error.Kind.LEX_ERROR,
@@ -195,159 +195,34 @@ public class Scanner
          }
     }
 
-    private Token checkCurString(){
+    private Token checkCurString(Character tempChar){
+        switch(curString){
+            case("chord"):
+                String chordInfo = tempChar.toString();
+                while(!currentChar.equals(')')){
+                    chordInfo += currentChar;
+                }
+                isChord = true;
+                return new Token(Token.Kind.CHORD, chordInfo, this.sourceFile.getCurrentLineNumber());
+
+            case("baseseq"):
+                String baseInfo = tempChar.toString();
+                while(!currentChar.equals(')')){
+                    baseInfo += currentChar;
+                }
+                return new Token(Token.Kind.BASELINE, baseInfo, this.sourceFile.getCurrentLineNumber());
+
+
+        }
         return null;
     }
-    /**
-     *
-     * @return a token of Kind.COMMENT, Kind.MULDIV or Kind.ERROR
-     */
-    private Token getCommentOrMulDivToken() {
-        Character prevChar = currentChar;
+
+    private Token getDivToken() {
+        String tempChar = currentChar.toString();
         currentChar = this.sourceFile.getNextChar();
-        switch(currentChar) {
-
-            case('/'): return this.getSingleLineCommentToken();
-
-            case('*'): return this.getBlockCommentToken(prevChar);
-
-            default:
-                return new Token(Token.Kind.MULDIV, prevChar.toString(),
+        return new Token(Token.Kind.DIV, tempChar,
                     this.sourceFile.getCurrentLineNumber());
-        }
     }
-
-    /**
-     * Creates and returns a single line comment token
-     * @return a token of Kind.COMMENT
-     */
-    private Token getSingleLineCommentToken() {
-
-        String commentBody = "//";
-        currentChar = this.sourceFile.getNextChar();    // move to first char after //
-        while (!( currentChar.equals(SourceFile.eol) ||
-                currentChar.equals(SourceFile.eof) )) {
-
-            commentBody = commentBody.concat(currentChar.toString());
-            currentChar = this.sourceFile.getNextChar();
-        }
-
-        if(currentChar.equals(SourceFile.eol)){currentChar = sourceFile.getNextChar();}
-
-        return new Token(Token.Kind.COMMENT, commentBody,
-                this.sourceFile.getCurrentLineNumber());
-    }
-
-    /**
-     * Creates and returns a multi-line comment token
-     * @return a token of Kind.COMMENT or Kind.ERROR if it was unclosed
-     */
-    private Token getBlockCommentToken(Character prevChar) {
-
-        String commentBody = "/*";
-
-        // move prevChar and currentChar past the "/*"
-        for (int i = 0; i < 2; i++) {
-            prevChar = currentChar;
-            currentChar = this.sourceFile.getNextChar();
-        }
-
-        boolean commentTerminated = false;
-
-        while (!commentTerminated) {
-
-            commentBody = commentBody.concat(prevChar.toString());
-            if (currentChar.equals(SourceFile.eof)) {
-
-                this.errorHandler.register(Error.Kind.LEX_ERROR,
-                        this.sourceFile.getFilename(),
-                        this.sourceFile.getCurrentLineNumber(),
-                        "UNTERMINATED BLOCK COMMENT");
-
-                return new Token(Token.Kind.ERROR,
-                        commentBody.concat(currentChar.toString()),
-                        this.sourceFile.getCurrentLineNumber());
-            }
-
-            else if (prevChar.equals('*') && currentChar.equals('/'))
-                commentTerminated = true;
-
-
-            prevChar = currentChar;
-            currentChar = this.sourceFile.getNextChar();
-        }
-        currentChar = sourceFile.getNextChar();
-        return new Token(Token.Kind.COMMENT, commentBody.concat(prevChar.toString()),
-                this.sourceFile.getCurrentLineNumber());
-    }
-
-    /**
-     * Creates and returns a token of Kind.BINARYLOGIC (|| or &&)
-     * or Kind.ERROR if neither are found
-     *
-     * @return a token of Kind.BINARYLOGIC (|| or &&) or Kind.ERROR if neither found
-     */
-    private Token getBinaryLogicToken() {
-
-        Character prevChar = currentChar;
-        currentChar = this.sourceFile.getNextChar();
-
-        if (currentChar.equals(prevChar)) {
-            Character temp = currentChar;
-            currentChar = sourceFile.getNextChar();
-
-            String spelling = prevChar.toString().concat(temp.toString());
-            return new Token(Token.Kind.BINARYLOGIC, spelling,
-                    this.sourceFile.getCurrentLineNumber());
-        }
-        else {
-            this.errorHandler.register(Error.Kind.LEX_ERROR,
-                    this.sourceFile.getFilename(), this.sourceFile.getCurrentLineNumber(),
-                    "BINARY LOGIC ERROR");
-            return new Token(Token.Kind.ERROR, prevChar.toString(),
-                    this.sourceFile.getCurrentLineNumber());
-        }
-    }
-
-    /**
-     * Creates and returns a Compare token
-     *
-     * @return a token of Kind.COMPARE, could be >, >=, <, <=
-     */
-    private Token getCompareToken() {
-        Character prevChar = currentChar;
-        currentChar = this.sourceFile.getNextChar();
-
-        if (currentChar.equals('=')) {
-            String tokenSpelling = prevChar.toString().concat(currentChar.toString());
-            currentChar = sourceFile.getNextChar();
-            return new Token(Token.Kind.COMPARE, tokenSpelling, this.sourceFile.getCurrentLineNumber());
-        }
-        else {
-            return new Token(Token.Kind.COMPARE, prevChar.toString(), this.sourceFile.getCurrentLineNumber());
-        }
-    }
-
-    /**
-     * Creates and returns a COMPARE or UNARYNOT token
-     *
-     * @return a token of Kind.COMPARE (if !=) or Kind.UNARYNOT (if just !)
-     */
-    private Token getUnaryNotOrCompareToken(){
-        currentChar = this.sourceFile.getNextChar();
-        if (currentChar.equals('=')){
-            currentChar = sourceFile.getNextChar();
-            return new Token(Token.Kind.COMPARE,
-                    "!=", this.sourceFile.getCurrentLineNumber());
-        }
-        else {
-            return new Token(Token.Kind.UNARYNOT,
-                    currentChar.toString(), this.sourceFile.getCurrentLineNumber());
-        }
-    }
-
-
-
 
     /**
      * Creates and returns a minus token or a unary decrement token
@@ -358,18 +233,8 @@ public class Scanner
 
         Character prevChar = currentChar;
         currentChar = this.sourceFile.getNextChar();
-
-        if (currentChar.equals(prevChar)) {
-
-            String spelling = prevChar.toString().concat(currentChar.toString());
-            currentChar = sourceFile.getNextChar();
-            return new Token(Token.Kind.UNARYDECR, spelling,
+        return new Token(Token.Kind.MINUS, prevChar.toString(),
                     this.sourceFile.getCurrentLineNumber());
-        }
-        else {
-            return new Token(Token.Kind.PLUSMINUS, prevChar.toString(),
-                    this.sourceFile.getCurrentLineNumber());
-        }
     }
 
     /**
@@ -395,37 +260,6 @@ public class Scanner
             return new Token(Token.Kind.ERROR, spelling,
                     this.sourceFile.getCurrentLineNumber());
         }
-    }
-
-    /**
-     * Returns a identifier or keyword token
-     * if it should be a keyword, it will be converted to the appropriate Kind in the
-     * Token constructor
-     *
-     * @return a token of Kind.IDENTIFIER or Kind.ERROR if its an invalid character
-     */
-    private Token getIdentifierOrKeywordToken() {
-        String spelling = "";
-        while(!charsEndingIdentifierOrKeyword.contains(currentChar)){
-
-            if(Character.isLetterOrDigit(currentChar) || currentChar.equals('_')) {
-                spelling = spelling.concat(currentChar.toString());
-                currentChar = this.sourceFile.getNextChar();
-            }
-            else{
-                this.errorHandler.register(Error.Kind.LEX_ERROR,
-                        this.sourceFile.getFilename(), this.sourceFile.getCurrentLineNumber(),
-                        "UNSUPPORTED IDENTIFIER CHARACTER");
-
-                spelling= spelling.concat(currentChar.toString());
-                currentChar = sourceFile.getNextChar();
-                return new Token(Token.Kind.ERROR, spelling,
-                        this.sourceFile.getCurrentLineNumber());
-            }
-        }
-
-
-        return new Token(Token.Kind.IDENTIFIER, spelling, this.sourceFile.getCurrentLineNumber());
     }
 
     /**

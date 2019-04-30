@@ -56,7 +56,7 @@
      {
          NOTE, PITCH, OCTAVE, CHORD, CHORDTYPE, TIMESIG, KEY, STEPSIZE, LENGTH, STEPLENGTH, STEPFREQ, PATTERN,
          // literals, identifiers...
-         INTCONST, STRCONST, BOOLEAN, IDENTIFIER,
+         INTCONST, STRCONST, BOOLEAN, IDENTIFIER, DIV, MINUS,
 
          // punctuation...
          DOT, COLON, SEMICOLON, COMMA,
