@@ -167,6 +167,9 @@ public class Scanner
 
             case(';'):
                 currentChar = sourceFile.getNextChar();
+                curString = "";
+                isNote = false;
+                isChord = false;
                 return new Token(Token.Kind.SEMICOLON,
                     tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
