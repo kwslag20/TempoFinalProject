@@ -28,7 +28,6 @@ piece MyNewSong {
 		}
 	layout{
 		timesig: 3,4;
-		key: d min;
 		first;
 	    first;
 		chorus;

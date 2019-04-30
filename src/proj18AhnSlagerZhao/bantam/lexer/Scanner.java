@@ -270,6 +270,9 @@ public class Scanner
                     curString = "";
                     return new Token(Token.Kind.BASELINE, baseInfo, this.sourceFile.getCurrentLineNumber());
 
+                case ("layout"):
+                    currentChar = this.sourceFile.getNextChar();
+                    return new Token(Token.Kind.LAYOUT, "layout", this.sourceFile.getCurrentLineNumber());
                 case ("verse"):
                     String verseName = "";
                     while (!currentChar.equals('{')){
