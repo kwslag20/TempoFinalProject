@@ -1,0 +1,38 @@
+piece MyNewSong {
+	writer: Kyle Slager;
+	verse V1{
+		righthand{
+			hn chord(c, maj, 7) 1;
+			qn d 1;
+			qr;
+			}
+		lefthand{
+			baseseq(
+				start: c 1;
+				stepsize: 1;
+				measures: 4;
+				permeasure: 2;)
+			}
+		}
+	chorus{
+		righthand{
+
+		}
+		lefthand{
+			baseseq(
+				notes: c 1, a 0, g 0, f 0;
+				measures: 4;
+				permeasure: 2;)
+		}
+	layout {
+		timesig: 3,4;
+		key: d min;
+		V1;
+		V1;
+		chorus;
+		V1;
+		}
+}
+
+
+

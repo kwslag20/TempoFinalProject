@@ -19,6 +19,7 @@ package proj18AhnSlagerZhao.bantam.lexer;
 import proj18AhnSlagerZhao.bantam.util.CompilationException;
 
 import java.io.*;
+import java.lang.reflect.Array;
 
 /**
  * A class for extracting the characters, one at a time, from a text file or an
@@ -51,6 +52,7 @@ class SourceFile
         currentLineNumber = 1;
         prevChar = -1;
         this.filename = filename;
+        //System.out.println(getReadOut());
     }
 
 
@@ -59,6 +61,8 @@ class SourceFile
         currentLineNumber = 1;
         prevChar = -1;
     }
+
+
 
 
     public int getCurrentLineNumber() {
@@ -90,6 +94,17 @@ class SourceFile
             return (char) c;
         } catch (IOException e) {
             throw new CompilationException("File " + filename + " could not be read.");
+        }
+    }
+
+    public char[] getReadOut(){
+        char[] cbuf = new char[10000];
+        try {
+            sourceReader.read(cbuf);
+            return cbuf;
+        }
+        catch (IOException e){
+            throw new CompilationException("File " + filename + " could not be read");
         }
     }
 

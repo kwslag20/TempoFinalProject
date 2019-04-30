@@ -37,6 +37,7 @@ public class Scanner
     private Character currentChar;
     private Boolean isNote, isChord;
     private String curString;
+    private Token tempToken;
 
 
     private final Set<Character> charsEndingIdentifierOrKeyword =
@@ -64,6 +65,9 @@ public class Scanner
     public Scanner(String filename, ErrorHandler handler) {
         errorHandler = handler;
         currentChar = ' ';
+        curString = "";
+        isNote = false;
+        isChord = false;
         try {
             sourceFile = new SourceFile(filename);
         }
@@ -90,7 +94,6 @@ public class Scanner
      */
     public Token scan() {
         Character tempChar = currentChar;
-
         if (currentChar.equals(SourceFile.eof)) return new Token(Token.Kind.EOF,
                 currentChar.toString(), this.sourceFile.getCurrentLineNumber());
 
@@ -106,7 +109,6 @@ public class Scanner
 
 
         switch(tempChar) {
-
             case(SourceFile.eof):
                 return new Token(Token.Kind.EOF,
                         currentChar.toString(), this.sourceFile.getCurrentLineNumber());
@@ -120,11 +122,13 @@ public class Scanner
             case('c'):
             case('b'):
             case('a'):
-                currentChar = sourceFile.getNextChar();
-                curString += tempChar;
                 checkCurString(tempChar);
-                if(isNote){
+                currentChar = this.sourceFile.getNextChar();
+                if(isNote && currentChar != 'h' && currentChar != '('){
                     return new Token(Token.Kind.PITCH, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+                }
+                else {
+                    return new Token(Token.Kind.NOTWORD, "doesnt matter", this.sourceFile.getCurrentLineNumber());
                 }
             case('w'):
             case('h'):
@@ -134,37 +138,59 @@ public class Scanner
             case('t'):
             case('x'):
             case('o'):
-                currentChar = sourceFile.getNextChar();
-                curString += tempChar;
                 checkCurString(tempChar);
+                currentChar = this.sourceFile.getNextChar();
                 if(currentChar.equals('n')){
                     currentChar = sourceFile.getNextChar();
                     isNote = true;
+                    curString = "";
                     return new Token(Token.Kind.NOTE, tempChar.toString()+'n', this.sourceFile.getCurrentLineNumber());
                 }
-            case('/'): return this.getDivToken();
+                else{
+                    return new Token(Token.Kind.NOTWORD, "doesnt matter", this.sourceFile.getCurrentLineNumber());
+                }
 
             case('-'): return this.getMinusToken();
 
             case('{'):
+                tempToken = checkCurString(tempChar);
                 currentChar = sourceFile.getNextChar();
-                return new Token(Token.Kind.LCURLY,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+                curString = "";
+                isNote = false;
+                isChord = false;
+                if(tempToken.kind != Token.Kind.NOTWORD) {
+                    return tempToken;
+                }
+                else{
+                    return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
+                }
 
             case('}'):
                 currentChar = sourceFile.getNextChar();
+                curString = "";
                 return new Token(Token.Kind.RCURLY,
                     tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
             case('('):
+                tempToken = checkCurString(tempChar);
                 currentChar = sourceFile.getNextChar();
-                return new Token(Token.Kind.LPAREN,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+                curString = "";
+                if(tempToken.kind != Token.Kind.NOTWORD) {
+                    return tempToken;
+                }
+                else{
+                    return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
+                }
 
             case(')'):
                 currentChar = sourceFile.getNextChar();
+                curString = "";
                 return new Token(Token.Kind.RPAREN,
                     tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+
+            case(':'):
+                currentChar = sourceFile.getNextChar();
+                return new Token(Token.Kind.COLON, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
             case(';'):
                 currentChar = sourceFile.getNextChar();
@@ -176,18 +202,28 @@ public class Scanner
 
             case('.'):
                 currentChar = sourceFile.getNextChar();
+                curString = "";
+                isNote = false;
+                isChord = false;
                 return new Token(Token.Kind.DOT,
                     tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
             case(','):
                 currentChar = sourceFile.getNextChar();
+                curString = "";
+                isNote = false;
+                isChord = false;
                 return new Token(Token.Kind.COMMA,
                     tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
             default:
 
                 if (Character.isDigit(currentChar)) return getIntConstToken();
-                else if (Character.isLetter(currentChar)) return checkCurString(tempChar);
+                else if (Character.isLetter(currentChar)){
+                    tempToken = checkCurString(tempChar);
+                    currentChar = this.sourceFile.getNextChar();
+                    return tempToken;
+                }
                 else {
                     currentChar = sourceFile.getNextChar();
                     this.errorHandler.register(Error.Kind.LEX_ERROR,
@@ -199,33 +235,82 @@ public class Scanner
          }
     }
 
-    private Token checkCurString(Character tempChar){
-        switch(curString){
-            case("chord"):
-                String chordInfo = tempChar.toString();
-                while(!currentChar.equals(')')){
+    private Token checkCurString(Character tempChar) {
+        if (curString != null) {
+            switch (curString) {
+                case ("chord"):
+                    String chordInfo = "";
+                    while (!currentChar.equals(')')) {
+                        chordInfo += currentChar;
+                        currentChar = this.sourceFile.getNextChar();
+                    }
                     chordInfo += currentChar;
-                }
-                isChord = true;
-                return new Token(Token.Kind.CHORD, chordInfo, this.sourceFile.getCurrentLineNumber());
+                    currentChar = this.sourceFile.getNextChar();
+                    curString = "";
+                    isChord = true;
+                    return new Token(Token.Kind.CHORD, chordInfo, this.sourceFile.getCurrentLineNumber());
 
-            case("baseseq"):
-                String baseInfo = tempChar.toString();
-                while(!currentChar.equals(')')){
+                case ("piece"):
+                    System.out.println("THIS ACTUALLY WORKED");
+                    String pieceName = "";
+                    while (!currentChar.equals('{')) {
+                        pieceName += currentChar;
+                        currentChar = this.sourceFile.getNextChar();
+                    }
+                    curString = "";
+                    return new Token(Token.Kind.PIECE, pieceName, this.sourceFile.getCurrentLineNumber());
+
+                case ("baseseq"):
+                    String baseInfo = "";
+                    while (!currentChar.equals(')')) {
+                        baseInfo += currentChar;
+                        currentChar = this.sourceFile.getNextChar();
+                    }
                     baseInfo += currentChar;
-                }
-                return new Token(Token.Kind.BASELINE, baseInfo, this.sourceFile.getCurrentLineNumber());
+                    currentChar = this.sourceFile.getNextChar();
+                    curString = "";
+                    return new Token(Token.Kind.BASELINE, baseInfo, this.sourceFile.getCurrentLineNumber());
 
+                case ("verse"):
+                    String verseName = "";
+                    while (!currentChar.equals('{')){
+                        verseName += currentChar;
+                        currentChar = this.sourceFile.getNextChar();
+                    }
+                    curString = "";
+                    return new Token(Token.Kind.VERSE, verseName, this.sourceFile.getCurrentLineNumber());
 
+                case ("chorus"):
+                    String chorusName = "";
+                    while (!currentChar.equals('{')){
+                        chorusName += currentChar;
+                        currentChar = this.sourceFile.getNextChar();
+                    }
+                    curString = "";
+                    return new Token(Token.Kind.CHORUS, chorusName, this.sourceFile.getCurrentLineNumber());
+
+                case ("righthand"):
+                    currentChar = this.sourceFile.getNextChar();
+                    curString = "";
+                    return new Token(Token.Kind.RIGHTHAND, "righthand", this.sourceFile.getCurrentLineNumber());
+
+                case ("lefthand"):
+                    currentChar = this.sourceFile.getNextChar();
+                    curString = "";
+                    return new Token(Token.Kind.LEFTHAND, "lefthand", this.sourceFile.getCurrentLineNumber());
+
+                case ("writer"):
+                    String authorName = "";
+                    while (!currentChar.equals(';')){
+                        authorName += currentChar;
+                        currentChar = this.sourceFile.getNextChar();
+                    }
+                    curString = "";
+                    return new Token(Token.Kind.WRITER, authorName, this.sourceFile.getCurrentLineNumber());
+            }
         }
-        return null;
-    }
-
-    private Token getDivToken() {
-        String tempChar = currentChar.toString();
-        currentChar = this.sourceFile.getNextChar();
-        return new Token(Token.Kind.DIV, tempChar,
-                    this.sourceFile.getCurrentLineNumber());
+            curString += tempChar;
+            return new Token(Token.Kind.NOTWORD, "doesn't matter", this.sourceFile.getCurrentLineNumber());
     }
 
     /**
@@ -247,23 +332,12 @@ public class Scanner
      * @return token of Kind.INTCONST or Kind.ERROR
      */
     private Token getIntConstToken() {
-        String spelling = "";
-        while(Character.isDigit(currentChar)){
-            spelling = spelling.concat(currentChar.toString());
-            currentChar = this.sourceFile.getNextChar();
+        String tempChar = currentChar.toString();
+        currentChar = this.sourceFile.getNextChar();
+        if(isNote){
+            return new Token(Token.Kind.OCTAVE, tempChar, this.sourceFile.getCurrentLineNumber());
         }
-
-        try {
-                Integer.parseInt(spelling);
-                return new Token(Token.Kind.INTCONST, spelling, this.sourceFile.getCurrentLineNumber());
-        }
-        catch (NumberFormatException e){
-            this.errorHandler.register(Error.Kind.LEX_ERROR,
-                    this.sourceFile.getFilename(), this.sourceFile.getCurrentLineNumber(),
-                    "INVALID INTEGER CONSTANT");
-            return new Token(Token.Kind.ERROR, spelling,
-                    this.sourceFile.getCurrentLineNumber());
-        }
+        else return new Token(Token.Kind.INTCONST, tempChar, this.sourceFile.getCurrentLineNumber());
     }
 
     /**
@@ -333,8 +407,8 @@ public class Scanner
      * @param args command line file arguments
      */
     public static void main (String[] args){
-        if(args.length > 0){
-            for(int i = 0; i< 1; i ++){
+        if(true){
+            for(int i = 0; i < 1; i ++){
                 Scanner scanner;
                 ErrorHandler errorHandler = new ErrorHandler();
                 try {
@@ -348,8 +422,12 @@ public class Scanner
                 }
 
                 Token nextToken;
-                while ( (nextToken = scanner.scan()).kind != Token.Kind.EOF) {
-                    System.out.println(nextToken);
+                nextToken = scanner.scan();
+                while (nextToken.kind != Token.Kind.EOF) {
+                    if(nextToken.kind != Token.Kind.NOTWORD) {
+                        System.out.println(nextToken);
+                    }
+                    nextToken = scanner.scan();
                 }
 
                 if(errorHandler.getErrorList().size() > 0){
