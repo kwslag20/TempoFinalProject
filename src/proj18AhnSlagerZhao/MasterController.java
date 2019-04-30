@@ -120,6 +120,34 @@ public class MasterController {
     }
 
     /**
+     * This method clears the console, tries to scan
+     * and will write any errors to the console
+     * @param event press of the Scan button triggering this method
+     */
+    @FXML
+    public void handleScan(Event event) {
+        this.console.clear();
+        try {
+            this.fileController.handleScan(event);
+        } catch (CompilationException e) {
+            this.console.writeLine(e.toString() + "\n", "ERROR");
+            return;
+        }
+
+        List<Error> scanningErrors = fileController.getScanningErrors();
+
+        if (scanningErrors != null) {
+
+            for (Error e : scanningErrors)
+                this.console.writeLine(e.toString() + "\n", "ERROR");
+
+            this.console.writeLine(scanningErrors.size() +
+                    " illegal tokens were found.", "ERROR");
+        }
+    }
+
+
+    /**
      * method that handles just assembly of a file
      * @param event
      * @throws InterruptedException

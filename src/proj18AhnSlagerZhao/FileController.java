@@ -395,12 +395,13 @@ public class FileController {
             }
 
             else{
-                Program root = this.parser.parse(filename);
-                if(scanOrParse.equals("SCAN_AND_PARSE")) {
-                    Drawer drawer = new Drawer();
-                    drawer.draw(filename, root);
-                }
-                return root;
+//                Program root = this.parser.parse(filename);
+//                if(scanOrParse.equals("SCAN_AND_PARSE")) {
+//                    Drawer drawer = new Drawer();
+//                    drawer.draw(filename, root);
+//                }
+//                return root;
+                System.out.println("TESTING");
             }
 
         }
@@ -479,6 +480,16 @@ public class FileController {
         ClassTreeNode analysis = analyzer.analyze(program);
         analysisErrors = analyzer.getErrorHandler();
         return analysis;
+    }
+
+    /**
+     *
+     * @return the list of errors from the most recent scan performed on a file
+     * return value will be null if there is no valid file open to scan
+     */
+    public List<Error> getScanningErrors() {
+        if (this.scanner == null) return null;
+        return this.scanner.getErrors();
     }
 
     public List<Error> getAnalysisErrors(){

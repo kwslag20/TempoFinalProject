@@ -446,21 +446,21 @@ public class MipsCodeGenerator {
         Parser parser = new Parser(errorHandler);
         SemanticAnalyzer analyzer = new SemanticAnalyzer(errorHandler);
 
-        for (String fileNames : args) {
-            try {
-                errorHandler.clear();
-                Program program = parser.parse(fileNames);
-                ClassTreeNode classTreeNode = analyzer.analyze(program);
-                MipsCodeGenerator mipsCodeGenerator = new MipsCodeGenerator(errorHandler, false, false);
-                mipsCodeGenerator.generate(classTreeNode, fileNames.replace(".btm", ".asm"), program);
-                System.out.println("MIPS code generation was successful.");
-            } catch (CompilationException ex) {
-                System.out.println("MIPS code generation was not successful:");
-                List<Error> errorList = errorHandler.getErrorList();
-                for (Error error : errorList) {
-                    System.out.println(" ,  " + error.toString());
-                }
-            }
-        }
+//        for (String fileNames : args) {
+//            try {
+//                errorHandler.clear();
+//                Program program = parser.parse(fileNames);
+//                ClassTreeNode classTreeNode = analyzer.analyze(program);
+//                MipsCodeGenerator mipsCodeGenerator = new MipsCodeGenerator(errorHandler, false, false);
+//                mipsCodeGenerator.generate(classTreeNode, fileNames.replace(".btm", ".asm"), program);
+//                System.out.println("MIPS code generation was successful.");
+//            } catch (CompilationException ex) {
+//                System.out.println("MIPS code generation was not successful:");
+//                List<Error> errorList = errorHandler.getErrorList();
+//                for (Error error : errorList) {
+//                    System.out.println(" ,  " + error.toString());
+//                }
+//            }
+//        }
     }
 }

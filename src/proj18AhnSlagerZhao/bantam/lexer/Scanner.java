@@ -14,6 +14,7 @@ import proj18AhnSlagerZhao.bantam.util.CompilationException;
 import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
 
 import java.io.*;
+import java.util.List;
 import java.util.Set;
 
 import proj18AhnSlagerZhao.bantam.util.Error;
@@ -318,6 +319,14 @@ public class Scanner
     }
 
     /**
+     *
+     * @return a list of errors from the ErrorHandler instance of this class
+     */
+    public List<Error> getErrors() {
+        return this.errorHandler.getErrorList();
+    }
+
+    /**
      * Tester Method for the Scanner class.
      * Prints all the tokens of a file
      *
@@ -325,12 +334,12 @@ public class Scanner
      */
     public static void main (String[] args){
         if(args.length > 0){
-            for(int i = 0; i< args.length; i ++){
+            for(int i = 0; i< 1; i ++){
                 Scanner scanner;
                 ErrorHandler errorHandler = new ErrorHandler();
                 try {
 
-                    scanner = new Scanner(args[i], errorHandler);
+                    scanner = new Scanner("test1.txt", errorHandler);
 
                 }
                 catch(CompilationException e){
@@ -344,12 +353,12 @@ public class Scanner
                 }
 
                 if(errorHandler.getErrorList().size() > 0){
-                    System.out.println("Scanning of " + args[i] + " was not successful. "+
+                    System.out.println("Scanning of " + "test1.txt" + " was not successful. "+
                             errorHandler.getErrorList().size() +" errors were found.\n\n");
                 }
                 else{
 
-                    System.out.println("Scanning of " + args[i] + " was successful. " +
+                    System.out.println("Scanning of " + "test1.txt" + " was successful. " +
                             "No errors were found.\n\n");
                 }
 

@@ -378,21 +378,21 @@ public class SemanticAnalyzer
         Parser parser = new Parser(errorHandler);
         SemanticAnalyzer analyzer = new SemanticAnalyzer(errorHandler);
 
-        for (String inFile : args) {
-            System.out.println("\n========== Results for " + inFile + " =============");
-            try {
-                errorHandler.clear();
-                Program program = parser.parse(inFile);
-                analyzer.analyze(program);
-                System.out.println("  Checking was successful.");
-            } catch (CompilationException ex) {
-                System.out.println("  There were errors:");
-                List<Error> errors = errorHandler.getErrorList();
-                for (Error error : errors) {
-                    System.out.println("\t" + error.toString());
-                }
-            }
-        }
+//        for (String inFile : args) {
+//            System.out.println("\n========== Results for " + inFile + " =============");
+//            try {
+//                errorHandler.clear();
+//                Program program = parser.parse(inFile);
+//                analyzer.analyze(program);
+//                System.out.println("  Checking was successful.");
+//            } catch (CompilationException ex) {
+//                System.out.println("  There were errors:");
+//                List<Error> errors = errorHandler.getErrorList();
+//                for (Error error : errors) {
+//                    System.out.println("\t" + error.toString());
+//                }
+//            }
+//        }
 
     }
 
