@@ -35,6 +35,7 @@ public class Scanner
     private ErrorHandler errorHandler;
     private Character currentChar;
     private Boolean isNote, isChord;
+    private String curString;
 
 
     private final Set<Character> charsEndingIdentifierOrKeyword =
@@ -51,6 +52,7 @@ public class Scanner
         errorHandler = handler;
         currentChar = ' ';
         sourceFile = null;
+        curString = "";
     }
 
     /**
@@ -118,13 +120,11 @@ public class Scanner
             case('b'):
             case('a'):
                 currentChar = sourceFile.getNextChar();
+                curString += tempChar;
+                checkCurString();
                 if(isNote){
-                    if (Character.isDigit(currentChar)){
-
-                    }
                     return new Token(Token.Kind.PITCH, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-                };
-
+                }
             case('w'):
             case('h'):
             case('q'):
@@ -134,6 +134,8 @@ public class Scanner
             case('x'):
             case('o'):
                 currentChar = sourceFile.getNextChar();
+                curString += tempChar;
+                checkCurString();
                 if(currentChar.equals('n')){
                     currentChar = sourceFile.getNextChar();
                     isNote = true;
@@ -181,7 +183,7 @@ public class Scanner
             default:
 
                 if (Character.isDigit(currentChar)) return getIntConstToken();
-                else if (Character.isLetter(currentChar)) return getIdentifierOrKeywordToken();
+                else if (Character.isLetter(currentChar)) return checkCurString();
                 else {
                     currentChar = sourceFile.getNextChar();
                     this.errorHandler.register(Error.Kind.LEX_ERROR,
@@ -193,9 +195,9 @@ public class Scanner
          }
     }
 
-    private Token getPitchToken() {
+    private Token checkCurString(){
+        return null;
     }
-
     /**
      *
      * @return a token of Kind.COMMENT, Kind.MULDIV or Kind.ERROR
