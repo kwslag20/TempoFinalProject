@@ -34,6 +34,8 @@ public class Scanner
     private SourceFile sourceFile;
     private ErrorHandler errorHandler;
     private Character currentChar;
+    private Boolean isNote, isChord;
+
 
     private final Set<Character> charsEndingIdentifierOrKeyword =
             Set.of('"', '/', '+', '-', '>', '<', '=', '&', '{',
@@ -106,30 +108,40 @@ public class Scanner
                 return new Token(Token.Kind.EOF,
                         currentChar.toString(), this.sourceFile.getCurrentLineNumber());
 
-            case('*'):
-                currentChar = sourceFile.getNextChar();
-                return new Token(Token.Kind.MULDIV, tempChar.toString(),
-                        this.sourceFile.getCurrentLineNumber());
-
             case('"'): return this.getStringConstToken();
 
+            case('g'):
+            case('f'):
+            case('e'):
+            case('d'):
+            case('c'):
+            case('b'):
+            case('a'):
+                currentChar = sourceFile.getNextChar();
+                if(isNote){
+                    if (Character.isDigit(currentChar)){
+
+                    }
+                    return new Token(Token.Kind.PITCH, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+                };
+
+            case('w'):
+            case('h'):
+            case('q'):
+            case('i'):
+            case('s'):
+            case('t'):
+            case('x'):
+            case('o'):
+                currentChar = sourceFile.getNextChar();
+                if(currentChar.equals('n')){
+                    currentChar = sourceFile.getNextChar();
+                    isNote = true;
+                    return new Token(Token.Kind.NOTE, tempChar.toString()+'n', this.sourceFile.getCurrentLineNumber());
+                }
             case('/'): return this.getCommentOrMulDivToken();
 
-            case('+'): return this.getPlusToken();
-
             case('-'): return this.getMinusToken();
-
-            case('>'): return this.getCompareToken();
-
-            case('<'): return this.getCompareToken();
-
-            case('='): return this.getEqualsToken();
-
-            case('&'): return getBinaryLogicToken();
-
-            case('|'): return getBinaryLogicToken();
-
-            case('%'): return getCommentOrMulDivToken();
 
             case('{'):
                 currentChar = sourceFile.getNextChar();
@@ -139,16 +151,6 @@ public class Scanner
             case('}'):
                 currentChar = sourceFile.getNextChar();
                 return new Token(Token.Kind.RCURLY,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case('['):
-                currentChar = sourceFile.getNextChar();
-                return new Token(Token.Kind.LBRACKET,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case(']'):
-                currentChar = sourceFile.getNextChar();
-                return new Token(Token.Kind.RBRACKET,
                     tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
             case('('):
@@ -165,13 +167,6 @@ public class Scanner
                 currentChar = sourceFile.getNextChar();
                 return new Token(Token.Kind.SEMICOLON,
                     tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case(':'):
-                currentChar = sourceFile.getNextChar();
-                return new Token(Token.Kind.COLON,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case('!'): return this.getUnaryNotOrCompareToken();
 
             case('.'):
                 currentChar = sourceFile.getNextChar();
@@ -196,6 +191,9 @@ public class Scanner
                             this.sourceFile.getCurrentLineNumber());
                 }
          }
+    }
+
+    private Token getPitchToken() {
     }
 
     /**
@@ -346,52 +344,8 @@ public class Scanner
         }
     }
 
-    /**
-     * Creates and returns an ASSIGN or COMPARE token
-     *
-     * @return a token of Kind.ASSIGN(=) or Kind.COMPARE(==)
-     */
-    private Token getEqualsToken() {
 
-        Character prevChar = currentChar;
-        currentChar = this.sourceFile.getNextChar();
 
-        if (currentChar.equals(prevChar)) {
-
-            String spelling = prevChar.toString().concat(currentChar.toString());
-            currentChar = sourceFile.getNextChar();
-            return new Token(Token.Kind.COMPARE, spelling,
-                    this.sourceFile.getCurrentLineNumber());
-        }
-        else {
-
-            return new Token(Token.Kind.ASSIGN, prevChar.toString(),
-                    this.sourceFile.getCurrentLineNumber());
-        }
-    }
-
-    /**
-     * Creates a PLUSMINUS or UNARYINCR token
-     *
-     * @return a token of Kind.PLUSMINUS(+) or Kind.UNARYINCR(++)
-     */
-    private Token getPlusToken() {
-
-        Character prevChar = currentChar;
-        currentChar = this.sourceFile.getNextChar();
-
-        if (currentChar.equals(prevChar)) {
-
-            String spelling = prevChar.toString().concat(currentChar.toString());
-            currentChar = sourceFile.getNextChar();
-            return new Token(Token.Kind.UNARYINCR, spelling,
-                    this.sourceFile.getCurrentLineNumber());
-        }
-        else {
-            return new Token(Token.Kind.PLUSMINUS, prevChar.toString(),
-                    this.sourceFile.getCurrentLineNumber());
-        }
-    }
 
     /**
      * Creates and returns a minus token or a unary decrement token

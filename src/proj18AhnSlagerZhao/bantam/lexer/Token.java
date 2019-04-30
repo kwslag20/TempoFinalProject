@@ -54,28 +54,23 @@
 
      public enum Kind
      {
+         NOTE, PITCH, OCTAVE, CHORD, CHORDTYPE, TIMESIG, KEY, STEPSIZE, LENGTH, STEPLENGTH, STEPFREQ, PATTERN,
          // literals, identifiers...
          INTCONST, STRCONST, BOOLEAN, IDENTIFIER,
-
-         // operators...
-         BINARYLOGIC, PLUSMINUS, MULDIV, COMPARE, UNARYINCR, UNARYDECR, ASSIGN,
-         UNARYNOT,
 
          // punctuation...
          DOT, COLON, SEMICOLON, COMMA,
 
          // brackets...
-         LPAREN, RPAREN, LBRACKET, RBRACKET, LCURLY, RCURLY,
+         LPAREN, RPAREN, LCURLY, RCURLY,
 
          // special tokens...
          COMMENT, ERROR, EOF, //end of file token
 
          // reserved words
-         BREAK, CAST, CLASS, VAR, ELSE, EXTENDS, FOR, IF, INSTANCEOF, NEW,
-         RETURN, WHILE
+         PIECE, VERSE, CHORUS, BRIDGE, RIGHTHAND, LEFTHAND, BASELINE, LAYOUT, ORDEROBJ, CRESCENDO
      }
 
-     private static Set<String> reservedWords = Set.of("break", "cast", "class", "var",
-             "else", "extends", "for", "if", "instanceof", "new", "return", "while");
-
+     private static Set<String> reservedWords = Set.of("piece", "verse", "chorus", "bridge", "righthand", "lefthand",
+             "baseseq", "layout", "timesig", "crescendo", "key", "chord", "start", "stepsize", "length", "stepfreq", "author");
  }
