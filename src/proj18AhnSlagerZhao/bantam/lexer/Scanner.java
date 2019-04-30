@@ -251,7 +251,6 @@ public class Scanner
                     return new Token(Token.Kind.CHORD, chordInfo, this.sourceFile.getCurrentLineNumber());
 
                 case ("piece"):
-                    System.out.println("THIS ACTUALLY WORKED");
                     String pieceName = "";
                     while (!currentChar.equals('{')) {
                         pieceName += currentChar;
