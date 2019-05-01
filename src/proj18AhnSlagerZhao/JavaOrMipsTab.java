@@ -52,7 +52,10 @@ public class JavaOrMipsTab extends Tab {
         }
         else if(extension.equals(".asm") || extension.equals(".s")){
             codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
-
+        }
+        else if(extension.equals(".mus")){
+            System.out.println("hello");
+            codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
         }
         else{
             codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);

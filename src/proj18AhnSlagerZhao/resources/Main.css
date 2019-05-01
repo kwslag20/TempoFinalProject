@@ -99,3 +99,28 @@
 .register {
     -fx-fill: red;
 }
+
+.note {
+    -fx-fill: blue;
+    font-weight: bold;
+}
+
+.chord {
+    -fx-fill: purple;
+    font-weight: bold;
+}
+
+.musKeyWord {
+    -fx-fill: green;
+    font-weight: bold;
+}
+
+.octave {
+    -fx-fill: red;
+    font-weight: bold;
+}
+
+.pitch {
+    -fx-fill: pink;
+    font-weight: bold;
+}

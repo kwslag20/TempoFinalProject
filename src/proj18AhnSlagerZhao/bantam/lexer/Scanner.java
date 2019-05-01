@@ -289,6 +289,7 @@ public class Scanner
                         currentChar = this.sourceFile.getNextChar();
                     }
                     curString = "";
+                    System.out.println("This should be returning a verse token");
                     return new Token(Token.Kind.VERSE, verseName, this.sourceFile.getCurrentLineNumber());
 
                 case ("righthand"):

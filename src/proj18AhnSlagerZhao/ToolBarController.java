@@ -123,14 +123,16 @@ public class ToolBarController {
         // create and run the compile process
         List<String> processBuilderArgs = new ArrayList<>();
         processBuilderArgs.add("javac");
-        processBuilderArgs.add("-classpath");
-        processBuilderArgs.add("CS461/project18AhnSlager/JARS/jfugue-5.0.9.jar:");
+        processBuilderArgs.add("-cp");
+        processBuilderArgs.add("/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
         processBuilderArgs.add(filename);
+        System.out.println(processBuilderArgs);
         ProcessBuilder pb = new ProcessBuilder(processBuilderArgs);
         CompileOrRunTask compileTask = new CompileOrRunTask(this.console, pb);
         this.curFutureTask = new FutureTask<Boolean>(compileTask);
         ExecutorService compileExecutor = Executors.newFixedThreadPool(1);
         compileExecutor.execute(curFutureTask);
+
 
         // Check if compile was successful, and if so, indicate this in the console
         Boolean compSuccessful = false;
@@ -198,6 +200,10 @@ public class ToolBarController {
      * Helper method for running Mips Programs.
      */
     public boolean compileRunFile(String fileName) {
+        boolean compSuccessful = compileFile(fileName);
+        if(!compSuccessful){
+            return compSuccessful;
+        }
         try {
             Platform.runLater(() -> {
                 this.console.clear();
@@ -207,8 +213,8 @@ public class ToolBarController {
             List<String> processBuilderArgs = new ArrayList<>();
             processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
-//            processBuilderArgs.add("-classpath");
-//            processBuilderArgs.add("CS461/project18AhnSlager/JARS/jfugue-5.0.9.jar;.");
+            processBuilderArgs.add("-cp");
+            processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
             processBuilderArgs.add(fileName);
             ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
             this.curProcess = builder.start();

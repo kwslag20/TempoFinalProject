@@ -126,6 +126,20 @@ public class JavaOrMIPSCodeArea extends CodeArea {
 
     );
 
+    private static final String[] MUSKEYWORDS = new String[]{"verse", "chorus", "piece",
+            "bridge", "layout", "baseseq"};
+    private static final String MUSKEYWORD_PATTERN = "\\b("+String.join("|", MUSKEYWORDS) + ")\\b";
+    private static final String NOTE_PATTERN = "\\s[whqistxo]+[nr]";
+    private static final String PITCH_PATTERN = "\\s[a-z]\\s";
+    private static final String OCTAVE_PATTERN = "\\s[1-9][;]";
+    private static final String CHORD_PATTERN = "(chord)";
+    private static final Pattern MUS_PATTERN = Pattern.compile(
+            "(?<NOTE>"+NOTE_PATTERN+")" + "|(?<PITCH>"+PITCH_PATTERN+")" +
+                    "|(?<OCTAVE>"+OCTAVE_PATTERN+")"+
+                    "|(?<CHORD>"+CHORD_PATTERN+")"+
+                    "|(?<MUSKEYWORD>"+MUSKEYWORD_PATTERN+")"
+    );
+
     // a list of strings that contain the keywords for the instructions of MIPS.
     private static final String[] INSTRUCTIONS = new String[]{
             "abs", "add", "adds", "addi", "and", "andi", "b", "beq", "beqz", "bge", "bltz",
@@ -166,6 +180,9 @@ public class JavaOrMIPSCodeArea extends CodeArea {
         if(".asm".equals(fileType)||".s".equals(fileType)){
             matcher = MIPS_PATTERN.matcher(text);
         }
+        else if(".mus".equals(fileType)){
+            matcher = MUS_PATTERN.matcher(text);
+        }
         else{
             matcher = PATTERN.matcher(text);
         }
@@ -183,6 +200,21 @@ public class JavaOrMIPSCodeArea extends CodeArea {
                 spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
                 spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
                 lastKwEnd = matcher.end();
+            }
+        }
+        else if(".mus".equals(fileType)){
+            while(matcher.find()){
+                String styleClass = matcher.group("NOTE") != null ? "note" :
+                        matcher.group("PITCH") != null ? "pitch" :
+                                matcher.group("OCTAVE") != null ? "octave" :
+                                        matcher.group("CHORD") != null ? "chord" :
+                                                matcher.group("MUSKEYWORD") != null ? "musKeyWord" :
+                                                        null;
+                assert  styleClass != null;
+                spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
+                spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
+                lastKwEnd = matcher.end();
+
             }
         }
         else {

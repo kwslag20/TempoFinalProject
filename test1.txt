@@ -11,6 +11,14 @@ piece MyNewSong {
 			hn e 3;
 			}
 		}
+	verse second{
+	    righthand{
+	        hn d 1;
+	    }
+	    lefthand{
+	        hn c 2;
+	    }
+	}
 	chorus{
 		righthand{
 		    wn f 4;

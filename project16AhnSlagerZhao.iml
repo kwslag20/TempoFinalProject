@@ -10,7 +10,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/src/proj18AhnSlagerZhao/JARS/richtextfx-fat-0.9.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/../richtextfx-fat-0.9.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -19,7 +19,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/src/proj18AhnSlagerZhao/JARS/org/jfugue/jfugue-5.0.9.jar!/" />
+          <root url="jar://$MODULE_DIR$/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
