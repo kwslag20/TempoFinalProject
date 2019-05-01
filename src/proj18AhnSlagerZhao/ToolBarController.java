@@ -12,15 +12,23 @@ import javafx.application.Platform;
 import javafx.event.Event;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
+import javafx.scene.control.*;
+
+import java.io.*;
+
+
+import java.util.concurrent.*;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
-import java.io.*;
 
 import javafx.concurrent.Task;
 import javafx.concurrent.Service;
+import proj18AhnSlagerZhao.FileController;
+import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
 import proj18AhnSlagerZhao.bantam.codegenmips.MipsCodeGenerator;
 import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
+
 
 /**
  * ToolbarController handles Toolbar related actions.
@@ -34,17 +42,26 @@ import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
  */
 public class ToolBarController {
 
+
+    private FutureTask<Boolean> curFutureTask;
+    private Button stopButton;
+    private Button compileButton;
+    private Button compileRunButton;
+    private TabPane tabPane;
+    private boolean receivedCommand = false;
+
     public ToolBarController(Console console, FileController fileController){
         this.fileController = fileController;
         this.console = console;
         this.mutex = new Semaphore(1);
-        this.compileWorker = new CompileWorker();
-        this.compileRunWorker = new CompileRunWorker();
+        //this.compileWorker = new CompileWorker();
+       // this.compileRunWorker = new CompileRunWorker();
     }
     /**
      * Console defined in Main.fxml
      */
-    private StyleClassedTextArea console;
+    private Console console;
+
     /**
      * Process currently compiling or running a Java file
      */
@@ -73,46 +90,114 @@ public class ToolBarController {
     /**
      * A CompileWorker object compiles a Java file in a separate thread.
      */
-    private CompileWorker compileWorker;
+   // private CompileWorker compileWorker;
     /**
      * A CompileRunWorker object compiles and runs a Java file in a separate thread.
      */
-    private CompileRunWorker compileRunWorker;
 
     /**
-     * Helper method for assembling Mips files.
+     *  Compiles the code currently open, assuming it has been saved.
+     *
      */
-    public boolean assembleMIPSFile(String fileName) {
-        try {
-            Platform.runLater(() -> {
-                this.console.clear();
-                this.consoleLength = 0;
-            });
-            // adds in the appropriate elements into the PB list
-            List<String> processBuilderArgs = new ArrayList<>();
-            processBuilderArgs.add("java");
-            processBuilderArgs.add("-jar");
-            processBuilderArgs.add("mars.jar");
-            processBuilderArgs.add("a");
-            processBuilderArgs.add(fileName);
-            ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
-            this.curProcess = builder.start();
-
-            this.outputToConsole();
-
-            // true if compiled without compile-time error, else false
-            return this.curProcess.waitFor() == 0;
-        } catch (Throwable e) {
-            Platform.runLater(() -> {
-            });
-            return false;
-        }
+    public void handleCompile(){
+        Thread compileThread = new Thread(()->compileFile(fileController.getFilePath()));
+        compileThread.start();
     }
 
     /**
+     * Calls compile and runs the code
+     *
+     */
+    public void handleCompileAndRun(){
+        Thread compileRunThread = new Thread(() -> compileRunFile(fileController.getFilePath()));
+        compileRunThread.start();
+    }
+
+    /**
+     * Compiles the specified file using the javac command
+     * @param filename the name of the file to compile
+     * @return whether or not compilation was successful
+     */
+    private boolean compileFile(String filename) {
+
+        // create and run the compile process
+        List<String> processBuilderArgs = new ArrayList<>();
+        processBuilderArgs.add("javac");
+        processBuilderArgs.add("-classpath");
+        processBuilderArgs.add("CS461/project18AhnSlager/JARS/jfugue-5.0.9.jar:");
+        processBuilderArgs.add(filename);
+        ProcessBuilder pb = new ProcessBuilder(processBuilderArgs);
+        CompileOrRunTask compileTask = new CompileOrRunTask(this.console, pb);
+        this.curFutureTask = new FutureTask<Boolean>(compileTask);
+        ExecutorService compileExecutor = Executors.newFixedThreadPool(1);
+        compileExecutor.execute(curFutureTask);
+
+        // Check if compile was successful, and if so, indicate this in the console
+        Boolean compSuccessful = false;
+        try {
+            compSuccessful = curFutureTask.get();
+            if (compSuccessful) {
+                Platform.runLater(() ->
+                        this.console.appendText("Compilation was Successful.\n"));
+            }
+            compileExecutor.shutdown();
+        } catch (ExecutionException | InterruptedException | CancellationException e) {
+            compileTask.stop();
+        }
+
+        return compSuccessful;
+    }
+
+
+//    /**
+//     * Compiles and runs the specified file using the java command
+//     * @param fileNameWithPath the file name, including its path
+//     */
+//    private void compileRunFile(String fileNameWithPath){
+//
+//        // Try to compile
+//        boolean compSuccessful = compileFile(fileNameWithPath);
+//        if(!compSuccessful){
+//            return;
+//        }
+//        // Disable appropriate compile buttons
+//        //disableCompileAndRunButtons();
+//        List<String> processBuilderArgs = new ArrayList<>();
+//        processBuilderArgs = new ArrayList<>();
+//        processBuilderArgs.add("java");
+//        processBuilderArgs.add("-jar");
+//        processBuilderArgs.add("jfugue-5.0.9.jar");
+//        // set up the necessary file path elements
+//        int pathLength = fileNameWithPath.length();
+//        File file = new File(fileNameWithPath);
+//        String filename = file.getName();
+//        String filepath = fileNameWithPath.substring(0,pathLength-filename.length());
+//        int nameLength = filename.length();
+//        String classFilename = filename.substring(0, nameLength - 5);
+//
+//        processBuilderArgs.add(filepath);
+//        //processBuilderArgs.add(classFilename);
+//
+//        // Run the java program
+//        ProcessBuilder pb = new ProcessBuilder(processBuilderArgs);
+//        CompileOrRunTask runTask = new CompileOrRunTask(console,pb);
+//        this.curFutureTask = new FutureTask<Boolean>(runTask);
+//        ExecutorService curExecutor = Executors.newFixedThreadPool(1);
+//        curExecutor.execute(this.curFutureTask);
+//
+//        try{
+//            curExecutor.shutdown();
+//        }
+//        // if the program is interrupted, stop running
+//        catch (CancellationException e){
+//            runTask.stop();
+//        }
+//
+//    }
+    /**
      * Helper method for running Mips Programs.
      */
-    public boolean runMIPSFile(String fileName) {
+    public boolean compileRunFile(String fileName) {
         try {
             Platform.runLater(() -> {
                 this.console.clear();
@@ -122,8 +207,8 @@ public class ToolBarController {
             List<String> processBuilderArgs = new ArrayList<>();
             processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
-            processBuilderArgs.add("-jar");
-            processBuilderArgs.add("mars.jar");
+//            processBuilderArgs.add("-classpath");
+//            processBuilderArgs.add("CS461/project18AhnSlager/JARS/jfugue-5.0.9.jar;.");
             processBuilderArgs.add(fileName);
             ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
             this.curProcess = builder.start();
@@ -173,11 +258,6 @@ public class ToolBarController {
         }
     }
 
-    public void handleCompile(Event event, ErrorHandler handler) {
-        MipsCodeGenerator mipsCodeGenerator = new MipsCodeGenerator(handler, false, false);
-        String[] files = new String[]{this.fileController.getFilePath()};
-        mipsCodeGenerator.main(files);
-    }
 
     /**
      * Helper method for getting program output
@@ -275,32 +355,6 @@ public class ToolBarController {
     }
 
     /**
-     * Handles the Compile button action.
-     *
-     * @param event Event object
-     * @param fileName  the Selected file
-     */
-    public void handleAssembleAction(Event event, String fileName) {
-        // user select cancel button
-        event.consume();
-        compileWorker.setFileName(fileName);
-        compileWorker.restart();
-    }
-
-    /**
-     * Handles the CompileRun button action.
-     *
-     * @param event Event object
-     * @param fileName  the Selected file
-     */
-    public void handleRunAction(Event event, String fileName) {
-        // user select cancel button
-        event.consume();
-        compileRunWorker.setFileName(fileName);
-        compileRunWorker.restart();
-    }
-
-    /**
      * Handles the Stop button action.
      */
     public void handleStopButtonAction() {
@@ -317,96 +371,100 @@ public class ToolBarController {
     }
 
     /**
-     * A CompileWorker subclass handling Java program compiling in a separated thread in the background.
-     * CompileWorker extends the javafx Service class.
+     * An inner class used for a thread to execute the run task
+     * Designed to be used for compilation or running.
+     * Writes the input/output error to the console.
      */
-    protected class CompileWorker extends Service<Boolean> {
-        /**
-         * the file to be compiled.
-         */
-        private String fileName;
+    private class CompileOrRunTask implements Callable{
+        private Process curProcess;
+        private Console console;
+        private ProcessBuilder pb;
 
         /**
-         * Sets the selected file.
-         *
-         * @param fileName the file to be compiled.
+         * Initializes this compile/run task
+         * @param console where to write output to
+         * @param pb the ProcessBuilder we have used to call javac/java
          */
-        private void setFileName(String fileName) {
-            this.fileName = fileName;
+        CompileOrRunTask(Console console, ProcessBuilder pb){
+            this.console = console;
+            this.pb = pb;
         }
 
         /**
-         * Overrides the createTask method in Service class.
-         * Compiles the file embedded in the selected tab, if appropriate.
-         *
-         * @return true if the program compiles successfully;
-         * false otherwise.
+         * Starts the process
+         * @return will return false if there is an error, true otherwise.
+         * @throws IOException error reading input/output to/from console
          */
         @Override
-        protected Task<Boolean> createTask() {
-            return new Task<Boolean>() {
-                /**
-                 * Called when we execute the start() method of a CompileRunWorker object
-                 * Compiles the file.
-                 *
-                 * @return true if the program compiles successfully;
-                 *         false otherwise.
-                 */
-                @Override
-                protected Boolean call() {
-                    Boolean compileResult = assembleMIPSFile(fileName);
-                    if (compileResult) {
-                        Platform.runLater(() -> console.appendText("Assembly was successful!\n"));
-                    }
-                    return compileResult;
+        public Boolean call() throws IOException{
+            this.curProcess = pb.start();
+            BufferedReader stdInput, stdError;
+            BufferedWriter stdOutput;
+            stdInput = new BufferedReader(new InputStreamReader(this.curProcess.getInputStream()));
+            stdError = new BufferedReader(new InputStreamReader(this.curProcess.getErrorStream()));
+            stdOutput = new BufferedWriter((new OutputStreamWriter(this.curProcess.getOutputStream())));
+
+            // Input to the console from the program
+            String inputLine;
+
+            // Errors from the executing task
+            String errorLine = null;
+
+            // True if there are no errors
+            Boolean taskSuccessful = true;
+
+            // While there is some input to the console, or errors that have occurred,
+            // append them to the console for the user to see.
+            while ((inputLine = stdInput.readLine()) != null || (errorLine = stdError.readLine()) != null){
+
+                final String finalInputLine = inputLine;
+                final String finalErrorLine = errorLine;
+                if (finalInputLine != null) {
+                    Platform.runLater(() -> this.console.appendText(" " + finalInputLine + " INPUT\n"));
                 }
-            };
+                if(finalErrorLine != null) {
+                    taskSuccessful = false;
+                    Platform.runLater(() -> this.console.appendText(" " + finalErrorLine + " ERROR\n"));
+                }
+                try {
+                    Thread.sleep(50);
+                }catch (InterruptedException e){
+                    this.stop();
+                    return taskSuccessful;
+                }
+            }
+            stdError.close();
+            stdInput.close();
+            stdOutput.close();
+            return taskSuccessful;
+        }
+
+        /**
+         * Stop the current process
+         */
+        public void stop(){
+            if(this.curProcess != null){
+                curProcess.destroyForcibly();
+            }
         }
     }
 
     /**
-     * A CompileRunWorker subclass handling Java program compiling and running in a separated thread in the background.
-     * CompileWorker extends the javafx Service class.
+     * Disables the Compile and Compile and Run buttons, enables the Stop button.
      */
-    protected class CompileRunWorker extends Service<Boolean> {
-        /**
-         * the file to be compiled.
-         */
-        private String fileName;
-
-        /**
-         * Sets the selected file.
-         *
-         * @param fileName the file to be compiled.
-         */
-        private void setFileName(String fileName) {
-            this.fileName = fileName;
-        }
-
-        /**
-         * Overrides the createTask method in Service class.
-         * Compiles and runs the file embedded in the selected tab, if appropriate.
-         *
-         * @return true if the program runs successfully;
-         * false otherwise.
-         */
-        @Override
-        protected Task<Boolean> createTask() {
-            return new Task<Boolean>() {
-                /**
-                 * Called when we execute the start() method of a CompileRunWorker object.
-                 * Compiles the file and runs it if compiles successfully.
-                 *
-                 * @return true if the program runs successfully;
-                 *         false otherwise.
-                 */
-                @Override
-                protected Boolean call() {
-                    return runMIPSFile(fileName);
-                }
-            };
-        }
+    public void disableCompileAndRunButtons() {
+        this.compileButton.setDisable(true);
+        this.compileRunButton.setDisable(true);
+        this.stopButton.setDisable(false);
     }
 
+    /**
+     * Enables the Compile and Compile and Run buttons, disables the Stop button.
+     */
+    public void enableCompileAndRunButtons() {
+        this.compileButton.setDisable(false);
+        this.compileRunButton.setDisable(false);
+        this.stopButton.setDisable(true);
+    }
 
 }

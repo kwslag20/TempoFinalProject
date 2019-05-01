@@ -64,8 +64,7 @@ public class MasterController {
     @FXML private Button findNextBtn;
     @FXML private TextField replaceTextEntry;
     @FXML private Menu prefMenu;
-    @FXML private Button assembleButton;
-    @FXML private Button assembleAndRunButton;
+    @FXML private Button scanButton;
     @FXML private Button stopButton;
     @FXML private Button compileButton;
 
@@ -96,16 +95,13 @@ public class MasterController {
         saveAsMenuItem.disableProperty().bind(listProperty.emptyProperty());
         closeMenuItem.disableProperty().bind(listProperty.emptyProperty());
 
-
-        assembleButton.disableProperty().bind(listProperty.emptyProperty());
-        assembleAndRunButton.disableProperty().bind(listProperty.emptyProperty());
+        compileButton.disableProperty().bind(listProperty.emptyProperty());
         stopButton.disableProperty().bind(listProperty.emptyProperty());
 
         // this line from JianQuanMarcello project 6
         this.setupContextMenuController();
 
     }
-
 
     /**
      * Creates a reference to the ContextMenuController and passes in window items and other sub Controllers when necessary.
@@ -117,6 +113,24 @@ public class MasterController {
         this.contextMenuController.setEditMenuController(this.editController);
 
         this.fileController.setContextMenuController(this.contextMenuController);
+    }
+
+    /**
+     * Helper method that calls either Compile or Compile and Run
+     * @throws InterruptedException
+     */
+    @FXML
+    public void handleCompile() throws InterruptedException{
+            this.toolBarController.handleCompile();
+    }
+
+    /**
+     * Helper method that calls either Compile or Compile and Run
+     * @throws InterruptedException
+     */
+    @FXML
+    public void handleCompileAndRun() throws InterruptedException{
+        this.toolBarController.handleCompileAndRun();
     }
 
     /**
@@ -147,73 +161,11 @@ public class MasterController {
     }
 
 
-    /**
-     * method that handles just assembly of a file
-     * @param event
-     * @throws InterruptedException
-     */
-    @FXML public void handleAssemble(Event event) throws InterruptedException{
-        this.console.clear();
-        try {
-            this.toolBarController.handleAssembleAction(event, this.fileController.getFilePath());
-        } catch (CompilationException e) {
-            this.console.writeLine(e.toString() + "\n", "ERROR");
-            return;
-        }
-        List<Error> scanningErrors = fileController.getErrors();
-
-        if (scanningErrors != null) {
-            errorHelper(scanningErrors);
-        }
-        else{
-            this.console.writeLine("Assembly of file was successful.", "CONS");
-
-        }
-        this.toolBarController = new ToolBarController(this.console, this.fileController);
-    }
-
-    /**
-     * Method to handle the assembly and running of a bantam file
-     * @param event
-     * @throws InterruptedException
-     */
-    @FXML public void handleAssembleAndRun(Event event) throws InterruptedException{
-        this.console.clear();
-        try {
-
-            this.toolBarController.handleRunAction(event, this.fileController.getFilePath());
-        } catch (CompilationException e) {
-            this.console.writeLine(e.toString() + "\n", "ERROR");
-            return;
-        }
-
-        List<Error> scanningErrors = fileController.getErrors();
-
-        if (scanningErrors != null) {
-            errorHelper(scanningErrors);
-        }
-        else{
-            this.console.writeLine("Assembly of file was successful.", "CONS");
-        }
-        this.toolBarController = new ToolBarController(this.console, this.fileController);
-    }
-
     @FXML public void handleStop(){
         this.toolBarController.handleStopButtonAction();
         this.toolBarController = new ToolBarController(this.console, this.fileController);
     }
 
-
-    /**
-     * method to handle the creation of a file to MIPS, writes it to a new tab with the .asm suffix
-     * @param e
-     * @throws InterruptedException
-     */
-    @FXML public void handleCompile(Event e) throws InterruptedException{
-        this.toolBarController.handleCompile(e, errorHandler);
-        File file = new File(this.fileController.getFilePath().replace("btm", "asm"));
-        this.fileController.handleNew(file);
-    }
 
     /**
      * Calls toggleSingleComment from the Edit Controller
@@ -252,33 +204,6 @@ public class MasterController {
 
     }
 
-
-    /**
-     * Method to handle the scanning, parsing, and checking
-     * @param event
-     * @throws InterruptedException
-     */
-    @FXML public void handleScanParseAndCheck(Event event ) throws InterruptedException {
-        this.console.clear();
-        try {
-            this.fileController.handleAnalyze(event);
-        } catch (CompilationException e) {
-            this.console.writeLine(e.toString() + "\n", "ERROR");
-
-            return;
-        }
-
-        List<Error> scanningErrors = fileController.getAnalysisErrors();
-
-        if (scanningErrors != null) {
-
-            errorHelper(scanningErrors);
-        }
-        else{
-            this.console.writeLine("Parse of file was successful.", "CONS");
-
-        }
-    }
 
     /**
      * handles the refactoring of a class
@@ -392,9 +317,6 @@ public class MasterController {
      */
     @FXML public void handleNew() {
         fileController.handleNew( null ); // TODO: decide whether to create a new File object or not here
-        assembleButton.disableProperty().bind(this.fileController.isMipsFile());
-        assembleAndRunButton.disableProperty().bind(this.fileController.isMipsFile());
-        stopButton.disableProperty().bind(this.fileController.isMipsFile());
     }
 
     /**
@@ -405,9 +327,6 @@ public class MasterController {
      */
     @FXML public void handleOpen() {
         fileController.handleOpen();
-        assembleButton.disableProperty().bind(this.fileController.isMipsFile());
-        assembleAndRunButton.disableProperty().bind(this.fileController.isMipsFile());
-        stopButton.disableProperty().bind(this.fileController.isMipsFile());
 
     }
 
@@ -431,8 +350,6 @@ public class MasterController {
      */
     @FXML public void handleSave() {
         fileController.handleSave();
-        assembleButton.disableProperty().bind(this.fileController.isMipsFile());
-        assembleAndRunButton.disableProperty().bind(this.fileController.isMipsFile());
     }
 
     /**

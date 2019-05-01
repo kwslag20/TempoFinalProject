@@ -352,10 +352,7 @@ public class FileController {
      * @param event press of the Scan button triggering the handleScan method
      */
     public void handleScanAndParse (Event event) {
-
         scanOrParseHelper(event, "SCAN_AND_PARSE" );
-
-
     }
 
     /**
@@ -366,8 +363,6 @@ public class FileController {
      */
     public Program scanOrParseHelper(Event event, String scanOrParse ){
         JavaOrMipsTab curTab = (JavaOrMipsTab) this.javaTabPane.getSelectionModel().getSelectedItem();
-
-
         if (this.javaTabPane.tabIsSaved(curTab)) {
             String filename = this.tabFilepathMap.get(curTab);
             try {
@@ -443,24 +438,6 @@ public class FileController {
         JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
         tabFilepathMap.remove(curTab);
         javaTabPane.removeTab(curTab);
-    }
-
-
-    /**
-     * helper method to determine if a file is a mips file
-     * @return true if it is a mips file
-     */
-    public BooleanProperty isMipsFile(){
-        if(this.extension.equals(".s") || this.extension.equals(".asm")){
-            BooleanProperty booleanProperty = new SimpleBooleanProperty(false);
-            return booleanProperty;
-
-        }
-        else{
-            BooleanProperty booleanProperty = new SimpleBooleanProperty(true);
-            return booleanProperty;
-
-        }
     }
 
     /**

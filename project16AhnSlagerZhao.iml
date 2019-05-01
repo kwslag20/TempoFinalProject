@@ -10,7 +10,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../richtextfx-fat-0.9.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/JARS/richtextfx-fat-0.9.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -19,14 +19,10 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../mars.jar!/" />
+          <root url="jar://$MODULE_DIR$/JARS/jfugue-5.0.9.jar!/" />
         </CLASSES>
-        <JAVADOC>
-          <root url="jar://$MODULE_DIR$/../mars.jar!/docs" />
-        </JAVADOC>
-        <SOURCES>
-          <root url="jar://$MODULE_DIR$/../mars.jar!/" />
-        </SOURCES>
+        <JAVADOC />
+        <SOURCES />
       </library>
     </orderEntry>
   </component>
