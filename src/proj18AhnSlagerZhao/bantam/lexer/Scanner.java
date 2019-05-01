@@ -107,7 +107,6 @@ public class Scanner
             }
         }
 
-
         switch(tempChar) {
             case(SourceFile.eof):
                 return new Token(Token.Kind.EOF,
@@ -190,7 +189,7 @@ public class Scanner
 
             case(':'):
                 currentChar = sourceFile.getNextChar();
-                return new Token(Token.Kind.COLON, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+                return new Token(Token.Kind.NOTWORD, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
             case(';'):
                 currentChar = sourceFile.getNextChar();
@@ -273,14 +272,6 @@ public class Scanner
                 case ("layout"):
                     currentChar = this.sourceFile.getNextChar();
                     return new Token(Token.Kind.LAYOUT, "layout", this.sourceFile.getCurrentLineNumber());
-                case ("verse"):
-                    String verseName = "";
-                    while (!currentChar.equals('{')){
-                        verseName += currentChar;
-                        currentChar = this.sourceFile.getNextChar();
-                    }
-                    curString = "";
-                    return new Token(Token.Kind.VERSE, verseName, this.sourceFile.getCurrentLineNumber());
 
                 case ("chorus"):
                     String chorusName = "";
@@ -290,6 +281,15 @@ public class Scanner
                     }
                     curString = "";
                     return new Token(Token.Kind.CHORUS, chorusName, this.sourceFile.getCurrentLineNumber());
+
+                case ("verse"):
+                    String verseName = "";
+                    while (!currentChar.equals('{')){
+                        verseName += currentChar;
+                        currentChar = this.sourceFile.getNextChar();
+                    }
+                    curString = "";
+                    return new Token(Token.Kind.VERSE, verseName, this.sourceFile.getCurrentLineNumber());
 
                 case ("righthand"):
                     currentChar = this.sourceFile.getNextChar();

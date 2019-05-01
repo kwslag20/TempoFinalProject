@@ -27,8 +27,9 @@ piece MyNewSong {
 				permeasure: 2;)
 		}
 	layout{
-		timesig: 3,4;
+		instrument: piano;
 		first;
+		instrument: flute;
 	    first;
 		chorus;
 		first;
