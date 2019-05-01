@@ -156,17 +156,48 @@ public class Parser
         MemberList memberList= new MemberList(position);
         System.out.println(currentToken.kind);
         this.checkToken(VERSE,"When parsing verse, verse expected." );
-        String name = parseIdentifier();
+        String name = currentToken.spelling;
+        memberList.addElement(parseRightHand());
+        memberList.addElement(parseLeftHand());
+        return new Verse(position, name, memberList);
+    }
 
+    /*
+     * <RightHand> ::= RIGHTHAND { <MemberList> }
+     * <MemberList> ::= EMPTY | <Member> <MemberList>
+     */
+    private RightHand parseRightHand() {
+        int position = currentToken.position;
+        MemberList memberList= new MemberList(position);
+        System.out.println(currentToken.kind);
+        this.checkToken(RIGHTHAND,"When parsing right hand, right hand expected." );
+        while (currentToken.kind!= LEFTHAND){
+            if (currentToken.kind == EOF){
+                this.registerError("When parsing right hand, left hand expected",
+                        "Missing Left Hand");
+            }
+            memberList.addElement(parseMember());
+        }
+        return new RightHand(position, memberList);
+    }
 
+    /*
+     * <Verse> ::= VERSE <Identifier> { <MemberList> }
+     * <MemberList> ::= EMPTY | <Member> <MemberList>
+     */
+    private LeftHand parseLeftHand() {
+        int position = currentToken.position;
+        MemberList memberList= new MemberList(position);
+        System.out.println(currentToken.kind);
+        this.checkToken(LEFTHAND,"When parsing left hand, left hand expected." );
         while (currentToken.kind!= VERSE && currentToken.kind!= CHORUS && currentToken.kind!= LAYOUT){
             if (currentToken.kind == EOF){
-                this.registerError("When parsing verse, layout expected",
+                this.registerError("When parsing left hand, layout expected",
                         "Missing Layout");
             }
             memberList.addElement(parseMember());
         }
-        return new Verse(position, name, memberList);
+        return new LeftHand(position, memberList);
     }
 
     /*
@@ -178,16 +209,8 @@ public class Parser
         MemberList memberList= new MemberList(position);
         System.out.println(currentToken.kind);
         this.checkToken(CHORUS,"When parsing chorus, chorus expected." );
-        String name = parseIdentifier();
-
-
-        while (currentToken.kind!= VERSE && currentToken.kind!= CHORUS && currentToken.kind!= LAYOUT){
-            if (currentToken.kind == EOF){
-                this.registerError("When parsing chorus, layout expected",
-                        "Missing Layout");
-            }
-            memberList.addElement(parseMember());
-        }
+        memberList.addElement(parseRightHand());
+        memberList.addElement(parseLeftHand());
         return new Chorus(position, memberList);
     }
 
