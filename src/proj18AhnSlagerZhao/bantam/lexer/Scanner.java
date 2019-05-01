@@ -121,13 +121,13 @@ public class Scanner
             case('c'):
             case('b'):
             case('a'):
-                checkCurString(tempChar);
+                tempToken = checkCurString(tempChar);
                 currentChar = this.sourceFile.getNextChar();
                 if(isNote && currentChar != 'h' && currentChar != '('){
                     return new Token(Token.Kind.PITCH, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
                 }
                 else {
-                    return new Token(Token.Kind.NOTWORD, "doesnt matter", this.sourceFile.getCurrentLineNumber());
+                    return tempToken;
                 }
             case('w'):
             case('h'):
@@ -137,16 +137,16 @@ public class Scanner
             case('t'):
             case('x'):
             case('o'):
-                checkCurString(tempChar);
+                tempToken = checkCurString(tempChar);
                 currentChar = this.sourceFile.getNextChar();
-                if(currentChar.equals('n')){
+                if(currentChar.equals('n') && tempToken.kind == Token.Kind.NOTWORD){
                     currentChar = sourceFile.getNextChar();
                     isNote = true;
                     curString = "";
                     return new Token(Token.Kind.NOTE, tempChar.toString()+'n', this.sourceFile.getCurrentLineNumber());
                 }
                 else{
-                    return new Token(Token.Kind.NOTWORD, "doesnt matter", this.sourceFile.getCurrentLineNumber());
+                    return tempToken;
                 }
 
             case('-'): return this.getMinusToken();
@@ -270,8 +270,13 @@ public class Scanner
                     return new Token(Token.Kind.BASELINE, baseInfo, this.sourceFile.getCurrentLineNumber());
 
                 case ("layout"):
-                    currentChar = this.sourceFile.getNextChar();
-                    return new Token(Token.Kind.LAYOUT, "layout", this.sourceFile.getCurrentLineNumber());
+                    String layoutString = "";
+                    while(!currentChar.equals('}')){
+                        layoutString += currentChar;
+                        currentChar = this.sourceFile.getNextChar();
+                    }
+                    curString = "";
+                    return new Token(Token.Kind.LAYOUT, layoutString, this.sourceFile.getCurrentLineNumber());
 
                 case ("chorus"):
                     String chorusName = "";
@@ -289,7 +294,6 @@ public class Scanner
                         currentChar = this.sourceFile.getNextChar();
                     }
                     curString = "";
-                    System.out.println("This should be returning a verse token");
                     return new Token(Token.Kind.VERSE, verseName, this.sourceFile.getCurrentLineNumber());
 
                 case ("righthand"):

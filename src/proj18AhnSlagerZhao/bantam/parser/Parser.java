@@ -133,12 +133,18 @@ public class Parser
         }
 
         while (currentToken.kind != EOF) {
-            System.out.println(currentToken.kind);
-            Verse verse = parseVerse();
-            Chorus chorus = parseChorus();
+            if(currentToken.kind == VERSE){
+                Verse verse = parseVerse();
+                pieceList.addElement(verse);
+            }
+            if(currentToken.kind == CHORUS) {
+                Chorus chorus = parseChorus();
+                pieceList.addElement(chorus);
+            }
+//            if(currentToken.kind == LAYOUT){
+//                Layout layout = parseLayout();
+//            }
             //Add Layout
-            pieceList.addElement(verse);
-            pieceList.addElement(chorus);
             updateCurrentToken();
         }
 
@@ -169,15 +175,15 @@ public class Parser
     private RightHand parseRightHand() {
         int position = currentToken.position;
         MemberList memberList= new MemberList(position);
-        System.out.println(currentToken.kind);
         this.checkToken(RIGHTHAND,"When parsing right hand, right hand expected." );
-        while (currentToken.kind!= LEFTHAND){
+        while (currentToken.kind!= RCURLY){
             if (currentToken.kind == EOF){
                 this.registerError("When parsing right hand, left hand expected",
                         "Missing Left Hand");
             }
             memberList.addElement(parseMember());
         }
+        updateCurrentToken();
         return new RightHand(position, memberList);
     }
 
@@ -188,15 +194,17 @@ public class Parser
     private LeftHand parseLeftHand() {
         int position = currentToken.position;
         MemberList memberList= new MemberList(position);
-        System.out.println(currentToken.kind);
+
         this.checkToken(LEFTHAND,"When parsing left hand, left hand expected." );
-        while (currentToken.kind!= VERSE && currentToken.kind!= CHORUS && currentToken.kind!= LAYOUT){
+        while (currentToken.kind!= RCURLY){
             if (currentToken.kind == EOF){
                 this.registerError("When parsing left hand, layout expected",
                         "Missing Layout");
             }
             memberList.addElement(parseMember());
         }
+        updateCurrentToken();
+        updateCurrentToken();
         return new LeftHand(position, memberList);
     }
 
@@ -223,14 +231,14 @@ public class Parser
      */
     private Member parseMember() {
         int position= currentToken.position;
+        System.out.println("Note: " + currentToken.spelling);
         if(currentToken.kind == NOTE){
-            return new Note(currentToken.position, currentToken.spelling, parsePitch(), parseOctave());
-        }
-
-        else if (currentToken.kind==NOTWORD){
-            //empty field case
+            String pitch = parsePitch();
+            System.out.println("Pitch " + currentToken.spelling);
+            int octave = parseOctave();
+            System.out.println("Octave " + currentToken.spelling);
             updateCurrentToken();
-            return null;
+            return new Note(currentToken.position, currentToken.spelling, pitch, octave);
         }
         else {
             this.registerError("When parsing field, \"(\", \"=\", or \";\" expected.",
@@ -242,8 +250,9 @@ public class Parser
     private String parsePitch(){
         updateCurrentToken();
         int position = currentToken.position;
+        String pitch = currentToken.spelling;
         if(currentToken.kind==PITCH){
-            return currentToken.spelling;
+            return pitch;
         }
         else{
             this.registerError("When parsing note, [note] [pitch] [octave];",
@@ -255,8 +264,9 @@ public class Parser
     private int parseOctave(){
         updateCurrentToken();
         int position = currentToken.position;
+        String octave = currentToken.spelling;
         if(currentToken.kind == OCTAVE){
-            return Integer.parseInt(currentToken.spelling);
+            return Integer.parseInt(octave);
         }
         else{
             this.registerError("When parsing note, [note] [pitch] [octave];",
@@ -326,7 +336,9 @@ public class Parser
      */
     private void updateCurrentToken(){
         this.currentToken = scanner.scan();
-        while(this.currentToken.kind == COMMENT || this.currentToken.kind == NOTWORD){
+        while(this.currentToken.kind == COMMENT || this.currentToken.kind == NOTWORD ||
+                this.currentToken.kind == SEMICOLON || this.currentToken.kind == RPAREN
+        || this.currentToken.kind == COLON || this.currentToken.kind == COMMA){
             this.currentToken = scanner.scan();
         }
     }

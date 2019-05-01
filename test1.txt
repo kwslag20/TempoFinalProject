@@ -2,12 +2,11 @@ piece MyNewSong {
 	writer: Kyle Slager;
 	verse first{
 		righthand{
-			hn chord(c, maj, 7) 1;
+			hn d 1;
 			qn d 1;
-			qr;
 			}
 		lefthand{
-			qn chord(d, min, 5) 4;
+			qn f 4;
 			hn e 3;
 			}
 		}
@@ -23,16 +22,9 @@ piece MyNewSong {
 		righthand{
 		    wn f 4;
 		}
-
-		}
 		lefthand{
-			baseseq(
-				qn c 2;
-				qn g 1;
-				qn a 1;
-				qn f 1;
-				measures: 4;
-				permeasure: 2;)
+		    wn g 3;
+		}
 		}
 	layout{
 		instrument: piano;
