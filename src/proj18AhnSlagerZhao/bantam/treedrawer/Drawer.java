@@ -17,6 +17,7 @@
 
 package proj18AhnSlagerZhao.bantam.treedrawer;
 
+import proj18AhnSlagerZhao.bantam.ast.Piece;
 import proj18AhnSlagerZhao.bantam.ast.Program;
 
 import java.awt.*;
@@ -29,7 +30,7 @@ public class Drawer
      * @param sourceName the name of the file containing the program parsed into the AST
      * @param AST The AST created when parsing the file with the given name.
      */
-    public void draw(String sourceName, Program AST)
+    public void draw(String sourceName, Piece AST)
     {
         DrawerPanel panel = new DrawerPanel();
         DrawerFrame frame = new DrawerFrame(sourceName, panel);

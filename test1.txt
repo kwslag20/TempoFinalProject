@@ -1,5 +1,4 @@
 piece MyNewSong {
-	writer: Kyle Slager;
 	verse first{
 		righthand{
 			hn d 1;
@@ -27,14 +26,15 @@ piece MyNewSong {
 		}
 		}
 	layout{
+		writer: Kyle Slager;
 		instrument: piano;
+		tempo: adaggio;
 		first;
 		instrument: flute;
-	    first;
+	    	first;
 		chorus;
+		second;
 		first;
 		}
 }
-
-
 

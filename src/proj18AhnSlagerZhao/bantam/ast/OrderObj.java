@@ -28,36 +28,37 @@ package proj18AhnSlagerZhao.bantam.ast;
 
 import proj18AhnSlagerZhao.bantam.visitor.Visitor;
 
+
 /**
- * The <tt>RightHand</tt> class represents a right hand declaration within
- * a verse, chorus or bridge.  It contains the memberList of a rightHand (<tt>memberList</tt>)
+ * The <tt>OrderObj</tt> class represents a orderObj declaration.
+ * It contains the name of the orderObj.
  *
  * @see ASTNode
  */
-public class RightHand extends Member {
+public class OrderObj extends Member {
     /**
-     * A list of formal parameters
+     * The name of the orderObj
      */
-    protected NotesList notesList;
+    protected String name;
 
     /**
-     * Method constructor
+     * Tempo constructor
      *
-     * @param lineNum    source line number corresponding to this AST node
-     * @param notesList list of notes and such in the hand
+     * @param lineNum source line number corresponding to this AST node
+     * @param name    the name of the orderObj
      */
-    public RightHand(int lineNum, NotesList notesList) {
+    public OrderObj(int lineNum, String name) {
         super(lineNum);
-        this.notesList = notesList;
+        this.name = name;
     }
 
     /**
-     * Get list of notes
+     * Get the name of the orderObj
      *
-     * @return list of notes
+     * @return orderObj
      */
-    public NotesList getNotesList() {
-        return notesList;
+    public String getName() {
+        return name;
     }
 
     /**

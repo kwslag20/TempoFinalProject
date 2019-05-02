@@ -28,36 +28,41 @@ package proj18AhnSlagerZhao.bantam.ast;
 
 import proj18AhnSlagerZhao.bantam.visitor.Visitor;
 
+import java.util.ArrayList;
+
 /**
- * The <tt>RightHand</tt> class represents a right hand declaration within
- * a verse, chorus or bridge.  It contains the memberList of a rightHand (<tt>memberList</tt>)
+ * The <tt>Layout</tt> class represents a class declaration,
+ * which consists of a filename (<tt>filename</tt>), a class name
+ * (<tt>name</tt>), the name of its parent class (<tt>parent</tt>),
+ * and a list of members (<tt>members</tt>) which can be either field
+ * declarations or method declarations.
  *
  * @see ASTNode
  */
-public class RightHand extends Member {
-    /**
-     * A list of formal parameters
-     */
-    protected NotesList notesList;
+public class Layout extends ASTNode {
 
     /**
-     * Method constructor
+     * LayoutList containing the properties of the Layout
+     */
+    protected LayoutList layoutList;
+
+    /**
+     * Class_ constructor
      *
      * @param lineNum    source line number corresponding to this AST node
-     * @param notesList list of notes and such in the hand
      */
-    public RightHand(int lineNum, NotesList notesList) {
+    public Layout(int lineNum, LayoutList layoutList) {
         super(lineNum);
-        this.notesList = notesList;
+        this.layoutList = layoutList;
     }
 
     /**
-     * Get list of notes
+     * Getter for layoutList
      *
-     * @return list of notes
+     * @return layoutList
      */
-    public NotesList getNotesList() {
-        return notesList;
+    public LayoutList getLayoutList(){
+        return this.layoutList;
     }
 
     /**

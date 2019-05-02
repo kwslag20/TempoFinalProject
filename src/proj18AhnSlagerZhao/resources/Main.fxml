@@ -105,6 +105,7 @@
     <ToolBar>
         <Button fx:id="stopButton" onAction="#handleStop" text="Stop"/>
         <Button fx:id="scanButton" onAction="#handleScan" text="Scan"/>
+        <Button fx:id="parseButton" onAction="#handleParse" text="Parse"/>
         <Button fx:id="compileButton" onAction="#handleCompile" text="Compile"/>
         <Button fx:id="compileAndRunButton" onAction="#handleCompileAndRun" text="Compile and Run"/>
         <TextField fx:id="findTextEntry" promptText="Find"/>

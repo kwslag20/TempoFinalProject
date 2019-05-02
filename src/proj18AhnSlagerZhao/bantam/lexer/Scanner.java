@@ -14,6 +14,7 @@ import proj18AhnSlagerZhao.bantam.util.CompilationException;
 import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -35,16 +36,13 @@ public class Scanner
     private SourceFile sourceFile;
     private ErrorHandler errorHandler;
     private Character currentChar;
-    private Boolean isNote, isChord;
+    private Boolean isNote, isLayout, writerDeclared;
     private String curString;
     private Token tempToken;
-
-
-    private final Set<Character> charsEndingIdentifierOrKeyword =
-            Set.of('"', '/', '+', '-', '>', '<', '=', '&', '{',
-                    '}', '[', ']', '(', ')', ';', ':', '!', ' ',
-                    '.', ',', '\r', '\n', '*', '%');
-
+    private ArrayList<String> sections;
+    private String[] layoutArray;
+    private int layoutCheck;
+    private int loopCount;
 
     /**
      *
@@ -67,7 +65,8 @@ public class Scanner
         currentChar = ' ';
         curString = "";
         isNote = false;
-        isChord = false;
+        isLayout = false;
+        sections = new ArrayList<>();
         try {
             sourceFile = new SourceFile(filename);
         }
@@ -107,131 +106,169 @@ public class Scanner
             }
         }
 
-        switch(tempChar) {
-            case(SourceFile.eof):
-                return new Token(Token.Kind.EOF,
-                        currentChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case('"'): return this.getStringConstToken();
-
-            case('g'):
-            case('f'):
-            case('e'):
-            case('d'):
-            case('c'):
-            case('b'):
-            case('a'):
-                tempToken = checkCurString(tempChar);
-                currentChar = this.sourceFile.getNextChar();
-                if(isNote && currentChar != 'h' && currentChar != '('){
-                    return new Token(Token.Kind.PITCH, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+        if(isLayout){
+            while(layoutCheck != layoutArray.length - 1){
+                String layoutItem = layoutArray[layoutCheck];
+                if(layoutItem.contains("instrument")){
+                    layoutItem.replace("instrument: ", "");
+                    layoutCheck++;
+                    return new Token(Token.Kind.INSTRUMENT, layoutItem, this.sourceFile.getCurrentLineNumber());
+                }
+                else if(layoutItem.contains("writer")){
+                    layoutItem.replace("writer: ", "");
+                    layoutCheck++;
+                    return new Token(Token.Kind.WRITER, layoutItem, this.sourceFile.getCurrentLineNumber());
+                }
+                else if(layoutItem.contains("tempo")){
+                    layoutItem.replace("tempo: ", "");
+                    layoutCheck++;
+                    return new Token(Token.Kind.TEMPO, layoutItem, this.sourceFile.getCurrentLineNumber());
                 }
                 else {
-                    return tempToken;
+                    for (String section : sections) {
+                        if (layoutItem.contains(section)) {
+                            layoutCheck++;
+                            return new Token(Token.Kind.ORDEROBJ, section, this.sourceFile.getCurrentLineNumber());
+                        }
+                    }
                 }
-            case('w'):
-            case('h'):
-            case('q'):
-            case('i'):
-            case('s'):
-            case('t'):
-            case('x'):
-            case('o'):
-                tempToken = checkCurString(tempChar);
-                currentChar = this.sourceFile.getNextChar();
-                if(currentChar.equals('n') && tempToken.kind == Token.Kind.NOTWORD){
-                    currentChar = sourceFile.getNextChar();
-                    isNote = true;
-                    curString = "";
-                    return new Token(Token.Kind.NOTE, tempChar.toString()+'n', this.sourceFile.getCurrentLineNumber());
+                loopCount++;
+                if(loopCount > layoutArray.length - 1){
+                    layoutCheck = layoutArray.length - 1;
+                    errorHandler.register(Error.Kind.LEX_ERROR, "Improper Layout Token Found");
+                    return new Token(Token.Kind.ERROR, "Improper Layout Token Found", this.sourceFile.getCurrentLineNumber());
                 }
-                else{
-                    return tempToken;
-                }
+            }
+            isLayout = false;
+            return new Token(Token.Kind.NOTWORD, "nothing", this.sourceFile.getCurrentLineNumber());
+        }
+        else {
+            switch (tempChar) {
+                case (SourceFile.eof):
+                    return new Token(Token.Kind.EOF,
+                            currentChar.toString(), this.sourceFile.getCurrentLineNumber());
 
-            case('-'): return this.getMinusToken();
+                case ('"'):
+                    return this.getStringConstToken();
 
-            case('{'):
-                tempToken = checkCurString(tempChar);
-                currentChar = sourceFile.getNextChar();
-                curString = "";
-                isNote = false;
-                isChord = false;
-                if(tempToken.kind != Token.Kind.NOTWORD) {
-                    return tempToken;
-                }
-                else{
-                    return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
-                }
-
-            case('}'):
-                currentChar = sourceFile.getNextChar();
-                curString = "";
-                return new Token(Token.Kind.RCURLY,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case('('):
-                tempToken = checkCurString(tempChar);
-                currentChar = sourceFile.getNextChar();
-                curString = "";
-                if(tempToken.kind != Token.Kind.NOTWORD) {
-                    return tempToken;
-                }
-                else{
-                    return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
-                }
-
-            case(')'):
-                currentChar = sourceFile.getNextChar();
-                curString = "";
-                return new Token(Token.Kind.RPAREN,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case(':'):
-                currentChar = sourceFile.getNextChar();
-                return new Token(Token.Kind.NOTWORD, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case(';'):
-                currentChar = sourceFile.getNextChar();
-                curString = "";
-                isNote = false;
-                isChord = false;
-                return new Token(Token.Kind.SEMICOLON,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case('.'):
-                currentChar = sourceFile.getNextChar();
-                curString = "";
-                isNote = false;
-                isChord = false;
-                return new Token(Token.Kind.DOT,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            case(','):
-                currentChar = sourceFile.getNextChar();
-                curString = "";
-                isNote = false;
-                isChord = false;
-                return new Token(Token.Kind.COMMA,
-                    tempChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-            default:
-
-                if (Character.isDigit(currentChar)) return getIntConstToken();
-                else if (Character.isLetter(currentChar)){
+                case ('g'):
+                case ('f'):
+                case ('e'):
+                case ('d'):
+                case ('c'):
+                case ('b'):
+                case ('a'):
                     tempToken = checkCurString(tempChar);
                     currentChar = this.sourceFile.getNextChar();
-                    return tempToken;
-                }
-                else {
+                    if (isNote && currentChar != 'h' && currentChar != '(') {
+                        return new Token(Token.Kind.PITCH, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+                    } else {
+                        return tempToken;
+                    }
+                case ('w'):
+                case ('h'):
+                case ('q'):
+                case ('i'):
+                case ('s'):
+                case ('t'):
+                case ('x'):
+                    tempToken = checkCurString(tempChar);
+                    currentChar = this.sourceFile.getNextChar();
+                    if (currentChar.equals('n') && tempToken.kind == Token.Kind.NOTWORD) {
+                        currentChar = sourceFile.getNextChar();
+                        isNote = true;
+                        curString = "";
+                        return new Token(Token.Kind.NOTE, tempChar.toString() + 'n', this.sourceFile.getCurrentLineNumber());
+                    }
+                    else if (currentChar.equals('r') && tempToken.kind == Token.Kind.NOTWORD) {
+                        currentChar = sourceFile.getNextChar();
+                        curString = "";
+                        return new Token(Token.Kind.REST, tempChar.toString() + 'r', this.sourceFile.getCurrentLineNumber());
+                    }
+                    else{
+                        return tempToken;
+
+                    }
+
+
+                case ('-'):
+                    return this.getMinusToken();
+
+                case ('{'):
+                    tempToken = checkCurString(tempChar);
                     currentChar = sourceFile.getNextChar();
-                    this.errorHandler.register(Error.Kind.LEX_ERROR,
-                            this.sourceFile.getFilename(), this.sourceFile.getCurrentLineNumber(),
-                            "TOKEN ERROR");
-                    return new Token(Token.Kind.ERROR, tempChar.toString(),
-                            this.sourceFile.getCurrentLineNumber());
-                }
-         }
+                    curString = "";
+                    isNote = false;
+                    if (tempToken.kind != Token.Kind.NOTWORD) {
+                        return tempToken;
+                    } else {
+                        return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
+                    }
+
+                case ('}'):
+                    currentChar = sourceFile.getNextChar();
+                    curString = "";
+                    return new Token(Token.Kind.RCURLY,
+                            tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+
+                case ('('):
+                    tempToken = checkCurString(tempChar);
+                    currentChar = sourceFile.getNextChar();
+                    curString = "";
+                    if (tempToken.kind != Token.Kind.NOTWORD) {
+                        return tempToken;
+                    } else {
+                        return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
+                    }
+
+                case (')'):
+                    currentChar = sourceFile.getNextChar();
+                    curString = "";
+                    return new Token(Token.Kind.RPAREN,
+                            tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+
+                case (':'):
+                    currentChar = sourceFile.getNextChar();
+                    return new Token(Token.Kind.NOTWORD, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+
+                case (';'):
+                    currentChar = sourceFile.getNextChar();
+                    curString = "";
+                    isNote = false;
+                    return new Token(Token.Kind.SEMICOLON,
+                            tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+
+                case ('.'):
+                    currentChar = sourceFile.getNextChar();
+                    curString = "";
+                    isNote = false;
+                    return new Token(Token.Kind.DOT,
+                            tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+
+                case (','):
+                    currentChar = sourceFile.getNextChar();
+                    curString = "";
+                    isNote = false;
+                    return new Token(Token.Kind.COMMA,
+                            tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+
+                default:
+
+                    if (Character.isDigit(currentChar)) return getIntConstToken();
+                    else if (Character.isLetter(currentChar)) {
+                        tempToken = checkCurString(tempChar);
+                        currentChar = this.sourceFile.getNextChar();
+                        return tempToken;
+                    } else {
+                        currentChar = sourceFile.getNextChar();
+                        this.errorHandler.register(Error.Kind.LEX_ERROR,
+                                this.sourceFile.getFilename(), this.sourceFile.getCurrentLineNumber(),
+                                "TOKEN ERROR");
+                        return new Token(Token.Kind.ERROR, tempChar.toString(),
+                                this.sourceFile.getCurrentLineNumber());
+                    }
+            }
+        }
     }
 
     private Token checkCurString(Character tempChar) {
@@ -246,7 +283,6 @@ public class Scanner
                     chordInfo += currentChar;
                     currentChar = this.sourceFile.getNextChar();
                     curString = "";
-                    isChord = true;
                     return new Token(Token.Kind.CHORD, chordInfo, this.sourceFile.getCurrentLineNumber());
 
                 case ("piece"):
@@ -270,22 +306,34 @@ public class Scanner
                     return new Token(Token.Kind.BASELINE, baseInfo, this.sourceFile.getCurrentLineNumber());
 
                 case ("layout"):
-                    String layoutString = "";
+                    String layoutText = "";
+                    currentChar = this.sourceFile.getNextChar();
                     while(!currentChar.equals('}')){
-                        layoutString += currentChar;
+                        layoutText += currentChar;
                         currentChar = this.sourceFile.getNextChar();
                     }
+                    layoutCheck = 0;
+                    loopCount = 0;
+                    layoutArray = layoutText.split(";");
                     curString = "";
-                    return new Token(Token.Kind.LAYOUT, layoutString, this.sourceFile.getCurrentLineNumber());
+                    if(sections.contains("layout")){
+                        errorHandler.register(Error.Kind.SEMANT_ERROR, this.sourceFile.getFilename(),
+                                this.sourceFile.getCurrentLineNumber(),  "Layout already exists.");
+                    }
+                    sections.add("layout");
+                    currentChar = this.sourceFile.getNextChar();
+                    isLayout = true;
+                    return new Token(Token.Kind.LAYOUT, "layout", this.sourceFile.getCurrentLineNumber());
 
                 case ("chorus"):
-                    String chorusName = "";
-                    while (!currentChar.equals('{')){
-                        chorusName += currentChar;
-                        currentChar = this.sourceFile.getNextChar();
-                    }
                     curString = "";
-                    return new Token(Token.Kind.CHORUS, chorusName, this.sourceFile.getCurrentLineNumber());
+                    if(sections.contains("chorus")){
+                        errorHandler.register(Error.Kind.SEMANT_ERROR, this.sourceFile.getFilename(),
+                                this.sourceFile.getCurrentLineNumber(),  "Chorus already exists.");
+                    }
+                    sections.add("chorus");
+                    currentChar = this.sourceFile.getNextChar();
+                    return new Token(Token.Kind.CHORUS, "chorus", this.sourceFile.getCurrentLineNumber());
 
                 case ("verse"):
                     String verseName = "";
@@ -294,6 +342,11 @@ public class Scanner
                         currentChar = this.sourceFile.getNextChar();
                     }
                     curString = "";
+                    if(sections.contains(verseName)){
+                        errorHandler.register(Error.Kind.SEMANT_ERROR, this.sourceFile.getFilename(),
+                                this.sourceFile.getCurrentLineNumber(), verseName + " already exists.");
+                    }
+                    sections.add(verseName);
                     return new Token(Token.Kind.VERSE, verseName, this.sourceFile.getCurrentLineNumber());
 
                 case ("righthand"):
@@ -306,14 +359,6 @@ public class Scanner
                     curString = "";
                     return new Token(Token.Kind.LEFTHAND, "lefthand", this.sourceFile.getCurrentLineNumber());
 
-                case ("writer"):
-                    String authorName = "";
-                    while (!currentChar.equals(';')){
-                        authorName += currentChar;
-                        currentChar = this.sourceFile.getNextChar();
-                    }
-                    curString = "";
-                    return new Token(Token.Kind.WRITER, authorName, this.sourceFile.getCurrentLineNumber());
             }
         }
             curString += tempChar;

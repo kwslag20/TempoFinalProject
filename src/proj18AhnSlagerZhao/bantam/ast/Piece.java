@@ -37,27 +37,21 @@ import proj18AhnSlagerZhao.bantam.visitor.Visitor;
  * @see PieceList
  */
 public class Piece extends ASTNode {
+
     /**
-     * List of class declarations that comprise the program
+     * List of class declarations that comprise the piece
      */
     protected PieceList pieceList;
-    protected String author;
 
     /**
      * Program constructor
      *
      * @param lineNum   source line number corresponding to this AST node
-     * @param author name of author of piece
      * @param pieceList list of class declarations
      */
-    public Piece(int lineNum, String author, PieceList pieceList) {
+    public Piece(int lineNum, PieceList pieceList) {
         super(lineNum);
-        this.author = author;
         this.pieceList = pieceList;
-    }
-
-    public String getAuthor(){
-        return author;
     }
 
     /**

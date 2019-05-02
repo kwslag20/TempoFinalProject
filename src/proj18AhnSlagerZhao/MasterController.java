@@ -25,9 +25,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.awt.Desktop;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import proj18AhnSlagerZhao.bantam.ast.Program;
+import proj18AhnSlagerZhao.bantam.parser.Parser;
 import proj18AhnSlagerZhao.bantam.util.CompilationException;
 import proj18AhnSlagerZhao.bantam.util.Error;
 import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
@@ -65,6 +67,7 @@ public class MasterController {
     @FXML private TextField replaceTextEntry;
     @FXML private Menu prefMenu;
     @FXML private Button scanButton;
+    @FXML private Button parseButton;
     @FXML private Button stopButton;
     @FXML private Button compileButton;
 
@@ -158,6 +161,12 @@ public class MasterController {
             this.console.writeLine(scanningErrors.size() +
                     " illegal tokens were found.", "ERROR");
         }
+    }
+
+    @FXML
+    public void handleParse(Event event){
+        this.console.clear();
+        this.fileController.handleScanAndParse(event);
     }
 
 

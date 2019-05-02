@@ -59,6 +59,7 @@ import static proj18AhnSlagerZhao.bantam.lexer.Token.Kind.*;
  * All other terminal symbols that are in all caps correspond to keywords.
  */
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -124,14 +125,8 @@ public class Parser
     private Piece parsePiece(){
         updateCurrentToken();
         int position = currentToken.position;
-        String name = "";
         PieceList pieceList = new PieceList(position);
         updateCurrentToken();
-        if(currentToken.kind == WRITER){
-            name = currentToken.spelling;
-            updateCurrentToken();
-        }
-
         while (currentToken.kind != EOF) {
             if(currentToken.kind == VERSE){
                 Verse verse = parseVerse();
@@ -141,15 +136,15 @@ public class Parser
                 Chorus chorus = parseChorus();
                 pieceList.addElement(chorus);
             }
-//            if(currentToken.kind == LAYOUT){
-//                Layout layout = parseLayout();
-//            }
-            //Add Layout
+            if(currentToken.kind == LAYOUT){
+                Layout layout = parseLayout();
+                pieceList.addElement(layout);
+            }
             updateCurrentToken();
         }
 
 
-        return new Piece(position, name, pieceList);
+        return new Piece(position, pieceList);
     }
 
 
@@ -160,9 +155,8 @@ public class Parser
     private Verse parseVerse() {
         int position = currentToken.position;
         MemberList memberList= new MemberList(position);
-        System.out.println(currentToken.kind);
-        this.checkToken(VERSE,"When parsing verse, verse expected." );
         String name = currentToken.spelling;
+        this.checkToken(VERSE,"When parsing verse, verse expected." );
         memberList.addElement(parseRightHand());
         memberList.addElement(parseLeftHand());
         return new Verse(position, name, memberList);
@@ -174,17 +168,17 @@ public class Parser
      */
     private RightHand parseRightHand() {
         int position = currentToken.position;
-        MemberList memberList= new MemberList(position);
+        NotesList notesList= new NotesList(position);
         this.checkToken(RIGHTHAND,"When parsing right hand, right hand expected." );
         while (currentToken.kind!= RCURLY){
             if (currentToken.kind == EOF){
                 this.registerError("When parsing right hand, left hand expected",
                         "Missing Left Hand");
             }
-            memberList.addElement(parseMember());
+            notesList.addElement(parseMember());
         }
         updateCurrentToken();
-        return new RightHand(position, memberList);
+        return new RightHand(position, notesList);
     }
 
     /*
@@ -193,7 +187,7 @@ public class Parser
      */
     private LeftHand parseLeftHand() {
         int position = currentToken.position;
-        MemberList memberList= new MemberList(position);
+        NotesList notesList= new NotesList(position);
 
         this.checkToken(LEFTHAND,"When parsing left hand, left hand expected." );
         while (currentToken.kind!= RCURLY){
@@ -201,11 +195,10 @@ public class Parser
                 this.registerError("When parsing left hand, layout expected",
                         "Missing Layout");
             }
-            memberList.addElement(parseMember());
+            notesList.addElement(parseMember());
         }
         updateCurrentToken();
-        updateCurrentToken();
-        return new LeftHand(position, memberList);
+        return new LeftHand(position, notesList);
     }
 
     /*
@@ -215,11 +208,44 @@ public class Parser
     private Chorus parseChorus() {
         int position = currentToken.position;
         MemberList memberList= new MemberList(position);
-        System.out.println(currentToken.kind);
         this.checkToken(CHORUS,"When parsing chorus, chorus expected." );
         memberList.addElement(parseRightHand());
         memberList.addElement(parseLeftHand());
         return new Chorus(position, memberList);
+    }
+
+    private Layout parseLayout(){
+        int position = currentToken.position;
+        LayoutList layoutList = new LayoutList(position);
+        updateCurrentToken();
+        while(currentToken.kind != RCURLY){
+            layoutList.addElement(parseLayoutMember());
+        }
+        return new Layout(position, layoutList);
+    }
+
+    private Member parseLayoutMember(){
+        int position = currentToken.position;
+        String spelling = currentToken.spelling;
+        if(currentToken.kind == INSTRUMENT){
+            updateCurrentToken();
+            return new Instrument(position, spelling);
+        }
+        else if(currentToken.kind == TEMPO){
+            updateCurrentToken();
+            return new Tempo(position, spelling);
+        }
+        else if(currentToken.kind == ORDEROBJ){
+            updateCurrentToken();
+            return new OrderObj(position, spelling);
+        }
+        else if(currentToken.kind == WRITER){
+            updateCurrentToken();
+            return new Writer(position, spelling);
+        }
+        else {
+            return null;
+        }
     }
 
 
@@ -231,14 +257,12 @@ public class Parser
      */
     private Member parseMember() {
         int position= currentToken.position;
-        System.out.println("Note: " + currentToken.spelling);
+        String length = currentToken.spelling;
         if(currentToken.kind == NOTE){
             String pitch = parsePitch();
-            System.out.println("Pitch " + currentToken.spelling);
             int octave = parseOctave();
-            System.out.println("Octave " + currentToken.spelling);
             updateCurrentToken();
-            return new Note(currentToken.position, currentToken.spelling, pitch, octave);
+            return new Note(position, length, pitch, octave);
         }
         else {
             this.registerError("When parsing field, \"(\", \"=\", or \";\" expected.",
@@ -249,7 +273,6 @@ public class Parser
 
     private String parsePitch(){
         updateCurrentToken();
-        int position = currentToken.position;
         String pitch = currentToken.spelling;
         if(currentToken.kind==PITCH){
             return pitch;
@@ -263,7 +286,6 @@ public class Parser
 
     private int parseOctave(){
         updateCurrentToken();
-        int position = currentToken.position;
         String octave = currentToken.spelling;
         if(currentToken.kind == OCTAVE){
             return Integer.parseInt(octave);
@@ -273,61 +295,6 @@ public class Parser
                     "Expected Octave Token");
         }
         return 4;
-    }
-
-    //-----------------------------------
-
-
-    /*
-     * BreakStmt> ::= BREAK ;
-     */
-    private Stmt parseBreak() {
-        updateCurrentToken();
-        int position = this.currentToken.position;
-        this.checkToken(SEMICOLON,"When parsing Break, \";\" expected");
-        return new BreakStmt(this.currentToken.position);
-    }
-
-
-
-
-
-
-
-
-    //----------------------------------------
-    //Terminals
-
-    private String parseOperator() {
-        return this.currentToken.spelling;
-    }
-
-
-    private String parseIdentifier() {
-        String identifier = this.currentToken.spelling;
-        this.checkToken(IDENTIFIER,"When parsing Identifier, Identifier expected");
-        return identifier;
-    }
-
-
-    private ConstStringExpr parseStringConst() {
-        ConstStringExpr constStringExpr = new ConstStringExpr(this.currentToken.position,this.currentToken.spelling);
-        updateCurrentToken();
-        return constStringExpr;
-    }
-
-
-    private ConstIntExpr parseIntConst() {
-        ConstIntExpr constIntExpr = new ConstIntExpr(this.currentToken.position,this.currentToken.spelling);
-        updateCurrentToken();
-        return constIntExpr;
-    }
-
-
-    private ConstBooleanExpr parseBoolean() {
-        ConstBooleanExpr constBooleanExpr = new ConstBooleanExpr(this.currentToken.position,this.currentToken.spelling);
-        updateCurrentToken();
-        return constBooleanExpr;
     }
 
     /**

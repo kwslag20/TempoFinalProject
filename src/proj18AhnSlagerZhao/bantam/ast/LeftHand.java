@@ -38,26 +38,26 @@ public class LeftHand extends Member {
     /**
      * A list of formal parameters
      */
-    protected MemberList memberList;
+    protected NotesList notesList;
 
     /**
      * Method constructor
      *
      * @param lineNum    source line number corresponding to this AST node
-     * @param memberList list of notes and such in the hand
+     * @param notesList list of notes and such in the hand
      */
-    public LeftHand(int lineNum, MemberList memberList) {
+    public LeftHand(int lineNum, NotesList notesList) {
         super(lineNum);
-        this.memberList = memberList;
+        this.notesList = notesList;
     }
 
     /**
-     * Get list of members
+     * Get list of notes
      *
-     * @return list of members
+     * @return list of notes
      */
-    public MemberList getMemberList() {
-        return memberList;
+    public NotesList getNotesList() {
+        return notesList;
     }
 
     /**

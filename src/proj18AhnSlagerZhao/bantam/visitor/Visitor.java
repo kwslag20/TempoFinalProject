@@ -42,6 +42,84 @@ public abstract class Visitor {
      * @param node the AST node
      * @return result of the visit
      */
+
+    public Object visit(Piece node){
+        node.getPieceList().accept(this);
+        return null;
+    }
+
+    public Object visit(PieceList node){
+        for(ASTNode musicSection : node){
+            musicSection.accept(this);
+        }
+        return null;
+    }
+    public Object visit(Verse node){
+        node.getMemberList().accept(this);
+        return null;
+    }
+
+    public Object visit(Chorus node){
+        node.getMemberList().accept(this);
+        return null;
+    }
+
+    public Object visit(Layout node){
+        return null;
+    }
+
+    public Object visit(MemberList node){
+        for (ASTNode hand : node)
+            hand.accept(this);
+        return null;
+    }
+
+    public Object visit(RightHand node){
+        node.getNotesList().accept(this);
+        return null;
+    }
+
+    public Object visit(LeftHand node){
+        node.getNotesList().accept(this);
+        return null;
+    }
+
+    public Object visit(NotesList node){
+        for (ASTNode note: node)
+            note.accept(this);
+        return null;
+    }
+
+    public Object visit(LayoutList node){
+        for (ASTNode layoutObj: node){
+            layoutObj.accept(this);
+        }
+        return null;
+    }
+
+    public Object visit(Writer node){
+        return null;
+    }
+
+    public Object visit(Instrument node){
+        return null;
+    }
+
+    public Object visit(Tempo node){
+        return null;
+    }
+
+    public Object visit(OrderObj node){
+        return null;
+    }
+
+    public Object visit(Note node){
+        return null;
+    }
+
+
+
+
     public Object visit(ASTNode node) {
         throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }
@@ -87,18 +165,6 @@ public abstract class Visitor {
      */
     public Object visit(Class_ node) {
         node.getMemberList().accept(this);
-        return null;
-    }
-
-    /**
-     * Visit a list node of members
-     *
-     * @param node the member list node
-     * @return result of the visit
-     */
-    public Object visit(MemberList node) {
-        for (ASTNode child : node)
-            child.accept(this);
         return null;
     }
 

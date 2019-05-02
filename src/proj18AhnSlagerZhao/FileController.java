@@ -38,6 +38,7 @@ import javafx.stage.Window;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
+import proj18AhnSlagerZhao.bantam.ast.Piece;
 import proj18AhnSlagerZhao.bantam.ast.Program;
 import proj18AhnSlagerZhao.bantam.lexer.Scanner;
 import proj18AhnSlagerZhao.bantam.lexer.Token;
@@ -361,7 +362,7 @@ public class FileController {
      * @param event press of the Scan button triggering the handleScan and Parse method
      * @param scanOrParse string "SCAN_ONLY" or "SCAN_AND_PARSE" or "PARSE_NO_TREE_DRAWN"
      */
-    public Program scanOrParseHelper(Event event, String scanOrParse ){
+    public Piece scanOrParseHelper(Event event, String scanOrParse ){
         JavaOrMipsTab curTab = (JavaOrMipsTab) this.javaTabPane.getSelectionModel().getSelectedItem();
         if (this.javaTabPane.tabIsSaved(curTab)) {
             String filename = this.tabFilepathMap.get(curTab);
@@ -390,13 +391,12 @@ public class FileController {
             }
 
             else{
-//                Program root = this.parser.parse(filename);
-//                if(scanOrParse.equals("SCAN_AND_PARSE")) {
-//                    Drawer drawer = new Drawer();
-//                    drawer.draw(filename, root);
-//                }
-//                return root;
-                System.out.println("TESTING");
+                Piece root = this.parser.parse(filename);
+                if(scanOrParse.equals("SCAN_AND_PARSE")) {
+                    Drawer drawer = new Drawer();
+                    drawer.draw(filename, root);
+                }
+                return root;
             }
 
         }
@@ -445,19 +445,19 @@ public class FileController {
      * @param event
      * @return
      */
-    public ClassTreeNode handleAnalyze(Event event){
-        Program program;
-        try{
-            program = scanOrParseHelper(event, "SCAN_AND_PARSE");
-        }
-        catch(CompilationException e){
-            throw e;
-        }
-        SemanticAnalyzer analyzer = new SemanticAnalyzer(errorHandler);
-        ClassTreeNode analysis = analyzer.analyze(program);
-        analysisErrors = analyzer.getErrorHandler();
-        return analysis;
-    }
+//    public ClassTreeNode handleAnalyze(Event event){
+//        Piece piece;
+//        try{
+//            piece = scanOrParseHelper(event, "SCAN_AND_PARSE");
+//        }
+//        catch(CompilationException e){
+//            throw e;
+//        }
+//        SemanticAnalyzer analyzer = new SemanticAnalyzer(errorHandler);
+//        ClassTreeNode analysis = analyzer.analyze(piece);
+//        analysisErrors = analyzer.getErrorHandler();
+//        return analysis;
+//    }
 
     /**
      *
