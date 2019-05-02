@@ -392,9 +392,5 @@ public class Refactor {
         }
         alert.setContentText(content);
         alert.showAndWait();
-
-
-
-
     }
 }

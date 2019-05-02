@@ -70,6 +70,7 @@ public class MasterController {
     @FXML private Button parseButton;
     @FXML private Button stopButton;
     @FXML private Button compileButton;
+    @FXML private Button compileAndRunButton;
 
 
     private EditController editController;
@@ -100,6 +101,9 @@ public class MasterController {
 
         compileButton.disableProperty().bind(listProperty.emptyProperty());
         stopButton.disableProperty().bind(listProperty.emptyProperty());
+        scanButton.disableProperty().bind(listProperty.emptyProperty());
+        parseButton.disableProperty().bind(listProperty.emptyProperty());
+        compileAndRunButton.disableProperty().bind(listProperty.emptyProperty());
 
         // this line from JianQuanMarcello project 6
         this.setupContextMenuController();
