@@ -117,9 +117,6 @@ public abstract class Visitor {
         return null;
     }
 
-
-
-
     public Object visit(ASTNode node) {
         throw new RuntimeException("This visitor method should not be called (node is abstract)");
     }

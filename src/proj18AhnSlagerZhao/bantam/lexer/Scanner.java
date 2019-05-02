@@ -147,10 +147,6 @@ public class Scanner
                 case (SourceFile.eof):
                     return new Token(Token.Kind.EOF,
                             currentChar.toString(), this.sourceFile.getCurrentLineNumber());
-
-                case ('"'):
-                    return this.getStringConstToken();
-
                 case ('g'):
                 case ('f'):
                 case ('e'):
@@ -197,12 +193,14 @@ public class Scanner
                 case ('{'):
                     tempToken = checkCurString(tempChar);
                     currentChar = sourceFile.getNextChar();
+                    String invalidString = curString;
                     curString = "";
                     isNote = false;
                     if (tempToken.kind != Token.Kind.NOTWORD) {
                         return tempToken;
                     } else {
-                        return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
+                        errorHandler.register(Error.Kind.LEX_ERROR, "Invalid usage of " + invalidString);
+                        return new Token(Token.Kind.ERROR, "Invalid Usage of " + invalidString, this.sourceFile.getCurrentLineNumber());
                     }
 
                 case ('}'):
@@ -214,10 +212,12 @@ public class Scanner
                 case ('('):
                     tempToken = checkCurString(tempChar);
                     currentChar = sourceFile.getNextChar();
+                    String invalidString2 = curString;
                     curString = "";
                     if (tempToken.kind != Token.Kind.NOTWORD) {
                         return tempToken;
                     } else {
+                        errorHandler.register(Error.Kind.LEX_ERROR, "Invalid usage of " + invalidString2);
                         return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
                     }
 
@@ -358,7 +358,6 @@ public class Scanner
                     currentChar = this.sourceFile.getNextChar();
                     curString = "";
                     return new Token(Token.Kind.LEFTHAND, "lefthand", this.sourceFile.getCurrentLineNumber());
-
             }
         }
             curString += tempChar;
@@ -392,52 +391,6 @@ public class Scanner
         else return new Token(Token.Kind.INTCONST, tempChar, this.sourceFile.getCurrentLineNumber());
     }
 
-    /**
-     * Returns a string constant token ensuring that
-     * no strings are over 5000 characters
-     *
-     * @return string constant token
-     */
-    private Token getStringConstToken() {
-
-        String spelling = "";
-        spelling = spelling.concat(currentChar.toString());
-        currentChar = this.sourceFile.getNextChar();
-
-        //while the quote is unmatched continue getting chars
-        while(!currentChar.equals('"')){
-
-            //if you've reached an eof or a new line in a string, throws error
-            if(currentChar.equals(SourceFile.eof) || currentChar.equals('\n')){
-                this.errorHandler.register(Error.Kind.LEX_ERROR,
-                        this.sourceFile.getFilename(), this.sourceFile.getCurrentLineNumber(),
-                        "UNCLOSED QUOTE");
-                return createErrorToken(spelling);
-            }
-            else if (currentChar.equals('\\')){
-                spelling = spelling.concat(currentChar.toString());
-                currentChar = this.sourceFile.getNextChar();
-            }
-            //otherwise add on to the string
-            spelling = spelling.concat(currentChar.toString());
-            currentChar = this.sourceFile.getNextChar();
-        }
-
-        //add on end quote
-        spelling = spelling.concat(currentChar.toString());
-        currentChar = sourceFile.getNextChar();
-
-        //makes sure the string is less than 5000 chars
-        if(spelling.length()<5000) {
-            return new Token(Token.Kind.STRCONST, spelling, this.sourceFile.getCurrentLineNumber());
-        }
-        else{
-            this.errorHandler.register(Error.Kind.LEX_ERROR,
-                    this.sourceFile.getFilename(), this.sourceFile.getCurrentLineNumber(),
-                    "STRING EXCEEDS MAX CHAR LENGTH 5000");
-            return createErrorToken(spelling);
-        }
-    }
 
     public Token createErrorToken(String spelling){
         return new Token(Token.Kind.ERROR, spelling,

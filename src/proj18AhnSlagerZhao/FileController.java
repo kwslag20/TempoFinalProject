@@ -384,8 +384,10 @@ public class FileController {
                 this.handleNew(null);
                 curTab = (JavaOrMipsTab) this.javaTabPane.getSelectionModel().getSelectedItem();
                 Token nextToken;
-                while ( (nextToken = scanner.scan()).kind != Token.Kind.EOF) {
-                    curTab.getCodeArea().appendText(nextToken.toString()+"\n");
+                while ( (nextToken = scanner.scan()).kind != Token.Kind.EOF ) {
+                    if(nextToken.kind != Token.Kind.NOTWORD) {
+                        curTab.getCodeArea().appendText(nextToken.toString() + "\n");
+                    }
                 }
                 return null;
             }
