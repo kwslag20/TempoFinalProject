@@ -153,7 +153,7 @@ public class Parser
     }
 
     /*
-     * <Verse> ::= VERSE <Identifier> { <MemberList> }
+     * <LeftHand> ::= LEFTHAND { <MemberList> }
      * <MemberList> ::= EMPTY | <Member> <MemberList>
      */
     private LeftHand parseLeftHand() {
@@ -173,7 +173,7 @@ public class Parser
     }
 
     /*
-     * <Verse> ::= VERSE <Identifier> { <MemberList> }
+     * <Chorus> ::= CHORUS { <MemberList> }
      * <MemberList> ::= EMPTY | <Member> <MemberList>
      */
     private Chorus parseChorus() {
@@ -185,6 +185,10 @@ public class Parser
         return new Chorus(position, memberList);
     }
 
+    /*
+     * <Layout> ::= LAYOUT { <MemberList> }
+     * <MemberList> ::= EMPTY | <Member> <MemberList>
+     */
     private Layout parseLayout(){
         int position = currentToken.position;
         LayoutList layoutList = new LayoutList(position);

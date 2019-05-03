@@ -1,0 +1,7 @@
+piece FurEliseTest {
+	verse first {
+	    righthand {
+	        qn e
+	    }
+	}
+}
