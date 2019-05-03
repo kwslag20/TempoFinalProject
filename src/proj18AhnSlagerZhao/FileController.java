@@ -376,7 +376,7 @@ public class FileController {
 
             }
             catch(CompilationException e){
-                throw e;
+                System.out.print("oh no you dont");
             }
 
             // section for SCAN ONLY

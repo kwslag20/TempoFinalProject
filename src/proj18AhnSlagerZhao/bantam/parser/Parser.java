@@ -96,6 +96,7 @@ public class Parser
     private Piece parsePiece(){
         updateCurrentToken();
         int position = currentToken.position;
+        String name = currentToken.spelling;
         PieceList pieceList = new PieceList(position);
         updateCurrentToken();
         while (currentToken.kind != EOF) {
@@ -115,7 +116,7 @@ public class Parser
         }
 
 
-        return new Piece(position, pieceList);
+        return new Piece(position, name, pieceList);
     }
 
 

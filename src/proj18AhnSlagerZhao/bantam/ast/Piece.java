@@ -44,13 +44,19 @@ public class Piece extends ASTNode {
     protected PieceList pieceList;
 
     /**
+     * Name of the piece
+     */
+    protected String name;
+    /**
      * Program constructor
      *
      * @param lineNum   source line number corresponding to this AST node
+     * @param name      name of the piece
      * @param pieceList list of class declarations
      */
-    public Piece(int lineNum, PieceList pieceList) {
+    public Piece(int lineNum, String name, PieceList pieceList) {
         super(lineNum);
+        this.name = name;
         this.pieceList = pieceList;
     }
 
@@ -62,6 +68,11 @@ public class Piece extends ASTNode {
     public PieceList getPieceList() {
         return pieceList;
     }
+
+    /**
+     * Gets the name of the piece
+     */
+    public String getName() { return name; }
 
     /**
      * Visitor method
