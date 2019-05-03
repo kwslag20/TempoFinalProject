@@ -157,6 +157,10 @@ public class Scanner
                     tempToken = checkCurString(tempChar);
                     currentChar = this.sourceFile.getNextChar();
                     if (isNote && currentChar != 'h' && currentChar != '(') {
+                        if(currentChar == '#'){
+                            currentChar = this.sourceFile.getNextChar();
+                            return new Token(Token.Kind.PITCH, tempChar.toString() + "#", this.sourceFile.getCurrentLineNumber());
+                        }
                         return new Token(Token.Kind.PITCH, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
                     } else {
                         return tempToken;

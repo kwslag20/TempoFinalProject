@@ -216,7 +216,7 @@ public class MusicCodeGenVisitor extends Visitor {
     public Object visit(Note node){
         String note = node.getPitch().toUpperCase();
         note += node.getOctave();
-        note += node.getLength().replace("n","");
+        note += node.getNoteLength().replace("n","");
         note += " ";
         currentPattern += note;
         return null;
