@@ -1,0 +1,68 @@
+piece FurEliseTest{
+	verse first{
+	    righthand{
+	        qn e 4;
+	        qn d 4;
+	        qn c 4;
+	        qn d 4;
+	        qn e 4;
+            qn e 4;
+            hn e 4;
+	    }
+	    lefthand{
+            qn e 4;
+            qn d 4;
+            qn c 4;
+            qn d 4;
+            qn e 4;
+            qn e 4;
+            hn e 4;
+        }
+	}
+	verse second{
+	    righthand{
+    	        qn d 4;
+    	        qn d 4;
+    	        hn d 4;
+    	        qn e 4;
+    	        qn g 4;
+                hn g 4;
+
+    	    }
+    	lefthand{
+                qn d 4;
+                qn d 4;
+                hn d 4;
+                qn e 4;
+                qn g 4;
+                hn g 4;
+            }
+	}
+	verse third{
+    	    righthand {
+                qn e 4;
+                qn d 4;
+                qn d 4;
+                qn e 4;
+                qn d 4;
+                hn c 4;
+
+            }
+        	lefthand{
+                qn e 4;
+                qn d 4;
+                qn d 4;
+                qn e 4;
+                qn d 4;
+                hn c 4;
+            }
+    }
+    layout{
+    		writer: Kevin Ahn;
+    		instrument: piano;
+    		tempo: adaggio;
+    		first;
+    	    second;
+            third;
+    }
+}

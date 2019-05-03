@@ -38,9 +38,6 @@ package proj18AhnSlagerZhao.bantam.codegenmusic;
 
 import proj18AhnSlagerZhao.bantam.ast.*;
 import proj18AhnSlagerZhao.bantam.parser.Parser;
-import proj18AhnSlagerZhao.bantam.semant.SemanticAnalyzer;
-import proj18AhnSlagerZhao.bantam.semant.StringConstantsVisitor;
-import proj18AhnSlagerZhao.bantam.util.ClassTreeNode;
 import proj18AhnSlagerZhao.bantam.util.CompilationException;
 import proj18AhnSlagerZhao.bantam.util.Error;
 import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
@@ -48,7 +45,6 @@ import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.*;
 
 /**
  * The <tt>MipsCodeGenerator</tt> class generates mips assembly code
@@ -139,7 +135,7 @@ public class MusicCodeGenerator {
         Parser parser = new Parser(errorHandler);
         try{
             errorHandler.clear();
-            Piece piece = parser.parse("test1.txt");
+            Piece piece = parser.parse("test2.txt");
             MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
             musicCodeGenerator.generate(piece, piece.getName().replace(" ", "") + ".java");
         }

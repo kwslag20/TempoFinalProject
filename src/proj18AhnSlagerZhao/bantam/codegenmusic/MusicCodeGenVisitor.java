@@ -90,7 +90,6 @@ public class MusicCodeGenVisitor extends Visitor {
             output += patternMap.get(orderObjects.get(i)+"lh").get(1);
             output += "\");";
             out.println(output);
-
         }
         return null;
     }

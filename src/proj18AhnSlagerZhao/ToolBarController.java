@@ -21,10 +21,12 @@ import java.util.concurrent.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import proj18AhnSlagerZhao.bantam.ast.Piece;
 import javafx.concurrent.Task;
 import javafx.concurrent.Service;
 import proj18AhnSlagerZhao.FileController;
+import proj18AhnSlagerZhao.bantam.codegenmusic.MusicCodeGenerator;
+import proj18AhnSlagerZhao.bantam.parser.Parser;
 import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
 import proj18AhnSlagerZhao.bantam.codegenmips.MipsCodeGenerator;
 import proj18AhnSlagerZhao.bantam.util.ErrorHandler;
@@ -49,12 +51,15 @@ public class ToolBarController {
         this.fileController = fileController;
         this.console = console;
         this.mutex = new Semaphore(1);
+        this.parser = new Parser(errorHandler);
     }
     /**
      * Console defined in Main.fxml
      */
     private Console console;
 
+    private ErrorHandler errorHandler = new ErrorHandler();
+    private Parser parser;
     /**
      * Process currently compiling or running a Java file
      */
@@ -107,12 +112,15 @@ public class ToolBarController {
      */
     private boolean compileFile(String filename) {
 
+        Piece root = this.parser.parse(filename);
+        MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
+        musicCodeGenerator.generate(root, root.getName().replace(" ", "") + ".java");
         // create and run the compile process
         List<String> processBuilderArgs = new ArrayList<>();
         processBuilderArgs.add("javac");
         processBuilderArgs.add("-cp");
-        processBuilderArgs.add("/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
-        processBuilderArgs.add(filename);
+        processBuilderArgs.add(".:/Users/KevinAhn/Desktop/CS461/project18AhnSlager/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
+        processBuilderArgs.add(root.getName()+".java");
         System.out.println(processBuilderArgs);
         ProcessBuilder pb = new ProcessBuilder(processBuilderArgs);
         CompileOrRunTask compileTask = new CompileOrRunTask(this.console, pb);
@@ -144,17 +152,23 @@ public class ToolBarController {
 //        if(!compSuccessful){
 //            return compSuccessful;
 //        }
+
         try {
+            Piece root = this.parser.parse(fileName);
+            MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
+            musicCodeGenerator.generate(root, root.getName().replace(" ", "") + ".java");
             Platform.runLater(() -> {
                 this.console.clear();
                 consoleLength = 0;
             });
+
             // again adds in needed commands into the PB list
             List<String> processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
             processBuilderArgs.add("-cp");
-            processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
-            processBuilderArgs.add(fileName);
+            processBuilderArgs.add(".:/Users/KevinAhn/Desktop/CS461/project18AhnSlager/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
+            processBuilderArgs.add(root.getName()+".java");
+            //processBuilderArgs.add(fileName);
             ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
             this.curProcess = builder.start();
 

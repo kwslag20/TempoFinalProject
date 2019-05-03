@@ -1,6 +1,0 @@
-class Main{  
-	var x = 4; 
-	void main(){
-	int x = 4;
-	}
-}
