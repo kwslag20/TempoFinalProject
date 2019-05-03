@@ -72,28 +72,25 @@ public class MasterController {
     @FXML private Button compileButton;
     @FXML private Button compileAndRunButton;
 
-
     private EditController editController;
     private FileController fileController;
     private ToolBarController toolBarController;
-    private Refactor refactor;
     private ErrorHandler errorHandler;
     private Program parseRoot;
-
-
-    // this line from JianQuanMarcello project 6
     private ContextMenuController contextMenuController;
 
     @FXML
     public void initialize(){
 
+        // initializes necessary controllers
         editController = new EditController(javaTabPane, findTextEntry, findPrevBtn, findNextBtn, replaceTextEntry);
         this.fileController = new FileController(vBox,javaTabPane);
         this.toolBarController = new ToolBarController(console, fileController);
         this.errorHandler = new ErrorHandler();
         this.parseRoot = null;
 
-        SimpleListProperty<Tab> listProperty = new SimpleListProperty<Tab> (javaTabPane.getTabs());
+        // sets up menu items and buttons to be disabled when nothing is open
+        SimpleListProperty<Tab> listProperty = new SimpleListProperty<> (javaTabPane.getTabs());
         editMenu.disableProperty().bind(listProperty.emptyProperty());
         saveMenuItem.disableProperty().bind(listProperty.emptyProperty());
         saveAsMenuItem.disableProperty().bind(listProperty.emptyProperty());
@@ -105,7 +102,6 @@ public class MasterController {
         parseButton.disableProperty().bind(listProperty.emptyProperty());
         compileAndRunButton.disableProperty().bind(listProperty.emptyProperty());
 
-        // this line from JianQuanMarcello project 6
         this.setupContextMenuController();
 
     }
@@ -149,31 +145,43 @@ public class MasterController {
     public void handleScan(Event event) {
         this.console.clear();
         try {
+            // calls the handleScan method in file controller
             this.fileController.handleScan(event);
-        } catch (CompilationException e) {
+        } catch (CompilationException e) { // catches a compilation exception
             this.console.writeLine(e.toString() + "\n", "ERROR");
             return;
         }
 
+        // gets the list of scanning errors
         List<Error> scanningErrors = fileController.getScanningErrors();
-
         if (scanningErrors != null) {
-
+            // loops through the errors in scanningErrors and prints them to the console
             for (Error e : scanningErrors)
                 this.console.writeLine(e.toString() + "\n", "ERROR");
-
-            this.console.writeLine(scanningErrors.size() +
-                    " illegal tokens were found.", "ERROR");
+                this.console.writeLine(scanningErrors.size() + " illegal tokens were found.", "ERROR");
         }
     }
 
+    /**
+     * handles the parsing of a program, catches any compilationExceptions
+     * from scanning
+     * @param event
+     */
     @FXML
     public void handleParse(Event event){
         this.console.clear();
-        this.fileController.handleScanAndParse(event);
+        try {
+            this.fileController.handleScanAndParse(event);
+        } catch (CompilationException e) { // catches a scanning error and does not allow piece to be parsed
+            this.console.writeLine("Error Found while scanning: " + e.toString() + "\n", "ERROR");
+            return;
+        }
     }
 
 
+    /**
+     * handles the stopping of a program
+     */
     @FXML public void handleStop(){
         this.toolBarController.handleStopButtonAction();
         this.toolBarController = new ToolBarController(this.console, this.fileController);
@@ -216,7 +224,6 @@ public class MasterController {
                 " illegal tokens were found.", "ERROR");
 
     }
-
 
     /**
      * handles the refactoring of a class
@@ -313,7 +320,9 @@ public class MasterController {
      * Opens a find and replace popup window.
      */
     @FXML
-    private void handleFindAndReplace() { editController.handleFindAndReplace(); }
+    private void handleFindAndReplace() {
+        editController.handleFindAndReplace();
+    }
 
     /**
      * Handler for the "About" menu item in the "File" menu.
@@ -340,7 +349,6 @@ public class MasterController {
      */
     @FXML public void handleOpen() {
         fileController.handleOpen();
-
     }
 
     /**
@@ -351,7 +359,6 @@ public class MasterController {
      */
     @FXML public void handleClose(Event event) {
         fileController.handleClose(event);
-
     }
 
     /**
@@ -388,7 +395,9 @@ public class MasterController {
      * Handler for the "Undo" menu item in the "Edit" menu.
      */
     @FXML
-    public void handleUndo() { editController.handleUndo(); }
+    public void handleUndo() {
+        editController.handleUndo();
+    }
 
     /**
      * Handler for the "Redo" menu item in the "Edit" menu.
@@ -423,7 +432,8 @@ public class MasterController {
      */
     @FXML
     public void handleSelectAll() {
-        editController.handleSelectAll(); }
+        editController.handleSelectAll();
+    }
 
     /**
      * Changes the theme of the IDE to Dark
@@ -495,9 +505,9 @@ public class MasterController {
      * When the item is clicked, a Java tutorial will be opened in a browser.
      */
     @FXML
-    public void handleOpenJavaTutorial(){
+    public void handleOpenMusicTutorial(){
         try {
-            URI url = new URI("https://docs.oracle.com/javase/tutorial/");
+            URI url = new URI("https://docs.google.com/document/d/1iL1nmyoy1NovxdhRcHcG10QKRLv1RV8dGyJ4DvsmK9s/edit?usp=sharing");
             Desktop.getDesktop().browse(url);
         } catch (IOException|URISyntaxException e) {
             e.printStackTrace();

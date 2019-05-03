@@ -177,7 +177,6 @@ public class FileController {
         }
     }
 
-
     /**
      * Handler for the "Save" menu item in the "File" menu.
      * If the current tab has been saved before, writes out the content to its corresponding
@@ -303,7 +302,6 @@ public class FileController {
         return null;
     }
 
-
     /**
      * Saves the text present in the current tab to a given filename.
      * Used by handleSave, handleSaveAs.
@@ -342,7 +340,6 @@ public class FileController {
      */
     public void handleScan(Event event) {
         scanOrParseHelper(event, "SCAN_ONLY" );
-
     }
 
     /**
@@ -363,12 +360,14 @@ public class FileController {
      * @param scanOrParse string "SCAN_ONLY" or "SCAN_AND_PARSE" or "PARSE_NO_TREE_DRAWN"
      */
     public Piece scanOrParseHelper(Event event, String scanOrParse ){
+
+        // Grabs the current tab open to be scanned or parsed
         JavaOrMipsTab curTab = (JavaOrMipsTab) this.javaTabPane.getSelectionModel().getSelectedItem();
-        if (this.javaTabPane.tabIsSaved(curTab)) {
+        if (this.javaTabPane.tabIsSaved(curTab)) { // checks if the user needs to save the currently open tab
             String filename = this.tabFilepathMap.get(curTab);
             try {
                 this.errorHandler = new ErrorHandler();
-                if(scanOrParse.equals("SCAN_ONLY")) {
+                if(scanOrParse.equals("SCAN_ONLY")) { // user clicked Scan Button
                     this.scanner = new Scanner(filename, this.errorHandler);
                 }
                 else{
@@ -380,22 +379,25 @@ public class FileController {
                 throw e;
             }
 
+            // section for SCAN ONLY
             if(scanOrParse.equals("SCAN_ONLY")) {
                 this.handleNew(null);
                 curTab = (JavaOrMipsTab) this.javaTabPane.getSelectionModel().getSelectedItem();
-                Token nextToken;
+                Token nextToken; // the next token to be scanned
+                // loops until the end of file
                 while ( (nextToken = scanner.scan()).kind != Token.Kind.EOF ) {
-                    if(nextToken.kind != Token.Kind.NOTWORD) {
+                    if(nextToken.kind != Token.Kind.NOTWORD) { // adds in the next token to the string
                         curTab.getCodeArea().appendText(nextToken.toString() + "\n");
                     }
                 }
                 return null;
             }
 
+            // section for SCAN AND PARSE
             else{
                 Piece root = this.parser.parse(filename);
-                if(scanOrParse.equals("SCAN_AND_PARSE")) {
-                    Drawer drawer = new Drawer();
+                if(scanOrParse.equals("SCAN_AND_PARSE")) { // user clicked Scan and Parse
+                    Drawer drawer = new Drawer(); // creates the drawer
                     drawer.draw(filename, root);
                 }
                 return root;
@@ -403,6 +405,7 @@ public class FileController {
 
         }
 
+        // used for saving of tabs and user response
         String saveStatus = this.askSaveAndScan(event);
         if (saveStatus == "cancel") {
             this.scanner = null;
@@ -443,25 +446,6 @@ public class FileController {
     }
 
     /**
-     * Scans and Parses and then checks the program using the semantic analyzer
-     * @param event
-     * @return
-     */
-//    public ClassTreeNode handleAnalyze(Event event){
-//        Piece piece;
-//        try{
-//            piece = scanOrParseHelper(event, "SCAN_AND_PARSE");
-//        }
-//        catch(CompilationException e){
-//            throw e;
-//        }
-//        SemanticAnalyzer analyzer = new SemanticAnalyzer(errorHandler);
-//        ClassTreeNode analysis = analyzer.analyze(piece);
-//        analysisErrors = analyzer.getErrorHandler();
-//        return analysis;
-//    }
-
-    /**
      *
      * @return the list of errors from the most recent scan performed on a file
      * return value will be null if there is no valid file open to scan
@@ -471,6 +455,10 @@ public class FileController {
         return this.scanner.getErrors();
     }
 
+    /**
+     *
+     * @return the list of errors from the most recent analysis
+     */
     public List<Error> getAnalysisErrors(){
         return analysisErrors.getErrorList();
     }

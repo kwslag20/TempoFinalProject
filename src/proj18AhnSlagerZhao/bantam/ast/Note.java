@@ -73,7 +73,7 @@ public class Note extends Member {
      *
      * @return note length
      */
-    public String getLength() {
+    public String getNoteLength() {
         return length;
     }
 

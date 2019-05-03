@@ -75,8 +75,8 @@ public class LayoutVisitor extends Visitor
         return layoutNary("NotesList", node);
     }
 
-    public Object visit(Note node){ System.out.print(node.getLength());
-    return layoutNullary("Note: " + node.getLength() + " Pitch: "
+    public Object visit(Note node){
+    return layoutNullary("Note: " + node.getNoteLength() + " Pitch: "
             + node.getPitch() + " Octave: " + node.getOctave());}
 
     //-------- auxilliary methods ---------

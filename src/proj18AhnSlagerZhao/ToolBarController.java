@@ -44,18 +44,11 @@ public class ToolBarController {
 
 
     private FutureTask<Boolean> curFutureTask;
-    private Button stopButton;
-    private Button compileButton;
-    private Button compileRunButton;
-    private TabPane tabPane;
-    private boolean receivedCommand = false;
 
     public ToolBarController(Console console, FileController fileController){
         this.fileController = fileController;
         this.console = console;
         this.mutex = new Semaphore(1);
-        //this.compileWorker = new CompileWorker();
-       // this.compileRunWorker = new CompileRunWorker();
     }
     /**
      * Console defined in Main.fxml
@@ -87,13 +80,7 @@ public class ToolBarController {
      * The FileMenuController
      */
     private FileController fileController;
-    /**
-     * A CompileWorker object compiles a Java file in a separate thread.
-     */
-   // private CompileWorker compileWorker;
-    /**
-     * A CompileRunWorker object compiles and runs a Java file in a separate thread.
-     */
+
 
     /**
      *  Compiles the code currently open, assuming it has been saved.
@@ -133,7 +120,6 @@ public class ToolBarController {
         ExecutorService compileExecutor = Executors.newFixedThreadPool(1);
         compileExecutor.execute(curFutureTask);
 
-
         // Check if compile was successful, and if so, indicate this in the console
         Boolean compSuccessful = false;
         try {
@@ -150,60 +136,14 @@ public class ToolBarController {
         return compSuccessful;
     }
 
-
-//    /**
-//     * Compiles and runs the specified file using the java command
-//     * @param fileNameWithPath the file name, including its path
-//     */
-//    private void compileRunFile(String fileNameWithPath){
-//
-//        // Try to compile
-//        boolean compSuccessful = compileFile(fileNameWithPath);
-//        if(!compSuccessful){
-//            return;
-//        }
-//        // Disable appropriate compile buttons
-//        //disableCompileAndRunButtons();
-//        List<String> processBuilderArgs = new ArrayList<>();
-//        processBuilderArgs = new ArrayList<>();
-//        processBuilderArgs.add("java");
-//        processBuilderArgs.add("-jar");
-//        processBuilderArgs.add("jfugue-5.0.9.jar");
-//        // set up the necessary file path elements
-//        int pathLength = fileNameWithPath.length();
-//        File file = new File(fileNameWithPath);
-//        String filename = file.getName();
-//        String filepath = fileNameWithPath.substring(0,pathLength-filename.length());
-//        int nameLength = filename.length();
-//        String classFilename = filename.substring(0, nameLength - 5);
-//
-//        processBuilderArgs.add(filepath);
-//        //processBuilderArgs.add(classFilename);
-//
-//        // Run the java program
-//        ProcessBuilder pb = new ProcessBuilder(processBuilderArgs);
-//        CompileOrRunTask runTask = new CompileOrRunTask(console,pb);
-//        this.curFutureTask = new FutureTask<Boolean>(runTask);
-//        ExecutorService curExecutor = Executors.newFixedThreadPool(1);
-//        curExecutor.execute(this.curFutureTask);
-//
-//        try{
-//            curExecutor.shutdown();
-//        }
-//        // if the program is interrupted, stop running
-//        catch (CancellationException e){
-//            runTask.stop();
-//        }
-//
-//    }
     /**
      * Helper method for running Mips Programs.
      */
     public boolean compileRunFile(String fileName) {
-        boolean compSuccessful = compileFile(fileName);
-        if(!compSuccessful){
-            return compSuccessful;
-        }
+//        boolean compSuccessful = compileFile(fileName);
+//        if(!compSuccessful){
+//            return compSuccessful;
+//        }
         try {
             Platform.runLater(() -> {
                 this.console.clear();
@@ -211,7 +151,6 @@ public class ToolBarController {
             });
             // again adds in needed commands into the PB list
             List<String> processBuilderArgs = new ArrayList<>();
-            processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
             processBuilderArgs.add("-cp");
             processBuilderArgs.add(".:/Users/KevinAhn/Desktop/CS461/project18AhnSlager/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
@@ -273,6 +212,7 @@ public class ToolBarController {
         InputStream stdout = this.curProcess.getInputStream();
         InputStream stderr = this.curProcess.getErrorStream();
 
+        // creates a new buffered reader for program output
         BufferedReader outputReader = new BufferedReader(new InputStreamReader(stdout));
         printOutput(outputReader);
 
@@ -454,23 +394,4 @@ public class ToolBarController {
             }
         }
     }
-
-    /**
-     * Disables the Compile and Compile and Run buttons, enables the Stop button.
-     */
-    public void disableCompileAndRunButtons() {
-        this.compileButton.setDisable(true);
-        this.compileRunButton.setDisable(true);
-        this.stopButton.setDisable(false);
-    }
-
-    /**
-     * Enables the Compile and Compile and Run buttons, disables the Stop button.
-     */
-    public void enableCompileAndRunButtons() {
-        this.compileButton.setDisable(false);
-        this.compileRunButton.setDisable(false);
-        this.stopButton.setDisable(true);
-    }
-
 }

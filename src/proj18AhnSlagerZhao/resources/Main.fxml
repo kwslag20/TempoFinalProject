@@ -97,7 +97,7 @@
             <MenuItem fx:id="fieldAnDep" mnemonicParsing="false" onAction="#handleAnDepField" text="Field" disable="false"/>
         </Menu>
         <Menu mnemonicParsing="false" text = "Help">
-            <MenuItem mnemonicParsing="false" onAction="#handleOpenJavaTutorial" text = "Java Tutorial"/>
+            <MenuItem mnemonicParsing="false" onAction="#handleOpenMusicTutorial" text = "Langauge Manual"/>
         </Menu>
 
     </MenuBar>

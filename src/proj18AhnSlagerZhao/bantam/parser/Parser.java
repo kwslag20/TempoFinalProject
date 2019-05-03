@@ -79,7 +79,6 @@ public class Parser
         this.errorHandler = errorHandler;
     }
 
-
     /**
      * parse the given file and return the root node of the AST
      * @param filename The name of the Bantam Java file to be parsed
@@ -90,34 +89,6 @@ public class Parser
         this.filename=filename;
         return this.parsePiece();
     }
-
-    public static void main(String[] argv){
-//        if(argv.length == 0){
-//            System.out.println("Please Provide Test Files");
-//            return;
-//        }
-        String[] filenames = new String[]{"test1.txt"};
-        for(String filename: filenames) {
-            ErrorHandler errorHandler = new ErrorHandler();
-            Parser parser = new Parser(errorHandler);
-
-            try {
-                parser.parse(filename);
-                System.out.println("Parsing Successful.");
-            }catch(CompilationException e){
-                if(errorHandler.errorsFound()){
-                    System.out.println(filename + ": Parsing Failed");
-                    List<Error> errorList= errorHandler.getErrorList();
-                    for(Error error:errorList ){
-                        System.out.println(error.toString() + "\n");
-                    }
-                }else{
-                    System.out.println("Invalid filename: "+filename);
-                }
-            }
-        }
-    }
-
 
     /*
      * <Piece> ::= <Verse> | <Chorus> | <Layout>
@@ -332,5 +303,37 @@ public class Parser
         }
         updateCurrentToken();
     }
+
+    /**
+     * main method used for testing
+     * @param argv
+     */
+    public static void main(String[] argv){
+//        if(argv.length == 0){
+//            System.out.println("Please Provide Test Files");
+//            return;
+//        }
+        String[] filenames = new String[]{"test1.txt"};
+        for(String filename: filenames) {
+            ErrorHandler errorHandler = new ErrorHandler();
+            Parser parser = new Parser(errorHandler);
+
+            try {
+                parser.parse(filename);
+                System.out.println("Parsing Successful.");
+            }catch(CompilationException e){
+                if(errorHandler.errorsFound()){
+                    System.out.println(filename + ": Parsing Failed");
+                    List<Error> errorList= errorHandler.getErrorList();
+                    for(Error error:errorList ){
+                        System.out.println(error.toString() + "\n");
+                    }
+                }else{
+                    System.out.println("Invalid filename: "+filename);
+                }
+            }
+        }
+    }
+
 }
 

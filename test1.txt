@@ -1,6 +1,6 @@
 piece MyNewSong {
 	verse first{
-		rigchthand{
+		righthand{
 			hn d 1;
 			qn d 1;
 			}
