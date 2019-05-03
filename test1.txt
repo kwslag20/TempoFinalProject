@@ -1,21 +1,85 @@
 piece MyNewSong {
 	verse first{
 		righthand{
-			hn d# 1;
-			qn d 1;
+		    sn e 5;
+		    sn d# 5;
+		    sn e 5;
+		    sn d# 5;
+		    sn e 5;
+		    sn b 4;
+		    sn d 5;
+		    sn c 5;
 			}
 		lefthand{
-			qn f 4;
-			hn e 3;
+			ir;
+			ir;
+			ir;
+			ir;
 			}
 		}
 	verse second{
 	    righthand{
-	        hn d 1;
+	        in a 4;
+	        sr;
+	        sn c 4;
+	        sn e 4;
+	        sn a 4;
+	        in b 4;
+	        sr;
+	        sn e 4;
+	        sn g# 4;
+	        sn b 4;
+	        in c 5;
+	        sr;
+            sn e 4;
 	    }
 	    lefthand{
-	        hn c 2;
+	        sn a 2;
+	        sn e 3;
+	        sn a 3;
+	        sr;
+	        ir;
+	        sn e 2;
+	        sn e 3;
+	        sn g# 3;
+	        sr;
+	        ir;
+	        sn a 2;
+	        sn e 3;
+	        sn e 3;
+	        sr;
 	    }
+	}
+	verse third{
+	    righthand{
+	        in a 4;
+	        sr;
+	        sn c 4;
+	        sn e 4;
+	        sn a 4;
+	        in b 4;
+	        sr;
+	        sn e 4;
+	        sn c 5;
+	        sn b 4;
+	        qn a 4;
+	    }
+	    lefthand{
+        	        sn a 2;
+        	        sn e 3;
+        	        sn a 3;
+        	        sr;
+        	        ir;
+        	        sn e 2;
+        	        sn e 3;
+        	        sn g# 3;
+        	        sr;
+        	        ir;
+        	        sn a 2;
+        	        sn e 3;
+        	        sn e 3;
+        	        sr;
+        	    }
 	}
 	chorus{
 		righthand{
@@ -27,13 +91,11 @@ piece MyNewSong {
 		}
 	layout{
 		writer: Kyle Slager;
-		instrument: piano;
-		tempo: adaggio;
-		first;
 		instrument: flute;
-	    	first;
-		chorus;
-		second;
+		tempo: adagio;
 		first;
+		second;
+	    first;
+	    third;
 		}
 }

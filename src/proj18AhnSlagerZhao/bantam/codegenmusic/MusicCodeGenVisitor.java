@@ -220,4 +220,12 @@ public class MusicCodeGenVisitor extends Visitor {
         currentPattern += note;
         return null;
     }
+
+    public Object visit(Rest node){
+        String rest = "R";
+        rest += node.getRestLength().replace("r", "");
+        rest += " ";
+        currentPattern += rest;
+        return null;
+    }
 }

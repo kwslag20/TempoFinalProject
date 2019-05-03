@@ -240,6 +240,10 @@ public class Parser
             updateCurrentToken();
             return new Note(position, length, pitch, octave);
         }
+        if(currentToken.kind == REST){
+            updateCurrentToken();
+            return new Rest(position, length);
+        }
         else {
             this.registerError("When parsing field, \"(\", \"=\", or \";\" expected.",
                     "Unexpected Token");

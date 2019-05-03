@@ -1,0 +1,31 @@
+piece FurEliseTest{
+	verse first{
+	    righthand{
+	        qn e 4;
+	        qn d 4;
+	    }
+	    lefthand{
+            qn e 4;
+            qn d 4;
+        }
+	}
+	verse second{
+	    righthand{
+    	        qn d 4;
+    	        qn d 4;
+    	        hn d 4;
+    	    }
+    	lefthand{
+                qn d 4;
+                qn d 4;
+                hn d 4;
+            }
+	}
+    layout{
+    		writer: Kevin Ahn;
+    		instrument: piano;
+    		tempo: adagio;
+    		first;
+    	    second;
+    }
+}

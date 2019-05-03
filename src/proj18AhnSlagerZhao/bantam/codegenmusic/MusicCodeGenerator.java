@@ -114,8 +114,8 @@ public class MusicCodeGenerator {
         out.println("public class " + name + "{");
         out.println();
         out.println("\tpublic static void main(String[] args) {");
-        out.println("\t\tPattern pattern0 = new Pattern();");
-        out.println("\t\tPattern pattern1 = new Pattern();");
+        out.println("\t\tPattern pattern0 = new Pattern(\"V0 I[VOICE_OOHS] T[Adagio] \");");
+        out.println("\t\tPattern pattern1 = new Pattern(\"V1 I[Flute] T[Adagio] \");");
     }
 
     private void genEpilog(){
@@ -135,7 +135,7 @@ public class MusicCodeGenerator {
         Parser parser = new Parser(errorHandler);
         try{
             errorHandler.clear();
-            Piece piece = parser.parse("test2.txt");
+            Piece piece = parser.parse("test1.txt");
             MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
             musicCodeGenerator.generate(piece, piece.getName().replace(" ", "") + ".java");
         }

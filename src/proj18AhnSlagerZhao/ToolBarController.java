@@ -119,8 +119,8 @@ public class ToolBarController {
         List<String> processBuilderArgs = new ArrayList<>();
         processBuilderArgs.add("javac");
         processBuilderArgs.add("-cp");
-        processBuilderArgs.add(".:/Users/KevinAhn/Desktop/CS461/project18AhnSlager/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
-        processBuilderArgs.add(root.getName()+".java");
+        processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
+        processBuilderArgs.add(root.getName().replace(" ", "")+".java");
         System.out.println(processBuilderArgs);
         ProcessBuilder pb = new ProcessBuilder(processBuilderArgs);
         CompileOrRunTask compileTask = new CompileOrRunTask(this.console, pb);
@@ -166,8 +166,8 @@ public class ToolBarController {
             List<String> processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
             processBuilderArgs.add("-cp");
-            processBuilderArgs.add(".:/Users/KevinAhn/Desktop/CS461/project18AhnSlager/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
-            processBuilderArgs.add(root.getName()+".java");
+            processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlagerZhao/resources/jfugue-5.0.9.jar");
+            processBuilderArgs.add(root.getName().replace(" ", "")+".java");
             //processBuilderArgs.add(fileName);
             ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
             this.curProcess = builder.start();

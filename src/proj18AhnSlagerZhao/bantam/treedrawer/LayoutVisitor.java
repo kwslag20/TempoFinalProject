@@ -74,10 +74,11 @@ public class LayoutVisitor extends Visitor
     public Object visit(NotesList node) {
         return layoutNary("NotesList", node);
     }
-
+    public Object visit(Rest node) { return layoutNullary("Rest: " + node.getRestLength());}
     public Object visit(Note node){
     return layoutNullary("Note: " + node.getNoteLength() + " Pitch: "
             + node.getPitch() + " Octave: " + node.getOctave());}
+
 
     //-------- auxilliary methods ---------
     private DrawingTree layoutCaption(String name)

@@ -202,6 +202,16 @@ public abstract class Visitor {
         return null;
     }
 
+    /**
+     * Visit a Rest node
+     *
+     * @param node
+     * @return
+     */
+    public Object visit(Rest node) {
+        return null;
+    }
+
 
     /**
      * Visit a AST node
