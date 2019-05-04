@@ -1,4 +1,4 @@
-piece FurEliseTest{
+piece MaryHadALittleLamb{
 	verse first{
 	    righthand{
 	        qn e 4;
@@ -60,7 +60,7 @@ piece FurEliseTest{
     layout{
     		writer: Kevin Ahn;
     		instrument: piano;
-    		tempo: adaggio;
+    		tempo: adagio;
     		first;
     	    second;
             third;
