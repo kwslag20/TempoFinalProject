@@ -1,12 +1,12 @@
 piece FurEliseTest{
 	verse first{
 	    righthand{
-	        qn e 4;
-	        qn d 4;
+	        qn c 4;
+		    qn c 5;
 	    }
 	    lefthand{
-            qn e 4;
-            qn d 4;
+            qn c 3;
+            qn c 3;
         }
 	}
 	verse second{
@@ -26,6 +26,8 @@ piece FurEliseTest{
     		instrument: piano;
     		tempo: adagio;
     		first;
-    	    second;
+		first;
+		first;	
+		first;
     }
 }

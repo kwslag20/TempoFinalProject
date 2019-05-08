@@ -244,6 +244,9 @@ public class Parser
             updateCurrentToken();
             return new Rest(position, length);
         }
+        if(currentToken.kind == CHORD){
+
+        }
         else {
             this.registerError("When parsing field, \"(\", \"=\", or \";\" expected.",
                     "Unexpected Token");
@@ -254,7 +257,7 @@ public class Parser
     private String parsePitch(){
         updateCurrentToken();
         String pitch = currentToken.spelling;
-        if(currentToken.kind==PITCH){
+        if(currentToken.kind==PITCH || currentToken.kind==CHORD){
             return pitch;
         }
         else{
