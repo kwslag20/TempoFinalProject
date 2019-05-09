@@ -17,14 +17,22 @@ public class MusicCodeGenVisitor extends Visitor {
     private ArrayList<String> orderObjects;
     private Boolean isRightHand, isLeftHand;
     private HashMap<String, Integer> noteValues;
+    private HashMap<String, String> sequenceMap;
+    private String currentSequencePatter;
+    private int seqVoiceNum;
+    private boolean inSequence;
 
     public MusicCodeGenVisitor(PrintStream out){
+        this.inSequence = false;
         this.out = out;
         this.patternCount = 0;
         this.sectionName = "";
         this.currentPattern = "";
+        this.currentSequencePatter = "";
+        this.seqVoiceNum = 15;
         this.orderObjects = new ArrayList<>();
         this.patternMap = new HashMap<>();
+        this.sequenceMap = new HashMap<>();
         this.isLeftHand = false;
         this.isRightHand = false;
         this.noteValues = new HashMap<>();
@@ -51,6 +59,7 @@ public class MusicCodeGenVisitor extends Visitor {
 
     public Object visit(Piece node){
         node.getPieceList().accept(this);
+        System.out.println(this.patternMap);
         return null;
     }
 
@@ -73,6 +82,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Verse node){
+        this.inSequence = false;
         this.sectionName = node.getName();
         node.getMemberList().accept(this);
         return null;
@@ -85,6 +95,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Chorus node){
+        this.inSequence = false;
         this.sectionName = "chorus";
         node.getMemberList().accept(this);
         return null;
@@ -97,6 +108,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @return result of the visit
      */
     public Object visit(Layout node){
+        this.inSequence = false;
         node.getLayoutList().accept(this);
         for(int i = 0; i < orderObjects.size(); i++){
             String output = "\t\tpattern" + "0.add(\"";
@@ -158,6 +170,45 @@ public class MusicCodeGenVisitor extends Visitor {
         patternMap.put(this.sectionName + "lh", pattern);
         patternCount++;
         currentPattern = "";
+        return null;
+    }
+
+    public Object visit(Sequences node){
+        this.inSequence = true;
+        node.getSequencesList().accept(this);
+        return null;
+    }
+
+    public Object visit(SequencesList node){
+        for(ASTNode seqs: node) seqs.accept(this);
+        return null;
+    }
+
+    public Object visit(Sequence node){
+        this.currentSequencePatter = "";
+        node.getNotesList().accept(this);
+        this.sequenceMap.put(node.getName(), this.currentSequencePatter);
+        this.currentSequencePatter = "";
+        return null;
+    }
+
+    public Object visit(SeqObj node){
+        if(node.getInstrument().length() > 0){
+            currentPattern += "I[" + node.getInstrument().toUpperCase().replace(" ", "") + "] ";
+        }
+        if(node.getVoice().length() > 0){
+            currentPattern += "V" + this.seqVoiceNum + " ";
+            this.seqVoiceNum--;
+        }
+        try {
+            for (int i = 0; i < Integer.parseInt(node.getRepeats()); i++) {
+                System.out.println(sequenceMap.get(node.getName()));
+                currentPattern += sequenceMap.get(node.getName());
+            }
+        }
+        catch(NumberFormatException e){
+            System.out.println("Repeats must be an integer value");
+        }
         return null;
     }
 
@@ -239,38 +290,34 @@ public class MusicCodeGenVisitor extends Visitor {
             note += node.getOctave();
             note += node.getNoteLength().replace("n","");
             note += " ";
-            currentPattern += note;
+            if(!inSequence) {
+                currentPattern += note;
+            }
+            currentSequencePatter += note;
         }
         else{
-            String chord = "";
-            int countStart = 0;
+            String chord = "(";
             int octave = node.getOctave();
             String note = node.getPitch().replace("(","");
             note = note.substring(0, note.length()-1);
             String[] notes = note.split(",");
-            if(isRightHand){
-                countStart = 0;
-            }
-            if(isLeftHand){
-                countStart = 1;
-            }
             for(int i = 0; i < notes.length; i++){
-                chord += "V" + Integer.toString((countStart) + (2 * i)) + " ";
-                chord += notes[i].toUpperCase();
+                chord += notes[i].toUpperCase().replace(")", "");
                 if(i>0) {
-                    System.out.println(this.noteValues.get(notes[i]));
-                    System.out.println(this.noteValues.get(notes[i-1]));
                     if (this.noteValues.get(notes[i]) <= this.noteValues.get(notes[i - 1])) {
                         octave++;
                     }
                 }
                 chord += octave;
-                chord += node.getNoteLength().replace("n", "");
-                chord += " ";
+                if(i != notes.length - 1) {
+                    chord += "+";
+                }
             }
-            chord += "V" + Integer.toString(countStart) + " ";
-            chord.replace(")", "");
-            currentPattern += chord;
+            chord += ")"+node.getNoteLength().replace("n", "")+" ";
+            if(!inSequence) {
+                currentPattern += chord;
+            }
+            currentSequencePatter += chord;
         }
 
         return null;
@@ -280,7 +327,10 @@ public class MusicCodeGenVisitor extends Visitor {
         String rest = "R";
         rest += node.getRestLength().replace("r", "");
         rest += " ";
-        currentPattern += rest;
+        if(!inSequence) {
+            currentPattern += rest;
+        }
+        currentSequencePatter += rest;
         return null;
     }
 }

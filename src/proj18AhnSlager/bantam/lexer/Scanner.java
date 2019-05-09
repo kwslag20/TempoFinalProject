@@ -35,13 +35,14 @@ public class Scanner
     private SourceFile sourceFile;
     private ErrorHandler errorHandler;
     private Character currentChar;
-    private Boolean isNote, isLayout, writerDeclared;
+    private Boolean isNote, isLayout, isSequences, wasSequences;
     private String curString;
     private Token tempToken;
     private ArrayList<String> sections;
     private String[] layoutArray;
     private int layoutCheck;
     private int loopCount;
+    private ArrayList<String> seqList;
 
     /**
      *
@@ -65,7 +66,10 @@ public class Scanner
         curString = "";
         isNote = false;
         isLayout = false;
+        isSequences = false;
+        wasSequences = false;
         sections = new ArrayList<>();
+        seqList = new ArrayList<>();
         try {
             sourceFile = new SourceFile(filename);
         }
@@ -134,12 +138,25 @@ public class Scanner
                 loopCount++;
                 if(loopCount > layoutArray.length - 1){
                     layoutCheck = layoutArray.length - 1;
-                    errorHandler.register(Error.Kind.LEX_ERROR, "Improper Layout Token Found");
+                    errorHandler.register(Error.Kind.PARSE_ERROR, "Improper Layout Token Found");
                     return new Token(Token.Kind.ERROR, "Improper Layout Token Found", this.sourceFile.getCurrentLineNumber());
                 }
             }
             isLayout = false;
             return new Token(Token.Kind.NOTWORD, "nothing", this.sourceFile.getCurrentLineNumber());
+        }
+        else if(isSequences){
+            String sequenceName = "";
+            while (currentChar != '[' && currentChar != '}') {
+                sequenceName += currentChar;
+                currentChar = this.sourceFile.getNextChar();
+            }
+            isSequences = false;
+            if(sequenceName == ""){
+                return new Token(Token.Kind.NOTWORD, sequenceName, this.sourceFile.getCurrentLineNumber());
+            }
+            seqList.add(sequenceName);
+            return new Token(Token.Kind.SEQ, sequenceName, this.sourceFile.getCurrentLineNumber());
         }
         else {
             switch (tempChar) {
@@ -208,6 +225,8 @@ public class Scanner
 
                 case ('}'):
                     currentChar = sourceFile.getNextChar();
+                    wasSequences = false;
+                    isSequences = false;
                     curString = "";
                     return new Token(Token.Kind.RCURLY,
                             tempChar.toString(), this.sourceFile.getCurrentLineNumber());
@@ -229,6 +248,17 @@ public class Scanner
                     curString = "";
                     return new Token(Token.Kind.RPAREN,
                             tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+
+                case ('['):
+                    currentChar = sourceFile.getNextChar();
+                    return new Token(Token.Kind.NOTWORD,
+                            tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+
+                case (']'):
+                    currentChar = sourceFile.getNextChar();
+                    curString = "";
+                    if(wasSequences) isSequences = true;
+                    return new Token(Token.Kind.RBRACKET, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
                 case (':'):
                     currentChar = sourceFile.getNextChar();
@@ -276,7 +306,26 @@ public class Scanner
 
     private Token checkCurString(Character tempChar) {
         if (curString != null) {
+            for(String seq: seqList){
+                if(curString.equals(seq)){
+                    String seqDef = "";
+                    int bailOutCount = 0;
+                    while (!currentChar.equals(')')){
+                        seqDef += currentChar;
+                        currentChar = this.sourceFile.getNextChar();
+                        bailOutCount++;
+                        if(bailOutCount > 25){
+                            this.errorHandler.register(Error.Kind.LEX_ERROR,
+                                    this.sourceFile.getFilename(), this.sourceFile.getCurrentLineNumber(),
+                                    "Invalid Sequence Call");
+                            return new Token(Token.Kind.ERROR, "Missing Right Parenthesis", this.sourceFile.getCurrentLineNumber());
+                        }
+                    }
+                    return new Token(Token.Kind.SEQOBJ, curString + seqDef, this.sourceFile.getCurrentLineNumber());
+                }
+            }
             switch (curString) {
+
                 case ("chord"):
                     String chordInfo = "";
                     while (!currentChar.equals(')')) {
@@ -297,16 +346,17 @@ public class Scanner
                     curString = "";
                     return new Token(Token.Kind.PIECE, pieceName, this.sourceFile.getCurrentLineNumber());
 
-                case ("baseseq"):
-                    String baseInfo = "";
-                    while (!currentChar.equals(')')) {
-                        baseInfo += currentChar;
-                        currentChar = this.sourceFile.getNextChar();
+                case ("sequences"):
+                    if(sections.contains("sequences")){
+                        errorHandler.register(Error.Kind.PARSE_ERROR, this.sourceFile.getFilename(),
+                                this.sourceFile.getCurrentLineNumber(), "Sequences already exists");
                     }
-                    baseInfo += currentChar;
+                    sections.add("sequences");
                     currentChar = this.sourceFile.getNextChar();
                     curString = "";
-                    return new Token(Token.Kind.BASELINE, baseInfo, this.sourceFile.getCurrentLineNumber());
+                    isSequences = true;
+                    wasSequences = true;
+                    return new Token(Token.Kind.SEQUENCES, "sequences", this.sourceFile.getCurrentLineNumber());
 
                 case ("layout"):
                     String layoutText = "";
@@ -421,7 +471,7 @@ public class Scanner
                 ErrorHandler errorHandler = new ErrorHandler();
                 try {
 
-                    scanner = new Scanner("test1.txt", errorHandler);
+                    scanner = new Scanner("test3.txt", errorHandler);
 
                 }
                 catch(CompilationException e){

@@ -44,6 +44,12 @@ public class LayoutVisitor extends Visitor
         return layoutNary("Piece", node.getPieceList());
     }
 
+    public Object visit(Sequences node) { return layoutUnary("Sequences", node.getSequencesList()); }
+
+    public Object visit(SequencesList node) { return layoutNary("SequencesList ", node); }
+
+    public Object visit(Sequence node) { return layoutUnary("Sequence: " + node.getName(), node.getNotesList()); }
+
     public Object visit(Verse node)
     {
         return layoutUnary("Verse " + node.getName(), node.getMemberList());
@@ -74,6 +80,7 @@ public class LayoutVisitor extends Visitor
     public Object visit(NotesList node) {
         return layoutNary("NotesList", node);
     }
+    public Object visit(SeqObj node) { return layoutNullary("SeqObj: " + node.getName()); }
     public Object visit(Rest node) { return layoutNullary("Rest: " + node.getRestLength());}
     public Object visit(Note node){
     return layoutNullary("Note: " + node.getNoteLength() + " Pitch: "

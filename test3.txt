@@ -1,12 +1,27 @@
 piece FurEliseTest{
+    sequences{
+        seqone[
+            hn c 4;
+            hn g 3;
+            hn a 3;
+		hn f 3;
+            ]
+        seqseven[
+            ir;
+            hn a 3;
+            qn a 1;
+            ]
+    }
 	verse first{
 	    righthand{
-	        qn c 4;
-		    qn c 5;
+		qn c 5;
 	    }
 	    lefthand{
-            qn c 3;
-            qn c 3;
+		hn c 5;
+		hn d 4;
+		hn f 4;
+		hn a 4;
+            	seqone(4, cello, yes);
         }
 	}
 	verse second{
@@ -26,8 +41,5 @@ piece FurEliseTest{
     		instrument: piano;
     		tempo: adagio;
     		first;
-		first;
-		first;	
-		first;
     }
 }

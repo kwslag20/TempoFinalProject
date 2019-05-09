@@ -93,6 +93,32 @@ public abstract class Visitor {
         return null;
     }
 
+    public Object visit(Sequences node) {
+        node.getSequencesList().accept(this);
+        return null;
+    }
+
+    /**
+     * Visit a SequencesList node
+     *
+     * @param node the sequence
+     * @return result of the visit
+     */
+    public Object visit(SequencesList node){
+        for (ASTNode sequence: node)
+            sequence.accept(this);
+        return null;
+    }
+
+    public Object visit(Sequence node){
+        node.getNotesList().accept(this);
+        return null;
+    }
+
+    public Object visit(SeqObj node){
+        return null;
+    }
+
     /**
      * Visit a MemberList node
      *
@@ -234,40 +260,6 @@ public abstract class Visitor {
     }
 
     /**
-     * Visit a program node
-     *
-     * @param node the program node
-     * @return result of the visit
-     */
-    public Object visit(Program node) {
-        node.getClassList().accept(this);
-        return null;
-    }
-
-    /**
-     * Visit a list node of classes
-     *
-     * @param node the class list node
-     * @return result of the visit
-     */
-    public Object visit(ClassList node) {
-        for (ASTNode aNode : node)
-            aNode.accept(this);
-        return null;
-    }
-
-    /**
-     * Visit a class node
-     *
-     * @param node the class node
-     * @return result of the visit
-     */
-    public Object visit(Class_ node) {
-        node.getMemberList().accept(this);
-        return null;
-    }
-
-    /**
      * Visit a member node (should never be calle)
      *
      * @param node the member node
@@ -287,18 +279,6 @@ public abstract class Visitor {
         if (node.getInit() != null) {
             node.getInit().accept(this);
         }
-        return null;
-    }
-
-    /**
-     * Visit a method node
-     *
-     * @param node the method node
-     * @return result of the visit
-     */
-    public Object visit(Method node) {
-        node.getFormalList().accept(this);
-        node.getStmtList().accept(this);
         return null;
     }
 
@@ -344,17 +324,6 @@ public abstract class Visitor {
      */
     public Object visit(Stmt node) {
         throw new RuntimeException("This visitor method should not be called (node is abstract)");
-    }
-
-    /**
-     * Visit a declaration statement node
-     *
-     * @param node the declaration statement node
-     * @return result of the visit
-     */
-    public Object visit(DeclStmt node) {
-        node.getInit().accept(this);
-        return null;
     }
 
     /**

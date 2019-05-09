@@ -81,21 +81,21 @@
             <MenuItem fx:id="hallowThemeItem" mnemonicParsing="false" onAction="#handleHallowThemeMode"
                       text="HallowTheme"/>
         </Menu>
-        <Menu fx:id="refactorMenu" mnemonicParsing="false" text="Refactor">
-            <MenuItem fx:id="classRefactor" mnemonicParsing="false" onAction="#handleRefactorClass" text="Class" disable="false"/>
-            <MenuItem fx:id="methodRefactor" mnemonicParsing="false" onAction="#handleRefactorMethod" text="Method" disable="false"/>
-            <MenuItem fx:id="fieldRefactor" mnemonicParsing="false" onAction="#handleRefactorField" text="Field" disable="false"/>
-        </Menu>
-        <Menu fx:id="jumpToMenu" mnemonicParsing="false" text="Jump To">
-            <MenuItem fx:id="classJumpTo" mnemonicParsing="false" onAction="#handleJumpToClass" text="Class" disable="false"/>
-            <MenuItem fx:id="methodJumpTo" mnemonicParsing="false" onAction="#handleJumpToMethod" text="Method" disable="false"/>
-            <MenuItem fx:id="fieldJumpTo" mnemonicParsing="false" onAction="#handleJumpToField" text="Field" disable="false"/>
-        </Menu>
-        <Menu fx:id="anDepMenu" mnemonicParsing="false" text="Analyze Dependencies">
-            <MenuItem fx:id="classAnDep" mnemonicParsing="false" onAction="#handleAnDepClass" text="Class" disable="false"/>
-            <MenuItem fx:id="methodAnDep" mnemonicParsing="false" onAction="#handleAnDepMethod" text="Method" disable="false"/>
-            <MenuItem fx:id="fieldAnDep" mnemonicParsing="false" onAction="#handleAnDepField" text="Field" disable="false"/>
-        </Menu>
+        <!--<Menu fx:id="refactorMenu" mnemonicParsing="false" text="Refactor">-->
+            <!--<MenuItem fx:id="classRefactor" mnemonicParsing="false" onAction="#handleRefactorClass" text="Class" disable="false"/>-->
+            <!--<MenuItem fx:id="methodRefactor" mnemonicParsing="false" onAction="#handleRefactorMethod" text="Method" disable="false"/>-->
+            <!--<MenuItem fx:id="fieldRefactor" mnemonicParsing="false" onAction="#handleRefactorField" text="Field" disable="false"/>-->
+        <!--</Menu>-->
+        <!--<Menu fx:id="jumpToMenu" mnemonicParsing="false" text="Jump To">-->
+            <!--<MenuItem fx:id="classJumpTo" mnemonicParsing="false" onAction="#handleJumpToClass" text="Class" disable="false"/>-->
+            <!--<MenuItem fx:id="methodJumpTo" mnemonicParsing="false" onAction="#handleJumpToMethod" text="Method" disable="false"/>-->
+            <!--<MenuItem fx:id="fieldJumpTo" mnemonicParsing="false" onAction="#handleJumpToField" text="Field" disable="false"/>-->
+        <!--</Menu>-->
+        <!--<Menu fx:id="anDepMenu" mnemonicParsing="false" text="Analyze Dependencies">-->
+            <!--<MenuItem fx:id="classAnDep" mnemonicParsing="false" onAction="#handleAnDepClass" text="Class" disable="false"/>-->
+            <!--<MenuItem fx:id="methodAnDep" mnemonicParsing="false" onAction="#handleAnDepMethod" text="Method" disable="false"/>-->
+            <!--<MenuItem fx:id="fieldAnDep" mnemonicParsing="false" onAction="#handleAnDepField" text="Field" disable="false"/>-->
+        <!--</Menu>-->
         <Menu mnemonicParsing="false" text = "Help">
             <MenuItem mnemonicParsing="false" onAction="#handleOpenMusicTutorial" text = "Langauge Manual"/>
         </Menu>

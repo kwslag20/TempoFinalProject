@@ -111,14 +111,13 @@ public class MusicCodeGenerator {
         out.println("import org.jfugue.player.*;");
         out.println("import org.jfugue.theory.*;");
         out.println("import org.jfugue.pattern.*;");
-        out.println("import org.jfugue.rhythm.Rhythm;");
         out.println();
         out.println("public class " + name + "{");
         out.println();
         out.println("\tpublic static void main(String[] args) {");
         out.println();
-        out.println("\t\tPattern pattern0 = new Pattern(\"V0 I[VOICE_OOHS] T[Adagio] \");");
-        out.println("\t\tPattern pattern1 = new Pattern(\"V1 I[Flute] T[Adagio] \");");
+        out.println("\t\tPattern pattern0 = new Pattern(\"V0 I[VOICE_OOHS] T[Andantino] \");");
+        out.println("\t\tPattern pattern1 = new Pattern(\"V1 I[Flute] T[Andantino] \");");
     }
 
     private void genEpilog(){
@@ -139,7 +138,7 @@ public class MusicCodeGenerator {
         Parser parser = new Parser(errorHandler);
         try{
             errorHandler.clear();
-            Piece piece = parser.parse("test1.txt");
+            Piece piece = parser.parse("PachelbelCanon.mus");
             MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
             musicCodeGenerator.generate(piece, piece.getName().replace(" ", "") + ".java");
         }

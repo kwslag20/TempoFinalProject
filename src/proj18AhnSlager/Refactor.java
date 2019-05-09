@@ -10,8 +10,7 @@ package proj18AhnSlager;
 import javafx.scene.control.*;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.NavigationActions;
-import proj18AhnSlager.bantam.ast.Program;
-import proj18AhnSlager.bantam.semant.*;
+import proj18AhnSlager.bantam.ast.Piece;
 
 import java.util.*;
 
@@ -23,7 +22,6 @@ import java.util.*;
 public class Refactor {
 
     private EditController editController;
-    private Program parseRoot;
 
     private Iterator<int[]> indices = new ArrayList<int[]>().iterator();
     private String target, textToSearch;
@@ -74,175 +72,174 @@ public class Refactor {
      * @param editController editController to be used by the class
      * @param parseRoot the program ast
      */
-    public Refactor(EditController editController, Program parseRoot){
+    public Refactor(EditController editController, Piece parseRoot){
         this.editController = editController;
-        this.parseRoot = parseRoot;
     }
 
-    /**
-     * a method that initializes the window that will hold the information from the AST.
-     * Creates a set of buttons that will redirect the user to the list of classes, methods,
-     * or fields
-     */
-    public void initializeRefactor(String type){
-        if(type.equals("class")){
-            getClasses("Refactor");
-        }
-        else if(type.equals("method")){
-            getMethods("Refactor");
-        }
-        else{
-            getFields("Refactor");
-        }
-    }
+//    /**
+//     * a method that initializes the window that will hold the information from the AST.
+//     * Creates a set of buttons that will redirect the user to the list of classes, methods,
+//     * or fields
+//     */
+//    public void initializeRefactor(String type){
+//        if(type.equals("class")){
+//            getClasses("Refactor");
+//        }
+//        else if(type.equals("method")){
+//            getMethods("Refactor");
+//        }
+//        else{
+//            getFields("Refactor");
+//        }
+//    }
 
-    /**
-     * intializes the jumpTo based on what type is passed into the method
-     * @param type the type being jumped to
-     */
-    public void initializeJumpTo(String type){
-        if(type.equals("class")){
-            getClasses("JumpTo");
-        }
-        else if(type.equals("method")){
-            getMethods("JumpTo");
-        }
-        else{
-            getFields("JumpTo");
-        }
-    }
+//    /**
+//     * intializes the jumpTo based on what type is passed into the method
+//     * @param type the type being jumped to
+//     */
+//    public void initializeJumpTo(String type){
+//        if(type.equals("class")){
+//            getClasses("JumpTo");
+//        }
+//        else if(type.equals("method")){
+//            getMethods("JumpTo");
+//        }
+//        else{
+//            getFields("JumpTo");
+//        }
+//    }
 
-    /**
-     * initialez what info to get
-     * @param type
-     */
-    public void initializeDependencies(String type){
-        if(type.equals("class")){
-            getClasses("AnDep");
-        }
-        else if(type.equals("method")){
-            getMethods("AnDep");
-        }
-        else{
-            getFields("AnDep");
-        }
-    }
+//    /**
+//     * initialez what info to get
+//     * @param type
+//     */
+//    public void initializeDependencies(String type){
+//        if(type.equals("class")){
+//            getClasses("AnDep");
+//        }
+//        else if(type.equals("method")){
+//            getMethods("AnDep");
+//        }
+//        else{
+//            getFields("AnDep");
+//        }
+//    }
 
-    /**
-     * method to get the list of classes in the current file, creates a new ClassVisitor
-     * to get the list of name and adds them to an arrayList.
-     */
-    public void getClasses(String type){
-        ClassVisitor classVisitor = new ClassVisitor(); // creates the visitor
-        ArrayList<String> names = classVisitor.getClasses(this.parseRoot, "null", "null");
-        if(type.equals("Refactor")) {
-            this.getHelper(names, "Classes");
-        }
-        else if(type.equals("AnDep")){
-            this.analyzeDependencies(names, "Classes");
-        }
-        else {
-            this.selectNext(names, "Classes");
-        }
-    }
+//    /**
+//     * method to get the list of classes in the current file, creates a new ClassVisitor
+//     * to get the list of name and adds them to an arrayList.
+//     */
+//    public void getClasses(String type){
+//        ClassVisitor classVisitor = new ClassVisitor(); // creates the visitor
+//        ArrayList<String> names = classVisitor.getClasses(this.parseRoot, "null", "null");
+//        if(type.equals("Refactor")) {
+//            this.getHelper(names, "Classes");
+//        }
+//        else if(type.equals("AnDep")){
+//            this.analyzeDependencies(names, "Classes");
+//        }
+//        else {
+//            this.selectNext(names, "Classes");
+//        }
+//    }
 
-    /**
-     * method to get the list of methods in the current file, creates a new MethodVisitor
-     * to get the list of names and adds them to an arrayList.
-     */
-    public void getMethods(String type){
-        MethodVisitor methodVisitor = new MethodVisitor(); // creates the method visitor
-        ArrayList<String> names = methodVisitor.getMethods(this.parseRoot,"null", "null");
-        if(type.equals("Refactor")) {
-            this.getHelper(names, "Methods");
-        }
-        else if(type.equals("AnDep")){
-            this.analyzeDependencies(names, "Methods");
-        }
-        else {
-            this.selectNext(names, "Methods");
-        }
-    }
+//    /**
+//     * method to get the list of methods in the current file, creates a new MethodVisitor
+//     * to get the list of names and adds them to an arrayList.
+//     */
+//    public void getMethods(String type){
+//        MethodVisitor methodVisitor = new MethodVisitor(); // creates the method visitor
+//        ArrayList<String> names = methodVisitor.getMethods(this.parseRoot,"null", "null");
+//        if(type.equals("Refactor")) {
+//            this.getHelper(names, "Methods");
+//        }
+//        else if(type.equals("AnDep")){
+//            this.analyzeDependencies(names, "Methods");
+//        }
+//        else {
+//            this.selectNext(names, "Methods");
+//        }
+//    }
 
-    /**
-     * method to get the list of fields in the current file, creates a new FieldVisitor
-     * to get the list of names and adds them to an arrayList.
-     */
-    public void getFields(String type){
-        FieldVisitor fieldVisitor = new FieldVisitor();
-        ArrayList<String> names = fieldVisitor.getFields(this.parseRoot, "null", "null");
-        if(type.equals("Refactor")) {
-            this.getHelper(names, "Fields");
-        }
-        else if(type.equals("AnDep")){
-            this.analyzeDependencies(names, "Fields");
-        }
-        else {
-            this.selectNext(names, "Fields");
-        }
-    }
+//    /**
+//     * method to get the list of fields in the current file, creates a new FieldVisitor
+//     * to get the list of names and adds them to an arrayList.
+//     */
+//    public void getFields(String type){
+//        FieldVisitor fieldVisitor = new FieldVisitor();
+//        ArrayList<String> names = fieldVisitor.getFields(this.parseRoot, "null", "null");
+//        if(type.equals("Refactor")) {
+//            this.getHelper(names, "Fields");
+//        }
+//        else if(type.equals("AnDep")){
+//            this.analyzeDependencies(names, "Fields");
+//        }
+//        else {
+//            this.selectNext(names, "Fields");
+//        }
+//    }
 
-    /**
-     * sets up the dialog created
-     * @param names
-     * @param type
-     */
-    public void getHelper(ArrayList names, String type) {
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(type, names);
-        dialog.setTitle("Refactor");
-        dialog.setHeaderText("Welcome to Refactoring Helper");
-        dialog.setContentText("Choose what you would like to refactor:");
+//    /**
+//     * sets up the dialog created
+//     * @param names
+//     * @param type
+//     */
+//    public void getHelper(ArrayList names, String type) {
+//        ChoiceDialog<String> dialog = new ChoiceDialog<>(type, names);
+//        dialog.setTitle("Refactor");
+//        dialog.setHeaderText("Welcome to Refactoring Helper");
+//        dialog.setContentText("Choose what you would like to refactor:");
+//
+//        Optional<String> result = dialog.showAndWait();
+//        if (result.isPresent()) {
+//            getNewName(result.get(), type);
+//        }
+//    }
 
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            getNewName(result.get(), type);
-        }
-    }
+//    /**
+//     * gets the new name set from the text input
+//     * @param oldName the old name
+//     * @param type method, field, or class
+//     */
+//    public void getNewName(String oldName, String type){
+//        TextInputDialog dialog = new TextInputDialog();
+//        dialog.setTitle("Choose New Name");
+//        dialog.setHeaderText("Welcome to Refactoring Helper");
+//        dialog.setContentText("Choose a new name");
+//
+//        Optional<String> result = dialog.showAndWait();
+//        if(result.isPresent()){
+//            String newName = result.get();
+//            refactorAll(oldName, newName, type);
+//        }
+//    }
 
-    /**
-     * gets the new name set from the text input
-     * @param oldName the old name
-     * @param type method, field, or class
-     */
-    public void getNewName(String oldName, String type){
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Choose New Name");
-        dialog.setHeaderText("Welcome to Refactoring Helper");
-        dialog.setContentText("Choose a new name");
-
-        Optional<String> result = dialog.showAndWait();
-        if(result.isPresent()){
-            String newName = result.get();
-            refactorAll(oldName, newName, type);
-        }
-    }
-
-    /**
-     * method that handles the refactoring using the visitor pattern
-     * @param oldName
-     * @param newName
-     * @param type class, method, or field
-     */
-    public void refactorAll(String oldName, String newName, String type){
-
-        String source = editController.getCurJavaCodeArea().getText();
-        String newText     = source.replace(oldName, newName);
-
-        editController.handleSelectAll();
-        editController.getCurJavaCodeArea().replaceSelection(newText);
-        if(type.equals("Classes")){
-            ClassVisitor classVisitor = new ClassVisitor();
-            classVisitor.getClasses(this.parseRoot, newName, oldName);
-        }
-        else if(type.equals("Methods")){
-            MethodVisitor methodVisitor = new MethodVisitor();
-            methodVisitor.getMethods(this.parseRoot, newName, oldName);
-        }
-        else{
-            FieldVisitor fieldVisitor = new FieldVisitor();
-            fieldVisitor.getFields(this.parseRoot, newName, oldName);
-        }
-    }
+//    /**
+//     * method that handles the refactoring using the visitor pattern
+//     * @param oldName
+//     * @param newName
+//     * @param type class, method, or field
+//     */
+//    public void refactorAll(String oldName, String newName, String type){
+//
+//        String source = editController.getCurJavaCodeArea().getText();
+//        String newText     = source.replace(oldName, newName);
+//
+//        editController.handleSelectAll();
+//        editController.getCurJavaCodeArea().replaceSelection(newText);
+//        if(type.equals("Classes")){
+//            ClassVisitor classVisitor = new ClassVisitor();
+//            classVisitor.getClasses(this.parseRoot, newName, oldName);
+//        }
+//        else if(type.equals("Methods")){
+//            MethodVisitor methodVisitor = new MethodVisitor();
+//            methodVisitor.getMethods(this.parseRoot, newName, oldName);
+//        }
+//        else{
+//            FieldVisitor fieldVisitor = new FieldVisitor();
+//            fieldVisitor.getFields(this.parseRoot, newName, oldName);
+//        }
+//    }
 
     /**
      * this method is used for finding all of the locations of a given substring in a given
@@ -366,31 +363,31 @@ public class Refactor {
         }
     }
 
-    /**
-     * method for creating the dialog to handle the dependency analyzer
-     * @param names
-     * @param type
-     */
-    private void analyzeDependencies(ArrayList names, String type){
-        ArrayList dependenciesList = new ArrayList();
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(type, names);
-        dialog.setTitle("Analyze Dependencies");
-        dialog.setHeaderText("Welcome to Analyze Dependencies");
-        dialog.setContentText("Choose where you would like to jump");
-        DependencyVisitor dependencyVisitor = new DependencyVisitor();
-        Optional<String> result = dialog.showAndWait();
-        if(result.isPresent()){
-            String choice = result.get();
-            dependenciesList = dependencyVisitor.initialize(this.parseRoot, choice);
-        }
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Analyze Dependencies");
-        alert.setHeaderText("The following variables are dependent on " + result.get());
-        String content = "";
-        for(Object a: dependenciesList){
-            content = content + a.toString() + "\n";
-        }
-        alert.setContentText(content);
-        alert.showAndWait();
-    }
+//    /**
+//     * method for creating the dialog to handle the dependency analyzer
+//     * @param names
+//     * @param type
+//     */
+//    private void analyzeDependencies(ArrayList names, String type){
+//        ArrayList dependenciesList = new ArrayList();
+//        ChoiceDialog<String> dialog = new ChoiceDialog<>(type, names);
+//        dialog.setTitle("Analyze Dependencies");
+//        dialog.setHeaderText("Welcome to Analyze Dependencies");
+//        dialog.setContentText("Choose where you would like to jump");
+//        DependencyVisitor dependencyVisitor = new DependencyVisitor();
+//        Optional<String> result = dialog.showAndWait();
+//        if(result.isPresent()){
+//            String choice = result.get();
+//            dependenciesList = dependencyVisitor.initialize(this.parseRoot, choice);
+//        }
+//        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+//        alert.setTitle("Analyze Dependencies");
+//        alert.setHeaderText("The following variables are dependent on " + result.get());
+//        String content = "";
+//        for(Object a: dependenciesList){
+//            content = content + a.toString() + "\n";
+//        }
+//        alert.setContentText(content);
+//        alert.showAndWait();
+//    }
 }

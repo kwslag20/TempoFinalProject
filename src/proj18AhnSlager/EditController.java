@@ -19,7 +19,8 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.NavigationActions.SelectionPolicy;
 import org.fxmisc.richtext.Selection;
-import proj18AhnSlager.bantam.ast.Program;
+import proj18AhnSlager.bantam.ast.Piece;
+
 
 import java.util.regex.Pattern;
 import java.util.ArrayList;
@@ -127,9 +128,9 @@ public class EditController {
      * @param parseRoot ast
      * @param type class, method, field
      */
-    public void handleRefactor(Program parseRoot, String type){
-        Refactor refactor = new Refactor(this, parseRoot);
-        refactor.initializeRefactor(type);
+    public void handleRefactor(Piece parseRoot, String type){
+        //Refactor refactor = new Refactor(this, parseRoot);
+        //refactor.initializeRefactor(type);
     }
 
     /**
@@ -137,9 +138,9 @@ public class EditController {
      * @param parseRoot ast
      * @param type class, method, field
      */
-    public void handleJumpTo(Program parseRoot, String type){
-        Refactor refactor = new Refactor(this, parseRoot);
-        refactor.initializeJumpTo(type);
+    public void handleJumpTo(Piece parseRoot, String type){
+        //Refactor refactor = new Refactor(this, parseRoot);
+        //refactor.initializeJumpTo(type);
     }
 
     /**
@@ -147,9 +148,9 @@ public class EditController {
      * @param parseRoot ast
      * @param type class, method, field
      */
-    public void handleAnDep(Program parseRoot, String type){
-        Refactor refactor = new Refactor(this, parseRoot);
-        refactor.initializeDependencies(type);
+    public void handleAnDep(Piece parseRoot, String type){
+        //Refactor refactor = new Refactor(this, parseRoot);
+        //refactor.initializeDependencies(type);
     }
 
     /**

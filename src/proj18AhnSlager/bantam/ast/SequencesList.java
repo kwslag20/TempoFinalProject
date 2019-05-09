@@ -28,39 +28,21 @@ package proj18AhnSlager.bantam.ast;
 
 import proj18AhnSlager.bantam.visitor.Visitor;
 
+
 /**
- * The <tt>Layout</tt> class represents a class declaration,
- * which consists of a filename (<tt>filename</tt>), a class name
- * (<tt>name</tt>), the name of its parent class (<tt>parent</tt>),
- * and a list of members (<tt>members</tt>) which can be either field
- * declarations or method declarations.
+ * The <tt>SequencesList</tt> class represents a list of sequence members.
  *
- * @see ASTNode
+ * @see ListNode
+ * @see Member
  */
-public class Layout extends ASTNode {
-
+public class SequencesList extends ListNode {
     /**
-     * LayoutList containing the properties of the Layout
-     */
-    protected LayoutList layoutList;
-
-    /**
-     * Class_ constructor
+     * Sequences list constructor
      *
-     * @param lineNum    source line number corresponding to this AST node
+     * @param lineNum source line number corresponding to this AST node
      */
-    public Layout(int lineNum, LayoutList layoutList) {
+    public SequencesList(int lineNum) {
         super(lineNum);
-        this.layoutList = layoutList;
-    }
-
-    /**
-     * Getter for layoutList
-     *
-     * @return layoutList
-     */
-    public LayoutList getLayoutList(){
-        return this.layoutList;
     }
 
     /**
@@ -68,7 +50,7 @@ public class Layout extends ASTNode {
      *
      * @param v proj18AhnSlager.bantam.visitor object
      * @return result of visiting this node
-     * @see Visitor
+     * @see proj18AhnSlager.bantam.visitor.Visitor
      */
     public Object accept(Visitor v) {
         return v.visit(this);

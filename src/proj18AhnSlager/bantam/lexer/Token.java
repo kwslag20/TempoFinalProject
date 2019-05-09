@@ -54,21 +54,21 @@
 
      public enum Kind
      {
-         NOTE, PITCH, OCTAVE, CHORD, REST, TEMPO, INSTRUMENT, STEPSIZE, LENGTH, STEPLENGTH, STEPFREQ, PATTERN,
+         NOTE, PITCH, OCTAVE, CHORD, REST, TEMPO, INSTRUMENT, LENGTH, STEPLENGTH, STEPFREQ, PATTERN,
          // literals, identifiers...
-         INTCONST, STRCONST, BOOLEAN, IDENTIFIER, MINUS, NOTWORD, WRITER,
+         INTCONST, BOOLEAN, IDENTIFIER, MINUS, NOTWORD, WRITER,
 
          // punctuation...
          DOT, COLON, SEMICOLON, COMMA,
 
          // brackets...
-         LPAREN, RPAREN, LCURLY, RCURLY,
+         LPAREN, RPAREN, LCURLY, RCURLY, RBRACKET,
 
          // special tokens...
          COMMENT, ERROR, EOF, //end of file token
 
          // reserved words
-         PIECE, VERSE, CHORUS, BRIDGE, RIGHTHAND, LEFTHAND, BASELINE, LAYOUT, ORDEROBJ, CRESCENDO
+         PIECE, VERSE, CHORUS, BRIDGE, RIGHTHAND, LEFTHAND, LAYOUT, ORDEROBJ, CRESCENDO, SEQ, SEQUENCES, SEQOBJ
      }
 
      private static Set<String> reservedWords = Set.of("piece", "verse", "chorus", "bridge", "righthand", "lefthand",

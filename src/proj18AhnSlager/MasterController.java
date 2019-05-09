@@ -26,7 +26,6 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.util.List;
 
-import proj18AhnSlager.bantam.ast.Program;
 import proj18AhnSlager.bantam.util.CompilationException;
 import proj18AhnSlager.bantam.util.Error;
 import proj18AhnSlager.bantam.util.ErrorHandler;
@@ -73,7 +72,6 @@ public class MasterController {
     private FileController fileController;
     private ToolBarController toolBarController;
     private ErrorHandler errorHandler;
-    private Program parseRoot;
     private ContextMenuController contextMenuController;
 
     @FXML
@@ -84,7 +82,6 @@ public class MasterController {
         this.fileController = new FileController(vBox,javaTabPane);
         this.toolBarController = new ToolBarController(console, fileController);
         this.errorHandler = new ErrorHandler();
-        this.parseRoot = null;
 
         // sets up menu items and buttons to be disabled when nothing is open
         SimpleListProperty<Tab> listProperty = new SimpleListProperty<> (javaTabPane.getTabs());
@@ -222,95 +219,95 @@ public class MasterController {
 
     }
 
-    /**
-     * handles the refactoring of a class
-     * @param event
-     */
-    @FXML public void handleRefactorClass(Event event){
-        if(this.parseRoot != null){
-            this.editController.handleRefactor(this.parseRoot, "class");
-        }
-    }
+//    /**
+//     * handles the refactoring of a class
+//     * @param event
+//     */
+//    @FXML public void handleRefactorClass(Event event){
+//        if(this.parseRoot != null){
+//            this.editController.handleRefactor(this.parseRoot, "class");
+//        }
+//    }
 
-    /**
-     * handles the refactoring of a method
-     * @param event
-     */
-    @FXML public void handleRefactorMethod(Event event){
-        if(this.parseRoot != null){
-            this.editController.handleRefactor(this.parseRoot, "method");
-        }
-    }
+//    /**
+//     * handles the refactoring of a method
+//     * @param event
+//     */
+//    @FXML public void handleRefactorMethod(Event event){
+//        if(this.parseRoot != null){
+//            this.editController.handleRefactor(this.parseRoot, "method");
+//        }
+//    }
 
-    /**
-     * handles the refactoring of a field
-     * @param event
-     */
-    @FXML public void handleRefactorField(Event event){
-        if(this.parseRoot != null){
-            this.editController.handleRefactor(this.parseRoot, "field");
-        }
-    }
+//    /**
+//     * handles the refactoring of a field
+//     * @param event
+//     */
+//    @FXML public void handleRefactorField(Event event){
+//        if(this.parseRoot != null){
+//            this.editController.handleRefactor(this.parseRoot, "field");
+//        }
+//    }
 
-    /**
-     * handles the jumping to a class
-     * @param event
-     */
-    @FXML public void handleJumpToClass(Event event){
-        if(this.parseRoot != null){
-            this.editController.handleJumpTo(this.parseRoot, "class");
-        }
-    }
+//    /**
+//     * handles the jumping to a class
+//     * @param event
+//     */
+//    @FXML public void handleJumpToClass(Event event){
+//        if(this.parseRoot != null){
+//            this.editController.handleJumpTo(this.parseRoot, "class");
+//        }
+//    }
 
-    /**
-     * handles the jumping to a method
-     * @param event
-     */
-    @FXML public void handleJumpToMethod(Event event){
-        if(this.parseRoot != null){
-            this.editController.handleJumpTo(this.parseRoot, "method");
-        }
-    }
+//    /**
+//     * handles the jumping to a method
+//     * @param event
+//     */
+//    @FXML public void handleJumpToMethod(Event event){
+//        if(this.parseRoot != null){
+//            this.editController.handleJumpTo(this.parseRoot, "method");
+//        }
+//    }
 
-    /**
-     * handles the jumping to a field
-     * @param event
-     */
-    @FXML public void handleJumpToField(Event event){
-        if(this.parseRoot != null){
-            this.editController.handleJumpTo(this.parseRoot, "field");
-        }
-    }
+//    /**
+//     * handles the jumping to a field
+//     * @param event
+//     */
+//    @FXML public void handleJumpToField(Event event){
+//        if(this.parseRoot != null){
+//            this.editController.handleJumpTo(this.parseRoot, "field");
+//        }
+//    }
 
-    /**
-     * handles the analyzing of dependencies of a class
-     * @param event
-     */
-    @FXML public void handleAnDepClass(Event event){
-        if(this.parseRoot != null){
-            this.editController.handleAnDep(this.parseRoot, "class");
-        }
-    }
+//    /**
+//     * handles the analyzing of dependencies of a class
+//     * @param event
+//     */
+//    @FXML public void handleAnDepClass(Event event){
+//        if(this.parseRoot != null){
+//            this.editController.handleAnDep(this.parseRoot, "class");
+//        }
+//    }
 
-    /**
-     * handles the analyzing of dependencies of a method
-     * @param event
-     */
-    @FXML public void handleAnDepMethod(Event event){
-        if(this.parseRoot != null){
-            this.editController.handleAnDep(this.parseRoot, "method");
-        }
-    }
+//    /**
+//     * handles the analyzing of dependencies of a method
+//     * @param event
+//     */
+//    @FXML public void handleAnDepMethod(Event event){
+//        if(this.parseRoot != null){
+//            this.editController.handleAnDep(this.parseRoot, "method");
+//        }
+//    }
 
-    /**
-     * handles the analyzing of dependencies of a field
-     * @param event
-     */
-    @FXML public void handleAnDepField(Event event){
-        if(this.parseRoot != null){
-            this.editController.handleAnDep(this.parseRoot, "field");
-        }
-    }
+//    /**
+//     * handles the analyzing of dependencies of a field
+//     * @param event
+//     */
+//    @FXML public void handleAnDepField(Event event){
+//        if(this.parseRoot != null){
+//            this.editController.handleAnDep(this.parseRoot, "field");
+//        }
+//    }
     
     /**
      * Handles the find and replace button action.

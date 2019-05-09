@@ -99,6 +99,10 @@ public class Parser
         PieceList pieceList = new PieceList(position);
         updateCurrentToken();
         while (currentToken.kind != EOF) {
+            if(currentToken.kind == SEQUENCES){
+                Sequences sequences = parseSequences();
+                pieceList.addElement(sequences);
+            }
             if(currentToken.kind == VERSE){
                 Verse verse = parseVerse();
                 pieceList.addElement(verse);
@@ -113,11 +117,38 @@ public class Parser
             }
             updateCurrentToken();
         }
-
-
         return new Piece(position, name, pieceList);
     }
 
+    /**
+     * <Sequences> :: SEQUENCE { <SequencesList> }
+     * <SequencesList> :: = SEQ <Identifier> <MemberList>
+     */
+    private Sequences parseSequences() {
+        int position = currentToken.position;
+        SequencesList sequencesList = new SequencesList(position);
+        this.checkToken(SEQUENCES, "When parsing sequences, sequences expected");
+        while(currentToken.kind != RCURLY) {
+            sequencesList.addElement(parseSequence());
+        }
+        return new Sequences(position, sequencesList);
+    }
+
+    private Sequence parseSequence() {
+        int position = currentToken.position;
+        String name = currentToken.spelling;
+        NotesList notesList = new NotesList(position);
+        this.checkToken(SEQ, "When parsing seq, seq expected");
+        while (currentToken.kind != RBRACKET){
+            if (currentToken.kind == EOF){
+                this.registerError("When parsing seq, right bracket expected",
+                        "Missing Right Bracket");
+            }
+            notesList.addElement(parseMember());
+        }
+        updateCurrentToken();
+        return new Sequence(position, name, notesList);
+    }
 
     /*
      * <Verse> ::= VERSE <Identifier> { <MemberList> }
@@ -243,8 +274,38 @@ public class Parser
             updateCurrentToken();
             return new Rest(position, length);
         }
-        if(currentToken.kind == CHORD){
-
+        if(currentToken.kind == SEQOBJ){
+            updateCurrentToken();
+            String repeats = "";
+            String instrument = "";
+            String voice = "";
+            String name = length.substring(0, length.indexOf('('));
+            System.out.println(name);
+            length = length.substring(length.indexOf('(') + 1);
+            System.out.println("Length" + length);
+            if(length.contains(",")) {
+                String[] seqInfo = length.split(",");
+                System.out.println(seqInfo);
+                if(seqInfo.length > 0){
+                    repeats = seqInfo[0];
+                }
+                else{
+                    this.registerError("Sequence requires at least a number of repeats", "Invalid Sequence Call");
+                }
+                if(seqInfo.length > 1){
+                    instrument = seqInfo[1];
+                }
+                if(seqInfo.length > 2){
+                    voice = seqInfo[2];
+                }
+                if(seqInfo.length > 3){
+                    this.registerError("Sequence can have no more than 3 parameters: Repeats, Instrument, Voice", "Invalid Sequence Call");
+                }
+            }
+            else{
+                repeats = length;
+            }
+            return new SeqObj(position, name, repeats, instrument, voice);
         }
         else {
             this.registerError("When parsing field, \"(\", \"=\", or \";\" expected.",
@@ -324,7 +385,7 @@ public class Parser
 //            System.out.println("Please Provide Test Files");
 //            return;
 //        }
-        String[] filenames = new String[]{"test1.txt"};
+        String[] filenames = new String[]{"test3.txt"};
         for(String filename: filenames) {
             ErrorHandler errorHandler = new ErrorHandler();
             Parser parser = new Parser(errorHandler);

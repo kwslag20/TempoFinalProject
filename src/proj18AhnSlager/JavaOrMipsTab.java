@@ -54,7 +54,6 @@ public class JavaOrMipsTab extends Tab {
             codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
         }
         else if(extension.equals(".mus") || extension.equals(".txt")){
-            System.out.println("hello");
             codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
         }
         else{
