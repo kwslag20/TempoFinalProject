@@ -1,4 +1,25 @@
 piece MyNewSong{
+// this is a test
+/**
+verse first{
+		righthand{
+		    sn e 5;
+		    sn d# 5;
+		    sn e 5;
+		    sn d# 5;
+		    sn e 5;
+		    sn b 4;
+		    sn d 5;
+		    sn c 5;
+			}
+		lefthand{
+			ir;
+			ir;
+			ir;
+			ir;
+			}
+		}
+**/
 	verse first{
 		righthand{
 		    sn e 5;

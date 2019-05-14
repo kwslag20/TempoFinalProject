@@ -163,6 +163,7 @@ public class Scanner
                 case (SourceFile.eof):
                     return new Token(Token.Kind.EOF,
                             currentChar.toString(), this.sourceFile.getCurrentLineNumber());
+                case ('/'): return this.getCommentToken();
                 case ('g'):
                 case ('f'):
                 case ('e'):
@@ -456,6 +457,87 @@ public class Scanner
      */
     public List<Error> getErrors() {
         return this.errorHandler.getErrorList();
+    }
+
+
+    /**
+     *
+     * @return a token of Kind.COMMENT, Kind.MULDIV or Kind.ERROR
+     */
+    private Token getCommentToken() {
+        Character prevChar = currentChar;
+        currentChar = this.sourceFile.getNextChar();
+        switch(currentChar) {
+
+            case('/'): return this.getSingleLineCommentToken();
+
+            default: return this.getBlockCommentToken(prevChar);
+
+        }
+    }
+
+    /**
+     * Creates and returns a single line comment token
+     * @return a token of Kind.COMMENT
+     */
+    private Token getSingleLineCommentToken() {
+
+        String commentBody = "//";
+        currentChar = this.sourceFile.getNextChar();    // move to first char after //
+        while (!( currentChar.equals(SourceFile.eol) ||
+                currentChar.equals(SourceFile.eof) )) {
+
+            commentBody = commentBody.concat(currentChar.toString());
+            currentChar = this.sourceFile.getNextChar();
+        }
+
+        if(currentChar.equals(SourceFile.eol)){currentChar = sourceFile.getNextChar();}
+
+        return new Token(Token.Kind.COMMENT, commentBody,
+                this.sourceFile.getCurrentLineNumber());
+    }
+
+    /**
+     * Creates and returns a multi-line comment token
+     * @return a token of Kind.COMMENT or Kind.ERROR if it was unclosed
+     */
+    private Token getBlockCommentToken(Character prevChar) {
+
+        String commentBody = "/*";
+
+        // move prevChar and currentChar past the "/*"
+        for (int i = 0; i < 2; i++) {
+            prevChar = currentChar;
+            currentChar = this.sourceFile.getNextChar();
+        }
+
+        boolean commentTerminated = false;
+
+        while (!commentTerminated) {
+
+            commentBody = commentBody.concat(prevChar.toString());
+            if (currentChar.equals(SourceFile.eof)) {
+
+                this.errorHandler.register(Error.Kind.LEX_ERROR,
+                        this.sourceFile.getFilename(),
+                        this.sourceFile.getCurrentLineNumber(),
+                        "UNTERMINATED BLOCK COMMENT");
+
+                return new Token(Token.Kind.ERROR,
+                        commentBody.concat(currentChar.toString()),
+                        this.sourceFile.getCurrentLineNumber());
+            }
+
+            else if (prevChar.equals('*') && currentChar.equals('/'))
+                commentTerminated = true;
+
+
+            prevChar = currentChar;
+            currentChar = this.sourceFile.getNextChar();
+        }
+        currentChar = sourceFile.getNextChar();
+        return new Token(Token.Kind.COMMENT, commentBody.concat(prevChar.toString()),
+                this.sourceFile.getCurrentLineNumber());
     }
 
     /**

@@ -60,7 +60,6 @@ public class MasterController {
     @FXML private TextField findTextEntry;
     @FXML private Button findPrevBtn;
     @FXML private Button findNextBtn;
-    @FXML private TextField replaceTextEntry;
     @FXML private Menu prefMenu;
     @FXML private Button scanButton;
     @FXML private Button parseButton;
@@ -78,7 +77,7 @@ public class MasterController {
     public void initialize(){
 
         // initializes necessary controllers
-        editController = new EditController(javaTabPane, findTextEntry, findPrevBtn, findNextBtn, replaceTextEntry);
+        editController = new EditController(javaTabPane, findTextEntry, findPrevBtn, findNextBtn);
         this.fileController = new FileController(vBox,javaTabPane);
         this.toolBarController = new ToolBarController(console, fileController);
         this.errorHandler = new ErrorHandler();
@@ -309,14 +308,7 @@ public class MasterController {
 //        }
 //    }
     
-    /**
-     * Handles the find and replace button action.
-     * Opens a find and replace popup window.
-     */
-    @FXML
-    private void handleFindAndReplace() {
-        editController.handleFindAndReplace();
-    }
+
 
     /**
      * Handler for the "About" menu item in the "File" menu.
@@ -541,12 +533,6 @@ public class MasterController {
     }
 
     /**
-     * Calls handleReplaceText() of the editController
-     */
-    @FXML
-    public void handleReplaceText() {editController.handleReplaceText(); }
-
-    /**
      * Focuses on the Find Text Entry Box
      */
     @FXML
@@ -554,11 +540,4 @@ public class MasterController {
         this.findTextEntry.requestFocus();
     }
 
-    /**
-     * Focuses on the Replace Text Extry Box
-     */
-    @FXML
-    public void handleFocusOnReplaceTextEntry() {
-        this.replaceTextEntry.requestFocus();
-    }
 }

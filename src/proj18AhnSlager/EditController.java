@@ -46,7 +46,7 @@ public class EditController {
     private int curMatchHighlightedIdx;
     private Button prevMatchBtn;
     private Button nextMatchBtn;
-    private TextField replaceTextEntry;
+
 
     private String[] lines;
     private int caretIdxStart;
@@ -58,13 +58,13 @@ public class EditController {
      * the current tab to null
      */
     public EditController(TabPane tabPane, TextField findTextEntry, Button prevMatchBtn,
-                          Button nextMatchBtn, TextField replaceTextEntry) {
+                          Button nextMatchBtn) {
         this.tabPane = tabPane;
         this.findTextEntry = findTextEntry;
         this.matchStartingIndices = new ArrayList<>();
         this.prevMatchBtn = prevMatchBtn;
         this.nextMatchBtn = nextMatchBtn;
-        this.replaceTextEntry = replaceTextEntry;
+
         this.resetFindMatchingStringData();
     }
 
@@ -534,39 +534,6 @@ public class EditController {
     private void setMatchNavButtonsClickable(boolean enable) {
         this.prevMatchBtn.setDisable(!enable);
         this.nextMatchBtn.setDisable(!enable);
-    }
-
-    /**
-     * if there is a highlighted match, this will replace it with the text from the
-     * Replace text entry
-     */
-    public void handleReplaceText() {
-
-
-        // check that there were matches & the file has not been changed since last search
-        if (this.canHighlightMatches()) {
-
-            String textToReplaceMatch = this.replaceTextEntry.getText();
-
-            // check that there is some text in the replace text entry
-            if (textToReplaceMatch.length() == 0) {
-
-                // get idx of currently highlighted match
-                int curHighlightedMatchStartingIdx =
-                        this.matchStartingIndices.get(this.curMatchHighlightedIdx);
-
-
-                // replace current highlighted mach with the replaced text
-                getCurJavaCodeArea().replaceText(curHighlightedMatchStartingIdx,
-                        curHighlightedMatchStartingIdx+this.curMatchLength,
-                        textToReplaceMatch);
-                /* call find method to update the indices of the found matches
-                 * to account for the changed text */
-                this.handleFindText(false);
-                return;
-            }
-            showAlert("ENTER REPLACEMENT TEXT");
-        }
     }
 
     /**

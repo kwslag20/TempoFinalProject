@@ -45,6 +45,8 @@ import proj18AhnSlager.bantam.util.ErrorHandler;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * The <tt>MipsCodeGenerator</tt> class generates mips assembly code
@@ -107,7 +109,31 @@ public class MusicCodeGenerator {
         genEpilog();
     }
 
+    private String getAuthor(){
+        WriterVisitor authorName = new WriterVisitor();
+        authorName.getAuthorName(piece);
+        return authorName.toString();
+    }
+    /**
+     * Gets the current date and time at which the file is generated
+     * @return
+     */
+    private String getDate(){
+        String curDate;
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+        Date date = new Date(System.currentTimeMillis());
+        curDate = formatter.format(date);
+        return curDate;
+    }
+
+    /**
+     *
+     * @param name
+     */
     private void genProlog(String name){
+        out.println("/** File Generated from Tempo file: " + name + ".mus");
+        out.println("\n Author: " + getAuthor());
+        out.println("\n Date Generated: " + getDate() + "**/");
         out.println("import org.jfugue.player.*;");
         out.println("import org.jfugue.theory.*;");
         out.println("import org.jfugue.pattern.*;");
