@@ -1,7 +1,7 @@
-piece ScanTest{
+piece ParserTesting{
 	verse first{
-	    righthand{  
-            hn e 4;
+	    righthand{
+            hn a 3;
 	    	}
 	    lefthand{
             hn e 4;

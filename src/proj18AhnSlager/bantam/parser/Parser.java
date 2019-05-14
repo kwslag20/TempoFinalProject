@@ -72,6 +72,7 @@ public class Parser
     private Token currentToken; // the lookahead token
     private ErrorHandler errorHandler;
     private String filename;
+    private Boolean verseParsed;
 
     // constructor
     public Parser(ErrorHandler errorHandler) {
@@ -86,6 +87,7 @@ public class Parser
     public Piece parse(String filename) {
         this.scanner=new Scanner(filename, this.errorHandler);
         this.filename=filename;
+        this.verseParsed = false;
         return this.parsePiece();
     }
 
@@ -96,6 +98,9 @@ public class Parser
         updateCurrentToken();
         int position = currentToken.position;
         String name = currentToken.spelling;
+        if(name.length() == 0){
+            this.registerError("Missing piece name or piece declaration", "Invalid Piece Declaration");
+        }
         PieceList pieceList = new PieceList(position);
         updateCurrentToken();
         while (currentToken.kind != EOF) {
@@ -104,6 +109,7 @@ public class Parser
                 pieceList.addElement(sequences);
             }
             if(currentToken.kind == VERSE){
+                this.verseParsed = true;
                 Verse verse = parseVerse();
                 pieceList.addElement(verse);
             }
@@ -112,8 +118,13 @@ public class Parser
                 pieceList.addElement(chorus);
             }
             if(currentToken.kind == LAYOUT){
-                Layout layout = parseLayout();
-                pieceList.addElement(layout);
+                if(!verseParsed){
+                    this.errorHandler.register(Error.Kind.PARSE_ERROR, this.filename, currentToken.position, "Parsed Layout before Verse");
+                }
+                else {
+                    Layout layout = parseLayout();
+                    pieceList.addElement(layout);
+                }
             }
             updateCurrentToken();
         }
@@ -268,21 +279,28 @@ public class Parser
             String pitch = parsePitch();
             int octave = parseOctave();
             updateCurrentToken();
+            if(currentToken.kind != SEMICOLON){
+                this.registerError("Semicolon required after note declaration", "Invalid Note Declaration");
+            }
             return new Note(position, length, pitch, octave);
         }
         if(currentToken.kind == REST){
             updateCurrentToken();
+            if(currentToken.kind != SEMICOLON){
+                this.registerError("Semicolon required after rest declaration", "Invalid Rest Declaration");
+            }
             return new Rest(position, length);
         }
         if(currentToken.kind == SEQOBJ){
             updateCurrentToken();
+            if(currentToken.kind != SEMICOLON){
+                this.registerError("Semicolon required after seqobj declaration", "Invalid SeqObj Declaration");
+            }
             String repeats = "";
             String instrument = "";
             String voice = "";
             String name = length.substring(0, length.indexOf('('));
-            System.out.println(name);
             length = length.substring(length.indexOf('(') + 1);
-            System.out.println("Length" + length);
             if(length.contains(",")) {
                 String[] seqInfo = length.split(",");
                 System.out.println(seqInfo);
@@ -308,7 +326,7 @@ public class Parser
             return new SeqObj(position, name, repeats, instrument, voice);
         }
         else {
-            this.registerError("When parsing field, \"(\", \"=\", or \";\" expected.",
+            this.registerError("Improper note definition, must be '[whqistx]n [abcdefg][\\s#] [1234567];'",
                     "Unexpected Token");
         }
         return null;
@@ -346,6 +364,9 @@ public class Parser
      */
     private void updateCurrentToken(){
         this.currentToken = scanner.scan();
+        if(this.currentToken.kind == ERROR){
+            registerError("Scanner Error, parsing cannot continue " + this.currentToken.spelling + " on " + this.currentToken.position, "Scanning Unsuccessful" );
+        }
         while(this.currentToken.kind == COMMENT || this.currentToken.kind == NOTWORD ||
                 this.currentToken.kind == SEMICOLON || this.currentToken.kind == RPAREN
         || this.currentToken.kind == COLON || this.currentToken.kind == COMMA){
@@ -385,7 +406,7 @@ public class Parser
 //            System.out.println("Please Provide Test Files");
 //            return;
 //        }
-        String[] filenames = new String[]{"test3.txt"};
+        String[] filenames = new String[]{"test2.txt"};
         for(String filename: filenames) {
             ErrorHandler errorHandler = new ErrorHandler();
             Parser parser = new Parser(errorHandler);

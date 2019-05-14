@@ -220,7 +220,8 @@ public class Scanner
                     if (tempToken.kind != Token.Kind.NOTWORD) {
                         return tempToken;
                     } else {
-                        errorHandler.register(Error.Kind.LEX_ERROR, "Invalid usage of " + invalidString);
+                        errorHandler.register(Error.Kind.LEX_ERROR, "Invalid usage of " + invalidString + " on line "
+                                + this.sourceFile.getCurrentLineNumber()+". Missing keyword or improper keyword");
                         return new Token(Token.Kind.ERROR, "Invalid Usage of " + invalidString, this.sourceFile.getCurrentLineNumber());
                     }
 
@@ -404,11 +405,13 @@ public class Scanner
                     return new Token(Token.Kind.VERSE, verseName, this.sourceFile.getCurrentLineNumber());
 
                 case ("righthand"):
+                    if(!checkCurly()) return new Token(Token.Kind.ERROR, "Missing {", this.sourceFile.getCurrentLineNumber());
                     currentChar = this.sourceFile.getNextChar();
                     curString = "";
                     return new Token(Token.Kind.RIGHTHAND, "righthand", this.sourceFile.getCurrentLineNumber());
 
                 case ("lefthand"):
+                    if(!checkCurly()) return new Token(Token.Kind.ERROR, "Missing {", this.sourceFile.getCurrentLineNumber());
                     currentChar = this.sourceFile.getNextChar();
                     curString = "";
                     return new Token(Token.Kind.LEFTHAND, "lefthand", this.sourceFile.getCurrentLineNumber());
@@ -431,6 +434,16 @@ public class Scanner
                     this.sourceFile.getCurrentLineNumber());
     }
 
+    private Boolean checkCurly(){
+        if(this.currentChar != '{'){
+            this.errorHandler.register(Error.Kind.PARSE_ERROR, "Missing {, cannot parse");
+            return false;
+        }
+        else{
+            return true;
+        }
+    }
+
     /**
      * Returns an integer constant token, where the integer
      * value does not exceed (2^31 - 1)
@@ -443,12 +456,6 @@ public class Scanner
             return new Token(Token.Kind.OCTAVE, tempChar, this.sourceFile.getCurrentLineNumber());
         }
         else return new Token(Token.Kind.INTCONST, tempChar, this.sourceFile.getCurrentLineNumber());
-    }
-
-
-    public Token createErrorToken(String spelling){
-        return new Token(Token.Kind.ERROR, spelling,
-                this.sourceFile.getCurrentLineNumber());
     }
 
     /**
@@ -553,7 +560,7 @@ public class Scanner
                 ErrorHandler errorHandler = new ErrorHandler();
                 try {
 
-                    scanner = new Scanner("test3.txt", errorHandler);
+                    scanner = new Scanner("test2.txt", errorHandler);
 
                 }
                 catch(CompilationException e){

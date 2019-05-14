@@ -20,7 +20,6 @@ verse first{
 			}
 		}
 **/
-	verse first{
 		righthand{
 		    sn e 5;
 		    sn d# 5;

@@ -97,7 +97,6 @@ public class ErrorHandler {
         // then line number.  filenames are kept in the order that they are seen
         // (i.e., an error is registered with that filename).  line numbers are
         // ordered numerically.
-
         int i = 0;
 
         if (e.getFilename() != null) {
