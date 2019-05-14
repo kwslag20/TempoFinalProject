@@ -1,6 +1,4 @@
 piece MyNewSong{
-// this is a test
-/**
 verse first{
 		righthand{
 		    sn e 5;
@@ -19,7 +17,6 @@ verse first{
 			ir;
 			}
 		}
-**/
 		righthand{
 		    sn e 5;
 		    sn d# 5;

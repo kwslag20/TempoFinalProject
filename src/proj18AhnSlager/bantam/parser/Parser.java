@@ -279,23 +279,24 @@ public class Parser
             String pitch = parsePitch();
             int octave = parseOctave();
             updateCurrentToken();
-            if(currentToken.kind != SEMICOLON){
-                this.registerError("Semicolon required after note declaration", "Invalid Note Declaration");
-            }
+//            if(currentToken.kind != SEMICOLON){
+//                System.out.println(currentToken.kind);
+//                this.registerError("Semicolon required after note declaration", "Invalid Note Declaration");
+//            }
             return new Note(position, length, pitch, octave);
         }
         if(currentToken.kind == REST){
             updateCurrentToken();
-            if(currentToken.kind != SEMICOLON){
-                this.registerError("Semicolon required after rest declaration", "Invalid Rest Declaration");
-            }
+//            if(currentToken.kind != SEMICOLON){
+//                this.registerError("Semicolon required after rest declaration", "Invalid Rest Declaration");
+//            }
             return new Rest(position, length);
         }
         if(currentToken.kind == SEQOBJ){
             updateCurrentToken();
-            if(currentToken.kind != SEMICOLON){
-                this.registerError("Semicolon required after seqobj declaration", "Invalid SeqObj Declaration");
-            }
+//            if(currentToken.kind != SEMICOLON){
+//                this.registerError("Semicolon required after seqobj declaration", "Invalid SeqObj Declaration");
+//            }
             String repeats = "";
             String instrument = "";
             String voice = "";
@@ -406,7 +407,7 @@ public class Parser
 //            System.out.println("Please Provide Test Files");
 //            return;
 //        }
-        String[] filenames = new String[]{"test2.txt"};
+        String[] filenames = new String[]{"test1.txt"};
         for(String filename: filenames) {
             ErrorHandler errorHandler = new ErrorHandler();
             Parser parser = new Parser(errorHandler);

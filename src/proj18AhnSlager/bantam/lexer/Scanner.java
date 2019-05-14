@@ -560,7 +560,7 @@ public class Scanner
                 ErrorHandler errorHandler = new ErrorHandler();
                 try {
 
-                    scanner = new Scanner("test2.txt", errorHandler);
+                    scanner = new Scanner("test1.txt", errorHandler);
 
                 }
                 catch(CompilationException e){
