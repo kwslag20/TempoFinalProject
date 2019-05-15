@@ -156,7 +156,7 @@ public class MusicCodeGenerator {
 
     /*
     Main Function used for testing purposes, executes parsing and analyzing before passing the results of those
-    (Program and ClassTreeNode) to the generate method of the class. Catches problems with parsing, analyzing,
+    (Piece) to the generate method of the class. Catches problems with parsing, analyzing,
     or compiling the mips code
      */
     public static void main(String[] args) {
@@ -168,25 +168,8 @@ public class MusicCodeGenerator {
             MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
             musicCodeGenerator.generate(piece, piece.getName().replace(" ", "") + ".java");
         }
-        catch (CompilationException ex){
+        catch (CompilationException ex) {
             System.out.print(ex);
         }
-
-//        for (String fileNames : args) {
-//            try {
-//                errorHandler.clear();
-//                Program program = parser.parse(fileNames);
-//                ClassTreeNode classTreeNode = analyzer.analyze(program);
-//                MipsCodeGenerator mipsCodeGenerator = new MipsCodeGenerator(errorHandler, false, false);
-//                mipsCodeGenerator.generate(classTreeNode, fileNames.replace(".btm", ".asm"), program);
-//                System.out.println("MIPS code generation was successful.");
-//            } catch (CompilationException ex) {
-//                System.out.println("MIPS code generation was not successful:");
-//                List<Error> errorList = errorHandler.getErrorList();
-//                for (Error error : errorList) {
-//                    System.out.println(" ,  " + error.toString());
-//                }
-//            }
-//        }
     }
 }

@@ -108,26 +108,38 @@ public class Scanner
                 tempChar = currentChar;
             }
         }
-
+        //This loop is entered when inside the layout, as things are handled very differently in the layout
         if(isLayout){
             while(layoutCheck != layoutArray.length - 1){
                 String layoutItem = layoutArray[layoutCheck];
-                if(layoutItem.contains("instrument")){
-                    layoutItem.replace("instrument: ", "");
+                //checks for the different types of layouts
+                //If a user accidentally adds letters infront of the type, it will not generate an error and the final product will not be affected
+                if(layoutItem.contains("instrument:")){
+                    layoutItem = layoutItem.substring(layoutItem.lastIndexOf(':'));
+                    layoutItem = layoutItem.replace(" ", "");
+                    layoutArray[layoutCheck] = "";
                     layoutCheck++;
                     return new Token(Token.Kind.INSTRUMENT, layoutItem, this.sourceFile.getCurrentLineNumber());
                 }
-                else if(layoutItem.contains("writer")){
-                    layoutItem.replace("writer: ", "");
+                else if(layoutItem.contains("writer:")){
+                    layoutItem = layoutItem.substring(layoutItem.lastIndexOf(':'));
+                    layoutItem = layoutItem.replace(" ", "");
+                    layoutArray[layoutCheck] = "";
                     layoutCheck++;
                     return new Token(Token.Kind.WRITER, layoutItem, this.sourceFile.getCurrentLineNumber());
                 }
-                else if(layoutItem.contains("tempo")){
-                    layoutItem.replace("tempo: ", "");
+                else if(layoutItem.contains("tempo:")){
+                    layoutItem = layoutItem.substring(layoutItem.lastIndexOf(':'));
+                    layoutItem = layoutItem.replace(" ", "");
+                    layoutArray[layoutCheck] = "";
                     layoutCheck++;
                     return new Token(Token.Kind.TEMPO, layoutItem, this.sourceFile.getCurrentLineNumber());
                 }
-                else {
+                else{
+                    //Check for orderobjs being declared
+                    //Manual states that order objects cannot be declared as a substring of another ie "first" and "firstsecond" not allowed
+                    //For some reason we were unable to remove the whitespace from our layoutItem so we were forced to use contains here
+                    //which obviously allows erroneous spellings should the contain a substring
                     for (String section : sections) {
                         if (layoutItem.contains(section)) {
                             layoutCheck++;
@@ -135,35 +147,38 @@ public class Scanner
                         }
                     }
                 }
-                loopCount++;
-                if(loopCount > layoutArray.length - 1){
-                    layoutCheck = layoutArray.length - 1;
-                    errorHandler.register(Error.Kind.PARSE_ERROR, "Improper Layout Token Found");
-                    return new Token(Token.Kind.ERROR, "Improper Layout Token Found", this.sourceFile.getCurrentLineNumber());
-                }
+                //Determines whether or not a layoutItem that is disallowed is in the array
+                layoutCheck = layoutArray.length - 1;
+                errorHandler.register(Error.Kind.PARSE_ERROR, "Improper Layout Token(s) Found: " + layoutItem);
+                return new Token(Token.Kind.ERROR, "Improper Layout Token(s) Found: " + layoutItem, this.sourceFile.getCurrentLineNumber());
             }
             isLayout = false;
             return new Token(Token.Kind.NOTWORD, "nothing", this.sourceFile.getCurrentLineNumber());
         }
+        //Similar to layout, if we are scanning in sequences things are done differently
         else if(isSequences){
             String sequenceName = "";
+            //collects the sequence name
             while (currentChar != '[' && currentChar != '}') {
                 sequenceName += currentChar;
                 currentChar = this.sourceFile.getNextChar();
             }
             isSequences = false;
             if(sequenceName == ""){
-                return new Token(Token.Kind.NOTWORD, sequenceName, this.sourceFile.getCurrentLineNumber());
+                this.errorHandler.register(Error.Kind.LEX_ERROR, "Must include name with sequence");
+                return new Token(Token.Kind.ERROR, sequenceName, this.sourceFile.getCurrentLineNumber());
             }
             seqList.add(sequenceName);
             return new Token(Token.Kind.SEQ, sequenceName, this.sourceFile.getCurrentLineNumber());
         }
         else {
+            //Regular case switching for verses and choruses
             switch (tempChar) {
                 case (SourceFile.eof):
                     return new Token(Token.Kind.EOF,
                             currentChar.toString(), this.sourceFile.getCurrentLineNumber());
                 case ('/'): return this.getCommentToken();
+                //case statements for finding pitches
                 case ('g'):
                 case ('f'):
                 case ('e'):
@@ -182,6 +197,7 @@ public class Scanner
                     } else {
                         return tempToken;
                     }
+                //case statements for finding note lengths (Notes) or rest lengths (Rests)
                 case ('w'):
                 case ('h'):
                 case ('q'):
@@ -191,20 +207,22 @@ public class Scanner
                 case ('x'):
                     tempToken = checkCurString(tempChar);
                     currentChar = this.sourceFile.getNextChar();
+                    //a check to make sure that it is not part of a keyword
                     if (currentChar.equals('n') && tempToken.kind == Token.Kind.NOTWORD) {
                         currentChar = sourceFile.getNextChar();
                         isNote = true;
                         curString = "";
                         return new Token(Token.Kind.NOTE, tempChar.toString() + 'n', this.sourceFile.getCurrentLineNumber());
                     }
+                    //same thing but for rests
                     else if (currentChar.equals('r') && tempToken.kind == Token.Kind.NOTWORD) {
                         currentChar = sourceFile.getNextChar();
                         curString = "";
                         return new Token(Token.Kind.REST, tempChar.toString() + 'r', this.sourceFile.getCurrentLineNumber());
                     }
+                    //if no conditions are met return the checkCurString
                     else{
                         return tempToken;
-
                     }
 
 
@@ -217,10 +235,13 @@ public class Scanner
                     String invalidString = curString;
                     curString = "";
                     isNote = false;
+                    //A curly bracket can never follow anything other than a keyword so
+                    //if it isnt a keyword the checkcurstring will return notword
                     if (tempToken.kind != Token.Kind.NOTWORD) {
                         return tempToken;
                     } else {
-                        errorHandler.register(Error.Kind.LEX_ERROR, "Invalid usage of " + invalidString + " on line "
+                        //handle the error of invalid usage
+                        errorHandler.register(Error.Kind.PARSE_ERROR, "Invalid usage of " + invalidString + " on line "
                                 + this.sourceFile.getCurrentLineNumber()+". Missing keyword or improper keyword");
                         return new Token(Token.Kind.ERROR, "Invalid Usage of " + invalidString, this.sourceFile.getCurrentLineNumber());
                     }
@@ -238,10 +259,11 @@ public class Scanner
                     currentChar = sourceFile.getNextChar();
                     String invalidString2 = curString;
                     curString = "";
+                    //similar to left curly this cannot occur unless a keyword has been entered
                     if (tempToken.kind != Token.Kind.NOTWORD) {
                         return tempToken;
                     } else {
-                        errorHandler.register(Error.Kind.LEX_ERROR, "Invalid usage of " + invalidString2);
+                        errorHandler.register(Error.Kind.PARSE_ERROR, "Invalid usage of " + invalidString2);
                         return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
                     }
 
@@ -268,6 +290,7 @@ public class Scanner
 
                 case (';'):
                     currentChar = sourceFile.getNextChar();
+                    //current string is set to nothing in the following as a keyword cannot contain a semicolon etc
                     curString = "";
                     isNote = false;
                     return new Token(Token.Kind.SEMICOLON,

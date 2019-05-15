@@ -110,9 +110,8 @@ public class ToolBarController {
         List<String> processBuilderArgs = new ArrayList<>();
         processBuilderArgs.add("javac");
         processBuilderArgs.add("-cp");
-        processBuilderArgs.add(".:/Users/KevinAhn/Desktop/CS461/project18AhnSlager/src/proj18AhnSlager/resources/jfugue-5.0.9.jar");
+        processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlager/bantam/util/jfugue-5.0.9.jar");
         processBuilderArgs.add(root.getName().replace(" ", "")+".java");
-        System.out.println(processBuilderArgs);
         ProcessBuilder pb = new ProcessBuilder(processBuilderArgs);
         CompileOrRunTask compileTask = new CompileOrRunTask(this.console, pb);
         this.curFutureTask = new FutureTask<Boolean>(compileTask);
@@ -146,6 +145,7 @@ public class ToolBarController {
 
         try {
             Piece root = this.parser.parse(fileName);
+
             MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
             musicCodeGenerator.generate(root, root.getName().replace(" ", "") + ".java");
             Platform.runLater(() -> {
@@ -157,7 +157,7 @@ public class ToolBarController {
             List<String> processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
             processBuilderArgs.add("-cp");
-            processBuilderArgs.add(".:/Users/KevinAhn/Desktop/CS461/project18AhnSlager/src/proj18AhnSlager/resources/jfugue-5.0.9.jar");
+            processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlager/bantam/util/jfugue-5.0.9.jar");
             processBuilderArgs.add(root.getName().replace(" ", "")+".java");
             //processBuilderArgs.add(fileName);
             ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);

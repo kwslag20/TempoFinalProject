@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.awt.Desktop;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import proj18AhnSlager.bantam.util.CompilationException;
@@ -163,10 +164,15 @@ public class MasterController {
     @FXML
     public void handleParse(Event event){
         this.console.clear();
+        List<Error> parsingErrors = new ArrayList<>();
         try {
             this.fileController.handleScanAndParse(event);
+            parsingErrors = fileController.getParsingErrors();
         } catch (CompilationException e) { // catches a scanning error and does not allow piece to be parsed
-            this.console.writeLine("Error Found while scanning: " + e.toString() + "\n", "ERROR");
+            this.console.writeLine("Error Found while scanning: " + e.getMessage() + "\n", "ERROR");
+            for(Error error: parsingErrors){
+                this.console.writeLine(error.toString(), "ERROR");
+            }
             return;
         }
     }

@@ -173,17 +173,36 @@ public class MusicCodeGenVisitor extends Visitor {
         return null;
     }
 
+    /**
+     * Visit a sequences node
+     * NOTE: this is different from the sequence node, as this refers to the whole sequences section, like layout
+     *
+     * @param node the sequences node
+     * @return result of the visit
+     */
     public Object visit(Sequences node){
         this.inSequence = true;
         node.getSequencesList().accept(this);
         return null;
     }
 
+    /**
+     * Visit a sequencelist node
+     *
+     * @param node the sequencelist node
+     * @return result of the visit
+     */
     public Object visit(SequencesList node){
         for(ASTNode seqs: node) seqs.accept(this);
         return null;
     }
 
+    /**
+     * Visit a sequence node
+     *
+     * @param node the sequence node
+     * @return result of the visit
+     */
     public Object visit(Sequence node){
         this.currentSequencePatter = "";
         node.getNotesList().accept(this);
@@ -192,14 +211,24 @@ public class MusicCodeGenVisitor extends Visitor {
         return null;
     }
 
+    /**
+     * Visit a SeqObj node
+     * NOTE: this is a call to a sequence that appears in a verse or a chorus
+     *
+     * @param node the seqobj node
+     * @return result of the visit
+     */
     public Object visit(SeqObj node){
+        //This is how instruments are added into pattern
         if(node.getInstrument().length() > 0){
             currentPattern += "I[" + node.getInstrument().toUpperCase().replace(" ", "") + "] ";
         }
+        //This code is not currently being used, but may be in the future
         if(node.getVoice().length() > 0){
             currentPattern += "V" + this.seqVoiceNum + " ";
             this.seqVoiceNum--;
         }
+        //confirms that the measure length is an integer
         try {
             for (int i = 0; i < Integer.parseInt(node.getRepeats()); i++) {
                 System.out.println(sequenceMap.get(node.getName()));

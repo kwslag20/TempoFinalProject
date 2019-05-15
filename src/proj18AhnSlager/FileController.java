@@ -371,7 +371,7 @@ public class FileController {
 
             }
             catch(CompilationException e){
-                System.out.print("oh no you dont");
+                System.out.println(e);
             }
 
             // section for SCAN ONLY
@@ -448,6 +448,11 @@ public class FileController {
     public List<Error> getScanningErrors() {
         if (this.scanner == null) return null;
         return this.scanner.getErrors();
+    }
+
+    public List<Error> getParsingErrors() {
+        if (this.parser == null) return null;
+        return this.parser.getParseErrors();
     }
 
     /**

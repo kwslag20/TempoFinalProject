@@ -1,7 +1,7 @@
 piece MyNewSong{
 verse first{
 		righthand{
-		    sn e 5;
+		    sn e 5e;
 		    sn d# 5;
 		    sn e 5;
 		    sn d# 5;
@@ -114,5 +114,6 @@ verse first{
 		second;
 	    first;
 	    third;
+	    eight;
 		}
 }
