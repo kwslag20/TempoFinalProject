@@ -383,7 +383,7 @@ public class Parser
     private void registerError(String errorMessage,String compilationMessage){
         this.errorHandler.register(Error.Kind.PARSE_ERROR,this.filename,
                 this.currentToken.position,errorMessage);
-        throw new CompilationException(compilationMessage);
+        throw new CompilationException(errorMessage + " on line " + this.currentToken.position);
     }
 
     /**
@@ -396,6 +396,10 @@ public class Parser
             this.registerError(errorMessage, "Unexpected Token");
         }
         updateCurrentToken();
+    }
+
+    public List<Error> getParseErrors(){
+        return errorHandler.getErrorList();
     }
 
     /**
