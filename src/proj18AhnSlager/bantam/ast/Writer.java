@@ -50,6 +50,7 @@ public class Writer extends Member {
     public Writer(int lineNum, String name) {
         super(lineNum);
         this.name = name;
+        System.out.println("visiting writer node");
     }
 
     /**

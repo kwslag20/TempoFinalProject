@@ -18,6 +18,7 @@ public class WriterVisitor extends Visitor {
      */
     public String getAuthorName(Piece piece){
         piece.accept(this);
+
         return authorName;
     }
 

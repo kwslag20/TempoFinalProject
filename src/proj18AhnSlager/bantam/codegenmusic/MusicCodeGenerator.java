@@ -102,17 +102,16 @@ public class MusicCodeGenerator {
         }
 
         genProlog(piece.getName());
-
         MusicCodeGenVisitor musicCodeGenVisitor = new MusicCodeGenVisitor(out);
         musicCodeGenVisitor.visit(piece);
-
         genEpilog();
     }
 
-    private String getAuthor(){
+    private String getAuthor(Piece piece){
+        String aName;
         WriterVisitor authorName = new WriterVisitor();
-        authorName.getAuthorName(piece);
-        return authorName.toString();
+        aName = authorName.getAuthorName(piece);
+        return aName;
     }
     /**
      * Gets the current date and time at which the file is generated
@@ -132,8 +131,8 @@ public class MusicCodeGenerator {
      */
     private void genProlog(String name){
         out.println("/** File Generated from Tempo file: " + name + ".mus");
-        out.println("\n Author: " + getAuthor());
-        out.println("\n Date Generated: " + getDate() + "**/");
+        //out.println("Author: " + getAuthor());
+        out.println("Date Generated: " + getDate() + " **/");
         out.println("import org.jfugue.player.*;");
         out.println("import org.jfugue.theory.*;");
         out.println("import org.jfugue.pattern.*;");
