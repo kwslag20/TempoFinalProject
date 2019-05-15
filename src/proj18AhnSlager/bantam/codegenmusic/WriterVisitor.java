@@ -18,8 +18,7 @@ public class WriterVisitor extends Visitor {
      */
     public String getAuthorName(Piece piece){
         piece.accept(this);
-
-        return authorName;
+        return this.authorName;
     }
 
     /**
@@ -29,7 +28,7 @@ public class WriterVisitor extends Visitor {
      */
     @Override
     public Object visit(Writer node){
-        authorName = node.getWriter();
+        this.authorName = node.getWriter();
         return null;
     }
 }

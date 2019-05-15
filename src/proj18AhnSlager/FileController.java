@@ -16,7 +16,6 @@ package proj18AhnSlager;
 
 import javafx.event.Event;
 
-import java.util.List;
 import java.util.Optional;
 import java.io.File;
 import java.io.BufferedWriter;
@@ -36,14 +35,6 @@ import javafx.stage.Window;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
-import proj18AhnSlager.bantam.ast.Piece;
-import proj18AhnSlager.bantam.lexer.Scanner;
-import proj18AhnSlager.bantam.lexer.Token;
-import proj18AhnSlager.bantam.parser.Parser;
-import proj18AhnSlager.bantam.treedrawer.Drawer;
-import proj18AhnSlager.bantam.util.CompilationException;
-import proj18AhnSlager.bantam.util.Error;
-import proj18AhnSlager.bantam.util.ErrorHandler;
 
 /**
  * This class contains the handlers for each of the menu options in the IDE.
@@ -67,11 +58,6 @@ public class FileController {
      * ContextMenuController handling context menu actions
      */
     private ContextMenuController contextMenuController;
-
-    private Scanner scanner;
-    private Parser parser;
-    private ErrorHandler errorHandler;
-    private ErrorHandler analysisErrors;
 
     /**
      * Constructor for the class. Intializes the save status
@@ -268,36 +254,6 @@ public class FileController {
     }
 
     /**
-     * Creates a pop-up window which allows the user to select whether they wish to save
-     * the current file or not.
-     * Used by handleClose.
-     *
-     * @param event the tab closing event that may be consumed
-     */
-    private String askSaveAndScan(Event event) {
-        ShowSaveOptionAlert saveOptions = new ShowSaveOptionAlert();
-        Optional<ButtonType> result = saveOptions.getUserSaveDecision();
-
-        if (result.isPresent()) {
-            if (result.get() == saveOptions.getCancelButton()) {
-                event.consume();
-                return "cancel";
-            }
-            else if (result.get() == saveOptions.getYesButton()){
-                boolean saved = this.handleSave();
-                if (saved) return "yes";
-                event.consume();
-                return null;
-            }
-            else {
-                event.consume();
-                return "no";
-            }
-        }
-        return null;
-    }
-
-    /**
      * Saves the text present in the current tab to a given filename.
      * Used by handleSave, handleSaveAs.
      *
@@ -328,105 +284,6 @@ public class FileController {
     }
 
     /**
-     * this method is called when the Scan button is pressed
-     * if the file is not saved it prompts the user to save before scanning
-     * it will scan the file and display the tokens in a new tab
-     * @param event press of the Scan button triggering the handleScan method
-     */
-    public void handleScan(Event event) {
-        scanOrParseHelper(event, "SCAN_ONLY" );
-    }
-
-    /**
-     * this method is called when the Scan&Parse button is pressed
-     * if the file is not saved it prompts the user to save before scanning
-     * it will scan and parse the file and display an AST if parse
-     * was successful
-     * @param event press of the Scan button triggering the handleScan method
-     */
-    public void handleScanAndParse (Event event) {
-        scanOrParseHelper(event, "SCAN_AND_PARSE" );
-    }
-
-    /**
-     * Assists with calling just scan or scanning and parsing the
-     * file
-     * @param event press of the Scan button triggering the handleScan and Parse method
-     * @param scanOrParse string "SCAN_ONLY" or "SCAN_AND_PARSE" or "PARSE_NO_TREE_DRAWN"
-     */
-    public Piece scanOrParseHelper(Event event, String scanOrParse ){
-
-        // Grabs the current tab open to be scanned or parsed
-        JavaOrMipsTab curTab = (JavaOrMipsTab) this.javaTabPane.getSelectionModel().getSelectedItem();
-        if (this.javaTabPane.tabIsSaved(curTab)) { // checks if the user needs to save the currently open tab
-            String filename = this.tabFilepathMap.get(curTab);
-            try {
-                this.errorHandler = new ErrorHandler();
-                if(scanOrParse.equals("SCAN_ONLY")) { // user clicked Scan Button
-                    this.scanner = new Scanner(filename, this.errorHandler);
-                }
-                else{
-                    this.parser = new Parser(this.errorHandler);
-                }
-
-            }
-            catch(CompilationException e){
-                System.out.println(e);
-            }
-
-            // section for SCAN ONLY
-            if(scanOrParse.equals("SCAN_ONLY")) {
-                this.handleNew(null);
-                curTab = (JavaOrMipsTab) this.javaTabPane.getSelectionModel().getSelectedItem();
-                Token nextToken; // the next token to be scanned
-                // loops until the end of file
-                while ( (nextToken = scanner.scan()).kind != Token.Kind.EOF ) {
-                    if(nextToken.kind != Token.Kind.NOTWORD) { // adds in the next token to the string
-                        curTab.getCodeArea().appendText(nextToken.toString() + "\n");
-                    }
-                }
-                return null;
-            }
-
-            // section for SCAN AND PARSE
-            else{
-                Piece root = this.parser.parse(filename);
-                if(scanOrParse.equals("SCAN_AND_PARSE")) { // user clicked Scan and Parse
-                    Drawer drawer = new Drawer(); // creates the drawer
-                    drawer.draw(filename, root);
-                }
-                return root;
-            }
-
-        }
-
-        // used for saving of tabs and user response
-        String saveStatus = this.askSaveAndScan(event);
-        if (saveStatus == "cancel") {
-            this.scanner = null;
-            return null;
-        }
-        else if (saveStatus == "no") {
-            if (tabFilepathMap.get(curTab) == null) {
-                return null;
-            }
-        }
-        else if (saveStatus == "yes"){
-            scanOrParseHelper(event, scanOrParse);
-        }
-        return null;
-    }
-
-    /**
-     * @return the list of errors from the most recent scan performed on a file
-     * return value will be null if there is no valid file open to scan
-     */
-    public List<Error> getErrors() {
-        if (this.scanner == null) return null;
-        return this.errorHandler.getErrorList();
-    }
-
-    /**
      * Executes process for when a tab is closed, which is to remove the filename and saveStatus at
      * the corresponding HashMaps, and then remove the Tab object from TabPane
      *
@@ -438,28 +295,5 @@ public class FileController {
         JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
         tabFilepathMap.remove(curTab);
         javaTabPane.removeTab(curTab);
-    }
-
-    /**
-     *
-     * @return the list of errors from the most recent scan performed on a file
-     * return value will be null if there is no valid file open to scan
-     */
-    public List<Error> getScanningErrors() {
-        if (this.scanner == null) return null;
-        return this.scanner.getErrors();
-    }
-
-    public List<Error> getParsingErrors() {
-        if (this.parser == null) return null;
-        return this.parser.getParseErrors();
-    }
-
-    /**
-     *
-     * @return the list of errors from the most recent analysis
-     */
-    public List<Error> getAnalysisErrors(){
-        return analysisErrors.getErrorList();
     }
 }

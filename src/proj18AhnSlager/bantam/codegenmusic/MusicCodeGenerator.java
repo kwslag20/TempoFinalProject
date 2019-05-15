@@ -107,6 +107,11 @@ public class MusicCodeGenerator {
         genEpilog();
     }
 
+    /**
+     * Method to grab the authors name for the header comment
+     * @param piece
+     * @return
+     */
     private String getAuthor(Piece piece){
         String aName;
         WriterVisitor authorName = new WriterVisitor();

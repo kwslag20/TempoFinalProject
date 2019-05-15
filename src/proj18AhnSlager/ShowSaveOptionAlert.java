@@ -6,7 +6,6 @@
  * Date: November 2, 2018
 */
 
-
 package proj18AhnSlager;
 
 import javafx.scene.control.Alert;

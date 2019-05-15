@@ -62,10 +62,7 @@ public class MasterController {
     @FXML private Button findPrevBtn;
     @FXML private Button findNextBtn;
     @FXML private Menu prefMenu;
-    @FXML private Button scanButton;
-    @FXML private Button parseButton;
     @FXML private Button stopButton;
-    @FXML private Button compileButton;
     @FXML private Button compileAndRunButton;
 
     private EditController editController;
@@ -90,10 +87,7 @@ public class MasterController {
         saveAsMenuItem.disableProperty().bind(listProperty.emptyProperty());
         closeMenuItem.disableProperty().bind(listProperty.emptyProperty());
 
-        compileButton.disableProperty().bind(listProperty.emptyProperty());
         stopButton.disableProperty().bind(listProperty.emptyProperty());
-        scanButton.disableProperty().bind(listProperty.emptyProperty());
-        parseButton.disableProperty().bind(listProperty.emptyProperty());
         compileAndRunButton.disableProperty().bind(listProperty.emptyProperty());
 
         this.setupContextMenuController();
@@ -112,14 +106,6 @@ public class MasterController {
         this.fileController.setContextMenuController(this.contextMenuController);
     }
 
-    /**
-     * Helper method that calls either Compile or Compile and Run
-     * @throws InterruptedException
-     */
-    @FXML
-    public void handleCompile() throws InterruptedException{
-            this.toolBarController.handleCompile();
-    }
 
     /**
      * Helper method that calls either Compile or Compile and Run
@@ -131,61 +117,12 @@ public class MasterController {
     }
 
     /**
-     * This method clears the console, tries to scan
-     * and will write any errors to the console
-     * @param event press of the Scan button triggering this method
-     */
-    @FXML
-    public void handleScan(Event event) {
-        this.console.clear();
-        try {
-            // calls the handleScan method in file controller
-            this.fileController.handleScan(event);
-        } catch (CompilationException e) { // catches a compilation exception
-            this.console.writeLine(e.toString() + "\n", "ERROR");
-            return;
-        }
-
-        // gets the list of scanning errors
-        List<Error> scanningErrors = fileController.getScanningErrors();
-        if (scanningErrors != null) {
-            // loops through the errors in scanningErrors and prints them to the console
-            for (Error e : scanningErrors)
-                this.console.writeLine(e.toString() + "\n", "ERROR");
-                this.console.writeLine(scanningErrors.size() + " illegal tokens were found.", "ERROR");
-        }
-    }
-
-    /**
-     * handles the parsing of a program, catches any compilationExceptions
-     * from scanning
-     * @param event
-     */
-    @FXML
-    public void handleParse(Event event){
-        this.console.clear();
-        List<Error> parsingErrors = new ArrayList<>();
-        try {
-            this.fileController.handleScanAndParse(event);
-            parsingErrors = fileController.getParsingErrors();
-        } catch (CompilationException e) { // catches a scanning error and does not allow piece to be parsed
-            this.console.writeLine("Error Found while scanning: " + e.getMessage() + "\n", "ERROR");
-            for(Error error: parsingErrors){
-                this.console.writeLine(error.toString(), "ERROR");
-            }
-            return;
-        }
-    }
-
-
-    /**
      * handles the stopping of a program
      */
     @FXML public void handleStop(){
         this.toolBarController.handleStopButtonAction();
         this.toolBarController = new ToolBarController(this.console, this.fileController);
     }
-
 
     /**
      * Calls toggleSingleComment from the Edit Controller
@@ -223,98 +160,6 @@ public class MasterController {
                 " illegal tokens were found.", "ERROR");
 
     }
-
-//    /**
-//     * handles the refactoring of a class
-//     * @param event
-//     */
-//    @FXML public void handleRefactorClass(Event event){
-//        if(this.parseRoot != null){
-//            this.editController.handleRefactor(this.parseRoot, "class");
-//        }
-//    }
-
-//    /**
-//     * handles the refactoring of a method
-//     * @param event
-//     */
-//    @FXML public void handleRefactorMethod(Event event){
-//        if(this.parseRoot != null){
-//            this.editController.handleRefactor(this.parseRoot, "method");
-//        }
-//    }
-
-//    /**
-//     * handles the refactoring of a field
-//     * @param event
-//     */
-//    @FXML public void handleRefactorField(Event event){
-//        if(this.parseRoot != null){
-//            this.editController.handleRefactor(this.parseRoot, "field");
-//        }
-//    }
-
-//    /**
-//     * handles the jumping to a class
-//     * @param event
-//     */
-//    @FXML public void handleJumpToClass(Event event){
-//        if(this.parseRoot != null){
-//            this.editController.handleJumpTo(this.parseRoot, "class");
-//        }
-//    }
-
-//    /**
-//     * handles the jumping to a method
-//     * @param event
-//     */
-//    @FXML public void handleJumpToMethod(Event event){
-//        if(this.parseRoot != null){
-//            this.editController.handleJumpTo(this.parseRoot, "method");
-//        }
-//    }
-
-//    /**
-//     * handles the jumping to a field
-//     * @param event
-//     */
-//    @FXML public void handleJumpToField(Event event){
-//        if(this.parseRoot != null){
-//            this.editController.handleJumpTo(this.parseRoot, "field");
-//        }
-//    }
-
-//    /**
-//     * handles the analyzing of dependencies of a class
-//     * @param event
-//     */
-//    @FXML public void handleAnDepClass(Event event){
-//        if(this.parseRoot != null){
-//            this.editController.handleAnDep(this.parseRoot, "class");
-//        }
-//    }
-
-//    /**
-//     * handles the analyzing of dependencies of a method
-//     * @param event
-//     */
-//    @FXML public void handleAnDepMethod(Event event){
-//        if(this.parseRoot != null){
-//            this.editController.handleAnDep(this.parseRoot, "method");
-//        }
-//    }
-
-//    /**
-//     * handles the analyzing of dependencies of a field
-//     * @param event
-//     */
-//    @FXML public void handleAnDepField(Event event){
-//        if(this.parseRoot != null){
-//            this.editController.handleAnDep(this.parseRoot, "field");
-//        }
-//    }
-    
-
 
     /**
      * Handler for the "About" menu item in the "File" menu.

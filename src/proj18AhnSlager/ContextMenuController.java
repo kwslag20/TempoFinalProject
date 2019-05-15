@@ -107,9 +107,7 @@ public class ContextMenuController {
         tab.setContextMenu(rightClickMenu);
     }
 
-
     /**
-     *
      * Handles the right click context menu action for a StyledJavaCodeArea.
      * Pops up a context menu when right-clicking on the specified StyledJavaCodeArea.
      * The context menu contains Undo, Redo, Cut, Copy, Paste, SelectAll,
@@ -158,5 +156,4 @@ public class ContextMenuController {
         });
         this.setOnShown(rightClickMenu, styledJavaCodeArea);
     }
-
 }

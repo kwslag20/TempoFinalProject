@@ -9,19 +9,14 @@
 package proj18AhnSlager;
 
 import javafx.application.Platform;
-
 import java.io.*;
-
-
 import java.util.concurrent.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import proj18AhnSlager.bantam.ast.Piece;
 import proj18AhnSlager.bantam.codegenmusic.MusicCodeGenerator;
 import proj18AhnSlager.bantam.parser.Parser;
 import proj18AhnSlager.bantam.util.ErrorHandler;
-
 
 /**
  * ToolbarController handles Toolbar related actions.
@@ -34,9 +29,6 @@ import proj18AhnSlager.bantam.util.ErrorHandler;
  * @author Melody Mao
  */
 public class ToolBarController {
-
-
-    private FutureTask<Boolean> curFutureTask;
 
     public ToolBarController(Console console, FileController fileController){
         this.fileController = fileController;
@@ -79,15 +71,6 @@ public class ToolBarController {
 
 
     /**
-     *  Compiles the code currently open, assuming it has been saved.
-     *
-     */
-    public void handleCompile(){
-        Thread compileThread = new Thread(()->compileFile(fileController.getFilePath()));
-        compileThread.start();
-    }
-
-    /**
      * Calls compile and runs the code
      *
      */
@@ -97,52 +80,9 @@ public class ToolBarController {
     }
 
     /**
-     * Compiles the specified file using the javac command
-     * @param filename the name of the file to compile
-     * @return whether or not compilation was successful
-     */
-    private boolean compileFile(String filename) {
-
-        Piece root = this.parser.parse(filename);
-        MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
-        musicCodeGenerator.generate(root, root.getName().replace(" ", "") + ".java");
-        // create and run the compile process
-        List<String> processBuilderArgs = new ArrayList<>();
-        processBuilderArgs.add("javac");
-        processBuilderArgs.add("-cp");
-        processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlager/bantam/util/jfugue-5.0.9.jar");
-        processBuilderArgs.add(root.getName().replace(" ", "")+".java");
-        ProcessBuilder pb = new ProcessBuilder(processBuilderArgs);
-        CompileOrRunTask compileTask = new CompileOrRunTask(this.console, pb);
-        this.curFutureTask = new FutureTask<Boolean>(compileTask);
-        ExecutorService compileExecutor = Executors.newFixedThreadPool(1);
-        compileExecutor.execute(curFutureTask);
-
-        // Check if compile was successful, and if so, indicate this in the console
-        Boolean compSuccessful = false;
-        try {
-            compSuccessful = curFutureTask.get();
-            if (compSuccessful) {
-                Platform.runLater(() ->
-                        this.console.appendText("Compilation was Successful.\n"));
-            }
-            compileExecutor.shutdown();
-        } catch (ExecutionException | InterruptedException | CancellationException e) {
-            compileTask.stop();
-        }
-
-        return compSuccessful;
-    }
-
-    /**
      * Helper method for running Mips Programs.
      */
     public boolean compileRunFile(String fileName) {
-//        boolean compSuccessful = compileFile(fileName);
-//        if(!compSuccessful){
-//            return compSuccessful;
-//        }
-
         try {
             Piece root = this.parser.parse(fileName);
 
@@ -157,7 +97,7 @@ public class ToolBarController {
             List<String> processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
             processBuilderArgs.add("-cp");
-            processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlager/bantam/util/jfugue-5.0.9.jar");
+            processBuilderArgs.add(".://Users/KevinAhn/Desktop/CS461/project18AhnSlager/src/proj18AhnSlager/resources/jfugue-5.0.9.jar");
             processBuilderArgs.add(root.getName().replace(" ", "")+".java");
             //processBuilderArgs.add(fileName);
             ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
@@ -209,7 +149,6 @@ public class ToolBarController {
         }
     }
 
-
     /**
      * Helper method for getting program output
      */
@@ -226,7 +165,6 @@ public class ToolBarController {
         outputReader.close();
         errorReader.close();
     }
-
 
     /**
      * Helper method for getting program input
@@ -284,7 +222,6 @@ public class ToolBarController {
         this.mutex.release();
         reader.close();
     }
-
 
     /**
      * Helper function to write user input
