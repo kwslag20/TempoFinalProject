@@ -7,6 +7,13 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * Class to generate the code from Tempo into
+ * java code using the jfugue package
+ *
+ * @author KevinAhn, KyleSlager
+ * @version 1.0
+ */
 public class MusicCodeGenVisitor extends Visitor {
 
     private PrintStream out;
@@ -22,6 +29,10 @@ public class MusicCodeGenVisitor extends Visitor {
     private int seqVoiceNum;
     private boolean inSequence;
 
+    /**
+     * constructor for the class
+     * @param out
+     */
     public MusicCodeGenVisitor(PrintStream out){
         this.inSequence = false;
         this.out = out;
@@ -56,10 +67,9 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the AST node
      * @return result of the visit
      */
-
+    @Override
     public Object visit(Piece node){
         node.getPieceList().accept(this);
-        System.out.println(this.patternMap);
         return null;
     }
 
@@ -68,6 +78,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(PieceList node){
         for(ASTNode musicSection : node){
             musicSection.accept(this);
@@ -81,6 +92,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the Verse node
      * @return result of the visit
      */
+    @Override
     public Object visit(Verse node){
         this.inSequence = false;
         this.sectionName = node.getName();
@@ -94,6 +106,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(Chorus node){
         this.inSequence = false;
         this.sectionName = "chorus";
@@ -107,6 +120,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(Layout node){
         this.inSequence = false;
         node.getLayoutList().accept(this);
@@ -129,6 +143,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(MemberList node){
         for (ASTNode hand : node)
             hand.accept(this);
@@ -141,6 +156,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(RightHand node){
         this.isRightHand = true;
         this.isLeftHand = false;
@@ -160,6 +176,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(LeftHand node){
         this.isLeftHand = true;
         this.isRightHand = false;
@@ -180,6 +197,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the sequences node
      * @return result of the visit
      */
+    @Override
     public Object visit(Sequences node){
         this.inSequence = true;
         node.getSequencesList().accept(this);
@@ -192,6 +210,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the sequencelist node
      * @return result of the visit
      */
+    @Override
     public Object visit(SequencesList node){
         for(ASTNode seqs: node) seqs.accept(this);
         return null;
@@ -203,6 +222,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the sequence node
      * @return result of the visit
      */
+    @Override
     public Object visit(Sequence node){
         this.currentSequencePatter = "";
         node.getNotesList().accept(this);
@@ -218,6 +238,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the seqobj node
      * @return result of the visit
      */
+    @Override
     public Object visit(SeqObj node){
         //This is how instruments are added into pattern
         if(node.getInstrument().length() > 0){
@@ -247,6 +268,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(NotesList node){
         for (ASTNode note: node)
             note.accept(this);
@@ -259,6 +281,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(LayoutList node){
         for (ASTNode layoutObj: node){
             layoutObj.accept(this);
@@ -272,6 +295,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(Writer node){
         return null;
     }
@@ -282,6 +306,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(Instrument node){
         return null;
     }
@@ -292,6 +317,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(Tempo node){
         return null;
     }
@@ -302,6 +328,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(OrderObj node){
         orderObjects.add(node.getName());
         return null;
@@ -313,6 +340,7 @@ public class MusicCodeGenVisitor extends Visitor {
      * @param node the method node
      * @return result of the visit
      */
+    @Override
     public Object visit(Note node){
         if(!node.getPitch().contains(",")){
             String note = node.getPitch().toUpperCase();
@@ -352,6 +380,12 @@ public class MusicCodeGenVisitor extends Visitor {
         return null;
     }
 
+    /**
+     * overrides the visit method for the rest node
+     * @param node
+     * @return
+     */
+    @Override
     public Object visit(Rest node){
         String rest = "R";
         rest += node.getRestLength().replace("r", "");

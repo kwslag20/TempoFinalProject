@@ -15,21 +15,24 @@
 package proj18AhnSlager;
 
 import javafx.event.Event;
-
 import java.util.Optional;
+import java.util.HashMap;
+
 import java.io.File;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
-import java.util.HashMap;
+
 
 import javafx.application.Platform;
+
 import javafx.scene.control.Tab;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.VBox;
+
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 

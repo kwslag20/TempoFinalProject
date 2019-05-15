@@ -48,9 +48,6 @@ public class Console extends StyleClassedTextArea {
         });
     }
 
-
-
-
     /**
      * Adds a new, separate line of text to this console.
      * Used in ToolbarController when printing to the console.
@@ -141,5 +138,4 @@ public class Console extends StyleClassedTextArea {
         this.moveTo(length);
         this.requestFollowCaret();
     }
-
 }

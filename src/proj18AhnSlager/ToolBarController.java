@@ -79,6 +79,14 @@ public class ToolBarController {
         compileRunThread.start();
     }
 
+    public void handlePause() throws InterruptedException {
+        System.out.println("PAUSE PLACEHOLDER");
+    }
+
+    public void handlePlay() throws InterruptedException {
+        System.out.println("PLAY PLACEHOLDER");
+    }
+
     /**
      * Helper method for running Mips Programs.
      */
@@ -252,6 +260,7 @@ public class ToolBarController {
                 this.inThread.interrupt(); // CURRENTLY BREAKS DOWN HERE
                 this.outThread.interrupt();
                 this.curProcess.destroy();
+                console.appendText("\nProgram Stopped by User\n");
             }
         } catch (Throwable e) {
             console.appendText("\nProgram was Stopped by User\n");

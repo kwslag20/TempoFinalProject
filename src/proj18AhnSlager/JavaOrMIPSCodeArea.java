@@ -63,7 +63,6 @@ public class JavaOrMIPSCodeArea extends CodeArea {
         );
     }
 
-
     /**
      * Method obtained from the RichTextFX Keywords Demo. Method allows
      * for syntax highlighting after a delay of 500ms after typing has ended.
@@ -86,25 +85,10 @@ public class JavaOrMIPSCodeArea extends CodeArea {
                 .subscribe(ignore -> this.setStyleSpans(0, computeHighlighting(this.getText(), this.fileType)));
     }
 
-    // a list of strings that contain the keywords for the IDE to identify.
-    private static final String[] KEYWORDS = new String[]{
-            "abstract", "assert", "boolean", "break", "byte",
-            "case", "catch", "char", "class", "const",
-            "continue", "default", "do", "double", "else",
-            "enum", "extends", "final", "finally", "float",
-            "for", "goto", "if", "implements", "import",
-            "instanceof", "int", "interface", "long", "native",
-            "new", "package", "private", "protected", "public",
-            "return", "short", "static", "strictfp", "super",
-            "switch", "synchronized", "this", "throw", "throws",
-            "transient", "try", "void", "volatile", "while", "var"
-    };
-
     // the regex rules for the ide
     private static final String IDENTIFIER_PATTERN = "[a-zA-Z]+[a-zA-Z0-9_]*";
     private static final String FLOAT_PATTERN = "(\\d+\\.\\d+)";
     private static final String INTCONST_PATTERN = "\\d+";
-    private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
     private static final String PAREN_PATTERN = "\\(|\\)";
     private static final String BRACE_PATTERN = "\\{|\\}";
     private static final String BRACKET_PATTERN = "\\[|\\]";
@@ -113,8 +97,7 @@ public class JavaOrMIPSCodeArea extends CodeArea {
     private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/";
 
     private static final Pattern PATTERN = Pattern.compile(
-            "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
-                    + "|(?<PAREN>" + PAREN_PATTERN + ")"
+                      "|(?<PAREN>" + PAREN_PATTERN + ")"
                     + "|(?<BRACE>" + BRACE_PATTERN + ")"
                     + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
                     + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")"
@@ -140,34 +123,6 @@ public class JavaOrMIPSCodeArea extends CodeArea {
                     "|(?<MUSKEYWORD>"+MUSKEYWORD_PATTERN+")"
     );
 
-    // a list of strings that contain the keywords for the instructions of MIPS.
-    private static final String[] INSTRUCTIONS = new String[]{
-            "abs", "add", "adds", "addi", "and", "andi", "b", "beq", "beqz", "bge", "bltz",
-            "bgeu", "bgt", "bgtu", "ble", "bleu", "blt", "bltu", "bne", "bnez", "div", "divu",
-            "l.d", "l.s", "la", "lb", "leu", "ld", "ldc1", "lh", "lhu", "li", "ll", "lw", "lwc1",
-            "lwl", "lwr", "mfc1.d", "move", "mtc1.d", "mul", "mulo", "mulou", "mulu", "neg",
-            "negu", "not", "or", "ori", "rem", "remu", "rol", "ror", "s.d", "s.s", "sb", "sc", "sd",
-            "sdc1", "seq", "sge", "sgeu", "sgt", "sgtu", "sh", "sle", "sleu", "sne", "sub subi",
-            "subiu", "subu", "sw", "swc1", "swl", "swr", "ulh", "ulhu", "ulw", "ush", "usw", "xor", "xori", "syscall"
-    };
-    //a list of directives in MIPS
-    private static final String[] DIRECTIVES = new String[]{
-            "asciiz", "align", "ascii", "asciiz", "byte", "data", "double", "end_macro", "eqv", "extern", "float",
-            "globl", "half", "include", "kdata", "ktext", "macro", "set", "text", "word"
-    };
-    //regex for highlighting in the way of MARS
-    private static final String REGISTER_PATTERN = "\\$[a-z]+[a-z0-9]*";
-    private static final String INSTRUCTION_PATTERN = "\\b("+ String.join("|", INSTRUCTIONS) + ")\\b";
-    private static final String DIRECTIVE_PATTERN = "\\.(" + String.join("|", DIRECTIVES)+")";
-    private static final String MIPS_COMMENT_PATTERN = "#(.*)";
-    private static final Pattern MIPS_PATTERN = Pattern.compile(
-            "(?<DIRECTIVE>"+DIRECTIVE_PATTERN +")"
-                    + "|(?<INSTRUCTION>" + INSTRUCTION_PATTERN + ")"
-                    + "|(?<COMMENT>" + MIPS_COMMENT_PATTERN + ")"
-                    + "|(?<REGISTER>" + REGISTER_PATTERN + ")"
-    );
-
-
     /**
      * Method to highlight all of the regex rules and keywords.
      * Code obtained from the RichTextFX Demo from GitHub.
@@ -176,11 +131,7 @@ public class JavaOrMIPSCodeArea extends CodeArea {
      */
     public static StyleSpans<Collection<String>> computeHighlighting(String text, String fileType) {
         Matcher matcher;
-        // checks what type of file is being passed in
-        if(".asm".equals(fileType)||".s".equals(fileType)){
-            matcher = MIPS_PATTERN.matcher(text);
-        }
-        else if(".mus".equals(fileType) || ".txt".equals(fileType)){
+        if(".mus".equals(fileType) || ".txt".equals(fileType)){
             matcher = MUS_PATTERN.matcher(text);
         }
         else{

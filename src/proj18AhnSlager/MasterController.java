@@ -124,6 +124,14 @@ public class MasterController {
         this.toolBarController = new ToolBarController(this.console, this.fileController);
     }
 
+    @FXML public void handlePause() throws InterruptedException{
+        this.toolBarController.handlePause();
+    }
+
+    @FXML public void handlePlay() throws InterruptedException{
+        this.toolBarController.handlePlay();
+    }
+
     /**
      * Calls toggleSingleComment from the Edit Controller
      *

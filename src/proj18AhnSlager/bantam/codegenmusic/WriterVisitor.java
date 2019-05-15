@@ -12,9 +12,10 @@ public class WriterVisitor extends Visitor {
     String authorName;
 
     /**
-     *
+     * method to start the visitng of a piece to grab the authors name
+     * from the writer node
      * @param piece
-     * @return
+     * @return the name of the author
      */
     public String getAuthorName(Piece piece){
         piece.accept(this);
@@ -22,7 +23,8 @@ public class WriterVisitor extends Visitor {
     }
 
     /**
-     *
+     * overrides the visit method of the writer node to
+     * get the name of the author
      * @param node the method node
      * @return
      */

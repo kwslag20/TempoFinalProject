@@ -116,44 +116,6 @@ public class EditController {
     }
 
     /**
-     * Handles the findAndReplace button action.
-     */
-    public void handleFindAndReplace() {
-        FindAndReplaceWidget findAndReplace = new FindAndReplaceWidget(this);
-        findAndReplace.setupWidget();
-    }
-
-    /**
-     * handles the refactoring
-     * @param parseRoot ast
-     * @param type class, method, field
-     */
-    public void handleRefactor(Piece parseRoot, String type){
-        //Refactor refactor = new Refactor(this, parseRoot);
-        //refactor.initializeRefactor(type);
-    }
-
-    /**
-     * handles the refactoring
-     * @param parseRoot ast
-     * @param type class, method, field
-     */
-    public void handleJumpTo(Piece parseRoot, String type){
-        //Refactor refactor = new Refactor(this, parseRoot);
-        //refactor.initializeJumpTo(type);
-    }
-
-    /**
-     * handles the analyzing dependencies
-     * @param parseRoot ast
-     * @param type class, method, field
-     */
-    public void handleAnDep(Piece parseRoot, String type){
-        //Refactor refactor = new Refactor(this, parseRoot);
-        //refactor.initializeDependencies(type);
-    }
-
-    /**
      * if a single "{", "}", "[", "]", "(", ")" is highlighted, this will attempt to find
      * the matching opening or closing character and if successful, will highlight the
      * text in between the matching set of {}, [], or (),
