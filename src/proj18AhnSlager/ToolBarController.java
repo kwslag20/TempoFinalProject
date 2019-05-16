@@ -14,6 +14,7 @@ import java.util.concurrent.*;
 import java.util.ArrayList;
 import java.util.List;
 import proj18AhnSlager.bantam.ast.Piece;
+import proj18AhnSlager.bantam.util.Error;
 import proj18AhnSlager.bantam.codegenmusic.MusicCodeGenerator;
 import proj18AhnSlager.bantam.parser.Parser;
 import proj18AhnSlager.bantam.util.ErrorHandler;
@@ -42,6 +43,7 @@ public class ToolBarController {
     private Console console;
 
     private ErrorHandler errorHandler = new ErrorHandler();
+
     private Parser parser;
     /**
      * Process currently compiling or running a Java file
@@ -69,6 +71,10 @@ public class ToolBarController {
      */
     private FileController fileController;
 
+    /**
+     * FutureTask
+     */
+    private FutureTask<Boolean> curFutureTask;
 
     /**
      * Calls compile and runs the code
@@ -79,38 +85,39 @@ public class ToolBarController {
         compileRunThread.start();
     }
 
-    public void handlePause() throws InterruptedException {
-        System.out.println("PAUSE PLACEHOLDER");
-    }
+//    public boolean compileRunFile(String fileName){
+//        Piece root = this.parser.parse(fileName);
+//        MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
+//        musicCodeGenerator.generate(root, "src/proj18AhnSlager/outputs/"+root.getName().replace(" ", "") + ".java");
+//        musicCodeGenerator.generatePlayerFile("src/proj18AhnSlager/outputs/MusicPlayer.java");
+//        return true;
+//    }
 
-    public void handlePlay() throws InterruptedException {
-        System.out.println("PLAY PLACEHOLDER");
-    }
 
     /**
-     * Helper method for running Mips Programs.
+     * Helper method for running Tempo Programs.
      */
     public boolean compileRunFile(String fileName) {
+        System.out.println("1");
         try {
             Piece root = this.parser.parse(fileName);
-
+            System.out.println("2");
             MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
-            musicCodeGenerator.generate(root, root.getName().replace(" ", "") + ".java");
+            musicCodeGenerator.generate(root, root.getName().replace(" ", "") + ".java", "GenAndPlay");
+            System.out.println("3");
             Platform.runLater(() -> {
                 this.console.clear();
                 consoleLength = 0;
             });
-
             // again adds in needed commands into the PB list
             List<String> processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
             processBuilderArgs.add("-cp");
-            processBuilderArgs.add(".://Users/KevinAhn/Desktop/CS461/project18AhnSlager/src/proj18AhnSlager/resources/jfugue-5.0.9.jar");
-            processBuilderArgs.add(root.getName().replace(" ", "")+".java");
+            processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlager/bantam/util/jfugue-5.0.9.jar");
+            processBuilderArgs.add(root.getName().replace(" ", "") + ".java");
             //processBuilderArgs.add(fileName);
             ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
             this.curProcess = builder.start();
-
 
             // Start output and input in different threads to avoid deadlock
             this.outThread = new Thread() {
@@ -147,12 +154,118 @@ public class ToolBarController {
                 }
             };
             inThread.start();
-
             // true if ran without error, else false
             return curProcess.waitFor() == 0;
         } catch (Throwable e) {
             Platform.runLater(() -> {
             });
+            return false;
+        }
+    }
+
+    private boolean compileFileOther(String fileName) {
+
+        Piece root = this.parser.parse(fileName);
+        MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
+        musicCodeGenerator.generate(root, "src/MusicPlayer/outputs/" + root.getName().replace(" ", "") + ".java", "OpenPlayer");
+        musicCodeGenerator.generatePlayerFile("src/MusicPlayer/IntermediaryPlayer.java");
+//        Piece root = this.parser.parse(filename);
+//        MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
+//        musicCodeGenerator.generate(root, root.getName().replace(" ", "") + ".java");
+        // create and run the compile process
+        List<String> processBuilderArgs = new ArrayList<>();
+        processBuilderArgs.add("javac");
+        processBuilderArgs.add("-cp");
+        processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/MusicPlayer/resources/richtextfx-fat-0.9.1.jar");
+        processBuilderArgs.add("src/MusicPlayer/Main.java");
+        ProcessBuilder pb = new ProcessBuilder(processBuilderArgs);
+        CompileOrRunTask compileTask = new CompileOrRunTask(this.console, pb);
+        this.curFutureTask = new FutureTask<Boolean>(compileTask);
+        ExecutorService compileExecutor = Executors.newFixedThreadPool(1);
+        compileExecutor.execute(curFutureTask);
+
+        // Check if compile was successful, and if so, indicate this in the console
+        Boolean compSuccessful = false;
+        try {
+            compSuccessful = curFutureTask.get();
+            if (compSuccessful) {
+                Platform.runLater(() ->
+                        this.console.appendText("Compilation was Successful.\n"));
+            }
+            compileExecutor.shutdown();
+        } catch (ExecutionException | InterruptedException | CancellationException e) {
+            compileTask.stop();
+        }
+
+        return compSuccessful;
+    }
+
+    /**
+     * Helper method for running Mips Programs.
+     */
+    public boolean compileRunFileOther(String fileName) {
+        Boolean result = compileFileOther(fileName);
+        if(result) {
+            try {
+                Platform.runLater(() -> {
+                    this.console.clear();
+                    consoleLength = 0;
+                });
+
+                // again adds in needed commands into the PB list
+                List<String> processBuilderArgs = new ArrayList<>();
+                processBuilderArgs.add("java");
+                processBuilderArgs.add("-cp");
+                processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/MusicPlayer/resources/richtextfx-fat-0.9.1.jar");
+                processBuilderArgs.add("src/MusicPlayer/Main.java");
+                ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
+                this.curProcess = builder.start();
+                // Start output and input in different threads to avoid deadlock
+                this.outThread = new Thread() {
+                    public void run() {
+                        try {
+                            // start output thread first
+                            mutex.acquire();
+                            outputToConsole();
+                        } catch (Throwable e) {
+                            Platform.runLater(() -> {
+                                // print stop message if other thread hasn't
+                                if (consoleLength == console.getLength()) {
+                                    console.appendText("\nProgram exited unexpectedly\n");
+                                    console.requestFollowCaret();
+                                }
+                            });
+                        }
+                    }
+                };
+                outThread.start();
+                inThread = new Thread() {
+                    public void run() {
+                        try {
+                            inputFromConsole();
+                        } catch (Throwable e) {
+                            Platform.runLater(() -> {
+                                // print stop message if other thread hasn't
+                                if (consoleLength == console.getLength()) {
+                                    console.appendText("\nProgram exited unexpectedly\n");
+                                    console.requestFollowCaret();
+                                }
+                            });
+                        }
+                    }
+                };
+                inThread.start();
+
+                // true if ran without error, else false
+                return curProcess.waitFor() == 0;
+            } catch (Throwable e) {
+                Platform.runLater(() -> {
+                });
+                return false;
+            }
+        }
+        else{
+            System.out.println("Compilation unsuccessful");
             return false;
         }
     }

@@ -10,7 +10,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/src/JARS/jfugue-5.0.9.jar!/" />
+          <root url="jar://$MODULE_DIR$/../org/jfugue/jfugue.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -19,16 +19,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/src/JARS/richtextfx-fat-0.9.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../richtextfx-fat-0.9.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/src/MusicPlayer/resources/richtextfx-fat-0.9.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

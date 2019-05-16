@@ -59,6 +59,7 @@ import static proj18AhnSlager.bantam.lexer.Token.Kind.*;
  * All other terminal symbols that are in all caps correspond to keywords.
  */
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -73,6 +74,8 @@ public class Parser
     private ErrorHandler errorHandler;
     private String filename;
     private Boolean verseParsed;
+    private ArrayList<String> allowedInstruments;
+    private ArrayList<String> allowedTempos;
 
     // constructor
     public Parser(ErrorHandler errorHandler) {
@@ -88,6 +91,16 @@ public class Parser
         this.scanner=new Scanner(filename, this.errorHandler);
         this.filename=filename;
         this.verseParsed = false;
+        allowedInstruments = new ArrayList<>(List.of("PIANO", "ELECTRIC_PIANO", "HARPSICHORD",
+                "CLAVINET", "CHURCH_ORGAN", "ROCK_ORGAN", "HARMONICA",
+                "ACOUSTIC_BASS", "ELECTRIC_BASS_PICK", "SYNTH_BASS_1", "STRING_ENSEMBLE_1",
+                "SYNTH_STRINGS_1", "VOICE_OOHS", "MARIMBA", "XYLOPHONE", "GUITAR",
+                "ELECTRIC_CLEAN_GUITAR", "DISTORTION_GUITAR", "VIOLIN", "VIOLA", "CELLO",
+                "TRUMPET", "TUBA", "BRASS_SECTION", "ALTO_SAX", "CLARINET", "FLUTE", "WHISTLE",
+                "SITAR", "BANJO", "BAGPIPE"));
+        allowedTempos = new ArrayList<>(List.of("GRAVE", "LARGO", "LARGHETTO", "LENTO",
+                "ADAGIO", "ADAGIETTO", "ANDANTE", "ANDANTINO", "MODERATO", "ALLEGRETTO",
+                "ALLEGRO", "VIVACE", "PRESTO", "PRETISSIMO"));
         return this.parsePiece();
     }
 
@@ -245,12 +258,32 @@ public class Parser
         int position = currentToken.position;
         String spelling = currentToken.spelling;
         if(currentToken.kind == INSTRUMENT){
-            updateCurrentToken();
-            return new Instrument(position, spelling);
+            spelling = spelling.replace(":", "").toUpperCase();
+            if(allowedInstruments.contains(spelling)) {
+                updateCurrentToken();
+                return new Instrument(position, spelling);
+            }
+            else{
+                this.registerError("Invalid Instrument " + spelling +". Valid Instruments are "
+                        + allowedInstruments.toString(), "Invalid Instrument. Valid Instruments are"
+                        + allowedInstruments.toString());
+                updateCurrentToken();
+                return new Instrument(position, "PIANO");
+            }
         }
         else if(currentToken.kind == TEMPO){
-            updateCurrentToken();
-            return new Tempo(position, spelling);
+            spelling = spelling.replace(":","").toUpperCase().replace(" ", "");
+            if(allowedTempos.contains(spelling)) {
+                updateCurrentToken();
+                return new Tempo(position, spelling);
+            }
+            else {
+                this.registerError("Invalid Tempo " + spelling+". Valid Tempos are "
+                        + allowedTempos.toString(), "Invalid Tempo. Valid Tempo are"
+                        + allowedTempos.toString());
+                updateCurrentToken();
+                return new Tempo(position, "ADAGIO");
+            }
         }
         else if(currentToken.kind == ORDEROBJ){
             updateCurrentToken();
@@ -411,7 +444,7 @@ public class Parser
 //            System.out.println("Please Provide Test Files");
 //            return;
 //        }
-        String[] filenames = new String[]{"test1.txt"};
+        String[] filenames = new String[]{"PachelbelCanon.mus"};
         for(String filename: filenames) {
             ErrorHandler errorHandler = new ErrorHandler();
             Parser parser = new Parser(errorHandler);

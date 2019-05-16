@@ -19,8 +19,10 @@ piece ParserTesting{
     }
     layout{
     	writer: Kevin Ahn;
+    	instrument: sitar;
     	first;
     	second;
+    	instrument: flute;
         first;
     }
 }

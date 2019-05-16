@@ -125,11 +125,23 @@ public class MusicCodeGenVisitor extends Visitor {
         this.inSequence = false;
         node.getLayoutList().accept(this);
         for(int i = 0; i < orderObjects.size(); i++){
+            String instrument = "";
+            String tempo = "";
+            if(patternMap.containsKey("Instrument"+i)){
+                instrument = patternMap.get("Instrument"+i).get(0);
+            }
+            if(patternMap.containsKey("Tempo"+i)){
+                tempo = patternMap.get("Tempo"+i).get(0);
+            }
             String output = "\t\tpattern" + "0.add(\"";
+            output += instrument;
+            output += tempo;
             output += patternMap.get(orderObjects.get(i)+"rh").get(1);
             output += "\");";
             out.println(output);
             output = "\t\tpattern" + "1.add(\"";
+            output += instrument;
+            output += tempo;
             output += patternMap.get(orderObjects.get(i)+"lh").get(1);
             output += "\");";
             out.println(output);
@@ -308,6 +320,9 @@ public class MusicCodeGenVisitor extends Visitor {
      */
     @Override
     public Object visit(Instrument node){
+        ArrayList<String> list = new ArrayList<>();
+        list.add(" I["+node.getInstrument()+"] ");
+        patternMap.put("Instrument"+(orderObjects.size()), list);
         return null;
     }
 
@@ -319,6 +334,9 @@ public class MusicCodeGenVisitor extends Visitor {
      */
     @Override
     public Object visit(Tempo node){
+        ArrayList<String> list = new ArrayList<>();
+        list.add(" T["+node.getTempo()+"] ");
+        patternMap.put("Tempo"+(orderObjects.size()), list);
         return null;
     }
 

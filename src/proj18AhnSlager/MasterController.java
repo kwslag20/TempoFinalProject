@@ -30,6 +30,7 @@ import java.util.List;
 import proj18AhnSlager.bantam.util.CompilationException;
 import proj18AhnSlager.bantam.util.Error;
 import proj18AhnSlager.bantam.util.ErrorHandler;
+import proj18AhnSlager.outputs.MusicPlayer;
 
 /**
  * This is the master controller for the program. it references
@@ -125,11 +126,18 @@ public class MasterController {
     }
 
     @FXML public void handlePause() throws InterruptedException{
-        this.toolBarController.handlePause();
+        MusicPlayer musicPlayer = new MusicPlayer();
+        musicPlayer.pause();
     }
 
     @FXML public void handlePlay() throws InterruptedException{
-        this.toolBarController.handlePlay();
+        MusicPlayer musicPlayer = new MusicPlayer();
+        musicPlayer.play();
+    }
+
+    @FXML public void handleResume() throws InterruptedException{
+        MusicPlayer musicPlayer = new MusicPlayer();
+        musicPlayer.resume();
     }
 
     /**
@@ -271,6 +279,11 @@ public class MasterController {
     @FXML
     public void handlePaste() {
         editController.handlePaste(); }
+
+    @FXML
+    public void handleMeasureLine() {
+        editController.handleMeasureLine();
+    }
 
     /**
      * Handler for the "SelectAll" menu item in the "Edit" menu.

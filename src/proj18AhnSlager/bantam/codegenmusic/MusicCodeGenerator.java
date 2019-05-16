@@ -42,6 +42,7 @@ import proj18AhnSlager.bantam.util.CompilationException;
 import proj18AhnSlager.bantam.util.Error;
 import proj18AhnSlager.bantam.util.ErrorHandler;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -71,6 +72,11 @@ public class MusicCodeGenerator {
     private ErrorHandler errorHandler;
 
     /**
+     * Print stream for the output of the music player
+     */
+    private PrintStream musicPlayerOut;
+
+    /**
      * outfile
      */
     private String outFile;
@@ -89,7 +95,7 @@ public class MusicCodeGenerator {
      * @param piece   root of piece hierarchy tree
      * @param outFile filename of the assembly output file
      */
-    public void generate(Piece piece, String outFile) {
+    public void generate(Piece piece, String outFile, String type) {
         this.piece = piece;
         this.outFile = outFile;
         // set up the PrintStream for writing the assembly file.
@@ -101,10 +107,48 @@ public class MusicCodeGenerator {
             throw new CompilationException("Couldn't write to output file.");
         }
 
-        genProlog(piece.getName());
-        MusicCodeGenVisitor musicCodeGenVisitor = new MusicCodeGenVisitor(out);
-        musicCodeGenVisitor.visit(piece);
-        genEpilog();
+        if(type.equals("GenAndPlay")) {
+            genProlog(piece.getName());
+            MusicCodeGenVisitor musicCodeGenVisitor = new MusicCodeGenVisitor(out);
+            musicCodeGenVisitor.visit(piece);
+            genEpilog();
+        }
+        else if(type.equals("OpenPlayer")){
+            genPlayerProlog(piece.getName());
+            MusicCodeGenVisitor musicCodeGenVisitor = new MusicCodeGenVisitor(out);
+            musicCodeGenVisitor.visit(piece);
+            genPlayerEpilog();
+        }
+    }
+
+    public void generatePlayerFile(String outFile){
+        try{
+            this.musicPlayerOut = new PrintStream(new FileOutputStream(outFile));
+        }
+        catch (IOException e1) {
+            System.out.println(e1);
+        }
+        genMusicPlayerFile();
+    }
+
+    private void genMusicPlayerFile(){
+        String type = this.outFile.replace(" ", "");
+        type = type.substring(type.lastIndexOf('/')+1, type.lastIndexOf('.'));
+        musicPlayerOut.println("package MusicPlayer;");
+        musicPlayerOut.println("import MusicPlayer.outputs." +type+";");
+        musicPlayerOut.println("public class IntermediaryPlayer {\npublic void play(){\n" +
+                type + " name = new " + type + "();\n" +
+                "name.notplay();" +
+                "    }\n" +
+                "    public void pause(){\n" +
+                type + " name = new " + type + "();\n" +
+                "name.notpause();" +
+                "    }\n" +
+                "   public void resume(){\n" +
+                type + " name = new " + type + "();\n" +
+                "name.notresume();" +
+                "}\n"+
+                "}");
     }
 
     /**
@@ -138,6 +182,7 @@ public class MusicCodeGenerator {
         out.println("/** File Generated from Tempo file: " + name + ".mus");
         //out.println("Author: " + getAuthor());
         out.println("Date Generated: " + getDate() + " **/");
+        out.println("package proj18AhnSlager.outputs;");
         out.println("import org.jfugue.player.*;");
         out.println("import org.jfugue.theory.*;");
         out.println("import org.jfugue.pattern.*;");
@@ -148,6 +193,51 @@ public class MusicCodeGenerator {
         out.println();
         out.println("\t\tPattern pattern0 = new Pattern(\"V0 I[VOICE_OOHS] T[Andantino] \");");
         out.println("\t\tPattern pattern1 = new Pattern(\"V1 I[Flute] T[Andantino] \");");
+    }
+
+    private void genPlayerProlog(String name){
+        out.println("/** File Generated from Tempo file: " + name + ".mus\n" +
+                "Date Generated: 2019-05-15 at 21:39:24 EDT **/\n" +
+                "package MusicPlayer.outputs;\n" +
+                "import org.jfugue.player.*;\n" +
+                "import org.jfugue.theory.*;\n" +
+                "import org.jfugue.pattern.*;\n" +
+                "\n" +
+                "import javax.sound.midi.InvalidMidiDataException;\n" +
+                "import javax.sound.midi.MidiUnavailableException;\n" +
+                "import javax.sound.midi.Sequence;\n" +
+                "\n" +
+                "public class " + name+ "{\n" +
+                "\n" +
+                "\tpublic Player player = new Player();\n" +
+                "\tpublic ManagedPlayer managedPlayer = new ManagedPlayer();\n" +
+                "\tpublic Pattern pattern0 = createPattern();\n" +
+                "\n" +
+                "\tpublic Pattern createPattern(){\n" +
+                "\t\tpattern0 = new Pattern(\"V0 I[VOICE_OOHS] T[Andantino] \");\n" +
+                "\t\tPattern pattern1 = new Pattern(\"V1 I[Flute] T[Andantino] \");");
+    }
+
+    private void genPlayerEpilog(){
+        out.println("return pattern0;\n}\n" +
+                "\n" +
+                "\tpublic void notplay(){\n" +
+                "\t\tthis.createPattern();\n" +
+                "\t\tSequence seq = player.getSequence(pattern0);\n" +
+                "\t\ttry{\n" +
+                "\t\t\tmanagedPlayer.start(seq);\n" +
+                "\t\t}\n" +
+                "\t\tcatch (InvalidMidiDataException | MidiUnavailableException e){\n" +
+                "\t\t}\n" +
+                "\t}\n" +
+                "\n" +
+                "\tpublic void notpause(){\n" +
+                "\t\tmanagedPlayer.pause();\n" +
+                "\t}" + "\n" +
+                "\tpublic void notresume(){\n" +
+                "\t\tmanagedPlayer.resume();\n" +
+                "\t}\n"+
+                "}");
     }
 
     private void genEpilog(){
@@ -167,10 +257,10 @@ public class MusicCodeGenerator {
         ErrorHandler errorHandler = new ErrorHandler();
         Parser parser = new Parser(errorHandler);
         try{
-            errorHandler.clear();
-            Piece piece = parser.parse("PachelbelCanon.mus");
+            Piece piece = parser.parse("test2.txt");
             MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
-            musicCodeGenerator.generate(piece, piece.getName().replace(" ", "") + ".java");
+            musicCodeGenerator.generate(piece, "src/MusicPlayer/outputs/"+piece.getName().replace(" ", "") + ".java", "OpenPlayer");
+            musicCodeGenerator.generatePlayerFile("src/MusicPlayer/IntermediaryPlayer.java");
         }
         catch (CompilationException ex) {
             System.out.print(ex);

@@ -22,6 +22,7 @@ import org.fxmisc.richtext.Selection;
 import proj18AhnSlager.bantam.ast.Piece;
 
 
+import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.ArrayList;
 
@@ -44,8 +45,10 @@ public class EditController {
     private ArrayList<Integer> matchStartingIndices;
     private int curMatchLength;
     private int curMatchHighlightedIdx;
+    private int measureNum;
     private Button prevMatchBtn;
     private Button nextMatchBtn;
+    private HashMap<String,Integer> numLocalMeasureLines;
 
 
     private String[] lines;
@@ -64,8 +67,11 @@ public class EditController {
         this.matchStartingIndices = new ArrayList<>();
         this.prevMatchBtn = prevMatchBtn;
         this.nextMatchBtn = nextMatchBtn;
-
+        this.numLocalMeasureLines = new HashMap<>();
+        this.numLocalMeasureLines.put("righthand", 1);
+        this.numLocalMeasureLines.put("lefthand", 1);
         this.resetFindMatchingStringData();
+        this.measureNum = 0;
     }
 
     /**
@@ -113,6 +119,25 @@ public class EditController {
     @FXML
     public void handleSelectAll() {
         getCurJavaCodeArea().selectAll();
+    }
+
+    public void handleMeasureLine() {
+        CodeArea curCodeArea = getCurJavaCodeArea();
+        String area = curCodeArea.getText();
+        area = area.substring(0, curCodeArea.getCaretPosition());
+        if(area.lastIndexOf("righthand") > area.lastIndexOf("lefthand")) {
+            measureNum = this.numLocalMeasureLines.get("righthand");
+            this.numLocalMeasureLines.replace("righthand", measureNum+1);
+        }
+        else if(area.lastIndexOf("lefthand") > area.lastIndexOf("righthand")){
+            measureNum = this.numLocalMeasureLines.get("lefthand");
+            this.numLocalMeasureLines.replace("lefthand", measureNum+1);
+        }
+        else{
+            measureNum++;
+        }
+        String end = "\n\t\t/////////////////Measure " + measureNum + "///////////////\n";
+        curCodeArea.replaceSelection(end);
     }
 
     /**

@@ -1,0 +1,139 @@
+piece PachelbelCanon{
+	sequences{
+	baseseq[
+		in d 3;
+		in a 3;
+		in d 4;
+		in f# 4;
+		in a 2;
+		in e 3;
+		in a 3;
+		in c# 4;
+		in b 2;
+		in f# 3;
+		in b 3;
+		in d 4;
+		in f# 2;
+		in c# 3;
+		in f# 3;
+		in a 3;
+		in g 2;
+		in d 3;
+		in g 3;
+		in d 4;
+		in d 2;
+		in a 2;
+		in d 3;
+		in f# 3;
+		in g 2;
+		in d 3;
+		in g 3;
+		in b 3;
+		in a 2;
+		in e 3;
+		in a 3;
+		in c# 4;
+		]
+	}
+	verse first{
+		righthand{
+		wr;
+		wr;
+		wr;
+		wr;
+		hn f# 5;
+		hn e 5;
+		hn d 5;
+		hn c# 5;
+		hn b 4;
+		hn a 4;
+		hn b 4;
+		hn c# 4;
+		hn chord(a,d,f#) 4;
+		hn chord(a,c#,e) 4;
+		hn chord(f#,b,d) 4;
+		hn chord(f#,a,c#) 4;
+		hn chord(d,g,b) 4;
+		hn chord(d,f#,a) 4;
+		hn chord(d,g,b) 4;
+		hn chord(e,a,c#) 4;
+		qn d 5;
+		qn f# 5;
+		qn a 5;
+		qn g 5;
+		qn f# 5;
+		qn d 5;
+		qn f# 5;
+		ir;
+		in e 5;
+		qn d 5;
+		qn b 4;
+		qn d 5;
+		qn f# 5;
+		qn g 5;
+		qn b 5;
+		qn a 5;
+		ir;
+		in g 5;
+		}
+		lefthand{
+		baseseq(4, cello);
+		}
+		}
+	verse second{
+		righthand{
+		in a 5;
+		sn f# 5;
+		sn g 5;
+		in a 5;
+		sn f# 5;
+		sn g 5;
+		sn a 5;
+		sn a 4;
+		sn b 4;
+		sn c# 5;
+		sn d 5;
+		sn e 5;
+		sn f# 5;
+		sn g 5;
+		in f# 5;
+		sn d 5;
+		sn e 5;
+		in f# 5;
+		sn d 4;
+		sn e 4;
+		sn a 4;
+		sn b 4;
+		sn a 4;
+		sn g 4;
+		sn a 4;
+		sn f# 4;
+		sn g 4;
+		sn a 4;
+		in g 4;
+		sn b 4;
+		sn a 4;
+		in g 4;
+		sn f# 4;
+		sn e 4;
+		sn f# 4;
+		sn e 4;
+		sn d 4;
+		sn e 4;
+		sn f# 4;
+		sn g 4;
+		sn a 4;
+		sn b 4;
+		}
+		lefthand{
+		baseseq(1,cello);
+		}
+		}
+	layout{
+		writer: Kyle;
+		instrument: flute;
+		tempo: adagio;
+		first;
+		second;
+		}
+}

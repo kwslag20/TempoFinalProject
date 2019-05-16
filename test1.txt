@@ -1,4 +1,4 @@
-piece MyNewSong{
+piece MyNewerSong{
 	verse first{
 		righthand{
 		    sn e 5;

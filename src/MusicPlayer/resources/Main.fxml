@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="MusicPlayer.MasterController"
+            prefHeight="400.0" prefWidth="600.0">
+    <ToolBar>
+        <Button fx:id="PlayButton" onAction="#handlePlay" text="Play"/>
+        <Button fx:id="PauseButton" onAction="#handlePause" text="Pause"/>
+        <Button fx:id="ResumeButton" onAction="#handleResume" text="Resume"/>
+    </ToolBar>
+</AnchorPane>

@@ -113,7 +113,8 @@ public class Scanner
             while(layoutCheck != layoutArray.length - 1){
                 String layoutItem = layoutArray[layoutCheck];
                 //checks for the different types of layouts
-                //If a user accidentally adds letters infront of the type, it will not generate an error and the final product will not be affected
+                //If a user accidentally adds letters infront of the type, it will
+                //not generate an error and the final product will not be affected
                 if(layoutItem.contains("instrument:")){
                     layoutItem = layoutItem.substring(layoutItem.lastIndexOf(':'));
                     layoutItem = layoutItem.replace(" ", "");
@@ -137,8 +138,10 @@ public class Scanner
                 }
                 else{
                     //Check for orderobjs being declared
-                    //Manual states that order objects cannot be declared as a substring of another ie "first" and "firstsecond" not allowed
-                    //For some reason we were unable to remove the whitespace from our layoutItem so we were forced to use contains here
+                    //Manual states that order objects cannot be declared as a
+                    //substring of another ie "first" and "firstsecond" not allowed
+                    //For some reason we were unable to remove the whitespace from our layoutItem
+                    //so we were forced to use contains here
                     //which obviously allows erroneous spellings should the contain a substring
                     for (String section : sections) {
                         if (layoutItem.contains(section)) {
@@ -149,27 +152,36 @@ public class Scanner
                 }
                 //Determines whether or not a layoutItem that is disallowed is in the array
                 layoutCheck = layoutArray.length - 1;
-                errorHandler.register(Error.Kind.PARSE_ERROR, "Improper Layout Token(s) Found: " + layoutItem);
-                return new Token(Token.Kind.ERROR, "Improper Layout Token(s) Found: " + layoutItem, this.sourceFile.getCurrentLineNumber());
+                errorHandler.register(Error.Kind.PARSE_ERROR, this.sourceFile.getFilename(),
+                        this.sourceFile.getCurrentLineNumber(),"Improper Layout Token(s) Found: " + layoutItem);
+                return new Token(Token.Kind.ERROR, "Improper Layout Token(s) Found: " + layoutItem,
+                        this.sourceFile.getCurrentLineNumber());
             }
             isLayout = false;
             return new Token(Token.Kind.NOTWORD, "nothing", this.sourceFile.getCurrentLineNumber());
         }
         //Similar to layout, if we are scanning in sequences things are done differently
         else if(isSequences){
-            String sequenceName = "";
-            //collects the sequence name
-            while (currentChar != '[' && currentChar != '}') {
-                sequenceName += currentChar;
+            if(!(currentChar == '}')) {
+                String sequenceName = "";
+                //collects the sequence name
+                while (currentChar != '[' && currentChar != '}') {
+                    sequenceName += currentChar;
+                    currentChar = this.sourceFile.getNextChar();
+                }
+                isSequences = false;
+                if (sequenceName == "") {
+                    this.errorHandler.register(Error.Kind.LEX_ERROR, "Must include name with sequence");
+                    return new Token(Token.Kind.ERROR, sequenceName, this.sourceFile.getCurrentLineNumber());
+                }
+                seqList.add(sequenceName);
+                return new Token(Token.Kind.SEQ, sequenceName, this.sourceFile.getCurrentLineNumber());
+            }
+            else {
+                isSequences = false;
                 currentChar = this.sourceFile.getNextChar();
+                return new Token(Token.Kind.RCURLY, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
             }
-            isSequences = false;
-            if(sequenceName == ""){
-                this.errorHandler.register(Error.Kind.LEX_ERROR, "Must include name with sequence");
-                return new Token(Token.Kind.ERROR, sequenceName, this.sourceFile.getCurrentLineNumber());
-            }
-            seqList.add(sequenceName);
-            return new Token(Token.Kind.SEQ, sequenceName, this.sourceFile.getCurrentLineNumber());
         }
         else {
             //Regular case switching for verses and choruses
@@ -191,7 +203,8 @@ public class Scanner
                     if (isNote && currentChar != 'h' && currentChar != '(') {
                         if(currentChar == '#'){
                             currentChar = this.sourceFile.getNextChar();
-                            return new Token(Token.Kind.PITCH, tempChar.toString() + "#", this.sourceFile.getCurrentLineNumber());
+                            return new Token(Token.Kind.PITCH, tempChar.toString() + "#",
+                                    this.sourceFile.getCurrentLineNumber());
                         }
                         return new Token(Token.Kind.PITCH, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
                     } else {
@@ -212,13 +225,15 @@ public class Scanner
                         currentChar = sourceFile.getNextChar();
                         isNote = true;
                         curString = "";
-                        return new Token(Token.Kind.NOTE, tempChar.toString() + 'n', this.sourceFile.getCurrentLineNumber());
+                        return new Token(Token.Kind.NOTE, tempChar.toString() + 'n',
+                                this.sourceFile.getCurrentLineNumber());
                     }
                     //same thing but for rests
                     else if (currentChar.equals('r') && tempToken.kind == Token.Kind.NOTWORD) {
                         currentChar = sourceFile.getNextChar();
                         curString = "";
-                        return new Token(Token.Kind.REST, tempChar.toString() + 'r', this.sourceFile.getCurrentLineNumber());
+                        return new Token(Token.Kind.REST, tempChar.toString() + 'r',
+                                this.sourceFile.getCurrentLineNumber());
                     }
                     //if no conditions are met return the checkCurString
                     else{
@@ -227,7 +242,10 @@ public class Scanner
 
 
                 case ('-'):
-                    return this.getMinusToken();
+                    currentChar = sourceFile.getNextChar();
+                    this.errorHandler.register(Error.Kind.LEX_ERROR, this.sourceFile.getFilename(),
+                            this.sourceFile.getCurrentLineNumber(),"Em-Dash not legal");
+                    return new Token(Token.Kind.ERROR, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
                 case ('{'):
                     tempToken = checkCurString(tempChar);
@@ -241,9 +259,11 @@ public class Scanner
                         return tempToken;
                     } else {
                         //handle the error of invalid usage
-                        errorHandler.register(Error.Kind.PARSE_ERROR, "Invalid usage of " + invalidString + " on line "
+                        errorHandler.register(Error.Kind.PARSE_ERROR, "Invalid usage of " +
+                                invalidString + " on line "
                                 + this.sourceFile.getCurrentLineNumber()+". Missing keyword or improper keyword");
-                        return new Token(Token.Kind.ERROR, "Invalid Usage of " + invalidString, this.sourceFile.getCurrentLineNumber());
+                        return new Token(Token.Kind.ERROR, "Invalid Usage of " +
+                                invalidString, this.sourceFile.getCurrentLineNumber());
                     }
 
                 case ('}'):
@@ -264,7 +284,8 @@ public class Scanner
                         return tempToken;
                     } else {
                         errorHandler.register(Error.Kind.PARSE_ERROR, "Invalid usage of " + invalidString2);
-                        return new Token(Token.Kind.ERROR, "Invalid Usage of " + curString, this.sourceFile.getCurrentLineNumber());
+                        return new Token(Token.Kind.ERROR, "Invalid Usage of " +
+                                curString, this.sourceFile.getCurrentLineNumber());
                     }
 
                 case (')'):
@@ -286,7 +307,9 @@ public class Scanner
 
                 case (':'):
                     currentChar = sourceFile.getNextChar();
-                    return new Token(Token.Kind.NOTWORD, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
+                    this.errorHandler.register(Error.Kind.LEX_ERROR, this.sourceFile.getFilename(),
+                            this.sourceFile.getCurrentLineNumber(),"Colons not legal outside of layout declarations");
+                    return new Token(Token.Kind.ERROR, tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
                 case (';'):
                     currentChar = sourceFile.getNextChar();
@@ -300,13 +323,17 @@ public class Scanner
                     currentChar = sourceFile.getNextChar();
                     curString = "";
                     isNote = false;
-                    return new Token(Token.Kind.DOT,
+                    this.errorHandler.register(Error.Kind.LEX_ERROR, this.sourceFile.getFilename(),
+                            this.sourceFile.getCurrentLineNumber(), "Dots not legal");
+                    return new Token(Token.Kind.ERROR,
                             tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
                 case (','):
                     currentChar = sourceFile.getNextChar();
                     curString = "";
                     isNote = false;
+                    this.errorHandler.register(Error.Kind.LEX_ERROR, this.sourceFile.getFilename(),
+                            this.sourceFile.getCurrentLineNumber(), "Commas not legal outside of chord or sequence calls");
                     return new Token(Token.Kind.COMMA,
                             tempChar.toString(), this.sourceFile.getCurrentLineNumber());
 
@@ -329,12 +356,22 @@ public class Scanner
         }
     }
 
+    /**
+     * Method for determining if a keyword has been created and correctly getting the information necessary
+     * for that keyword
+     *
+     * @param tempChar
+     * @return either a NOTWORD token which is ignored by the program, or some keyword token
+     */
     private Token checkCurString(Character tempChar) {
         if (curString != null) {
+            //This loop checks to determine if a call to a sequence has been made in the code by looping through
+            //the list of sequence names and checking the string against them
             for(String seq: seqList){
                 if(curString.equals(seq)){
                     String seqDef = "";
                     int bailOutCount = 0;
+                    //gathers the information of the sequence call and checks that it has been done correctly
                     while (!currentChar.equals(')')){
                         seqDef += currentChar;
                         currentChar = this.sourceFile.getNextChar();
@@ -343,14 +380,17 @@ public class Scanner
                             this.errorHandler.register(Error.Kind.LEX_ERROR,
                                     this.sourceFile.getFilename(), this.sourceFile.getCurrentLineNumber(),
                                     "Invalid Sequence Call");
-                            return new Token(Token.Kind.ERROR, "Missing Right Parenthesis", this.sourceFile.getCurrentLineNumber());
+                            return new Token(Token.Kind.ERROR, "Missing Right Parenthesis",
+                                    this.sourceFile.getCurrentLineNumber());
                         }
                     }
+                    //gives the spelling of the seqobj as the information in the parantheses and its name
                     return new Token(Token.Kind.SEQOBJ, curString + seqDef, this.sourceFile.getCurrentLineNumber());
                 }
             }
+            //case switch for the remaining keywords that could be being used
             switch (curString) {
-
+                //creates a chord object with the information within the parantheses
                 case ("chord"):
                     String chordInfo = "";
                     while (!currentChar.equals(')')) {
@@ -442,19 +482,6 @@ public class Scanner
         }
             curString += tempChar;
             return new Token(Token.Kind.NOTWORD, "doesn't matter", this.sourceFile.getCurrentLineNumber());
-    }
-
-    /**
-     * Creates and returns a minus token or a unary decrement token
-     *
-     * @return a token of Kind.PLUSMINUS(-) or UNARYDECR(---)
-     */
-    private Token getMinusToken() {
-
-        Character prevChar = currentChar;
-        currentChar = this.sourceFile.getNextChar();
-        return new Token(Token.Kind.MINUS, prevChar.toString(),
-                    this.sourceFile.getCurrentLineNumber());
     }
 
     private Boolean checkCurly(){
@@ -583,7 +610,7 @@ public class Scanner
                 ErrorHandler errorHandler = new ErrorHandler();
                 try {
 
-                    scanner = new Scanner("test1.txt", errorHandler);
+                    scanner = new Scanner("PachelbelCanon.mus", errorHandler);
 
                 }
                 catch(CompilationException e){
