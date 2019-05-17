@@ -87,9 +87,6 @@
 
     <ToolBar>
         <Button fx:id="stopButton" onAction="#handleStop" text="Stop"/>
-        <Button fx:id="playButton" onAction="#handlePlay" text="Play"/>
-        <Button fx:id="pauseButton" onAction="#handlePause" text="Pause"/>
-        <Button fx:id="resumeButton" onAction="#handleResume" text="Resume"/>
         <Button fx:id="compileAndRunButton" onAction="#handleCompileAndRun" text="Compile and Run"/>
         <TextField fx:id="findTextEntry" promptText="Find"/>
         <Button fx:id="findButton" onAction="#handleFindText" text="Find"/>

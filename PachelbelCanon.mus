@@ -77,7 +77,7 @@ piece PachelbelCanon{
 		in g 5;
 		}
 		lefthand{
-		baseseq(4, cello);
+		baseseq(4, ACOUSTIC_BASS);
 		}
 		}
 	verse second{
@@ -131,7 +131,7 @@ piece PachelbelCanon{
 		}
 	layout{
 		writer: Kyle;
-		instrument: flute;
+		instrument: guitar;
 		tempo: adagio;
 		first;
 		second;

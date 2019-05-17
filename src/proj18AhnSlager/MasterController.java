@@ -30,7 +30,6 @@ import java.util.List;
 import proj18AhnSlager.bantam.util.CompilationException;
 import proj18AhnSlager.bantam.util.Error;
 import proj18AhnSlager.bantam.util.ErrorHandler;
-import proj18AhnSlager.outputs.MusicPlayer;
 
 /**
  * This is the master controller for the program. it references
@@ -123,21 +122,6 @@ public class MasterController {
     @FXML public void handleStop(){
         this.toolBarController.handleStopButtonAction();
         this.toolBarController = new ToolBarController(this.console, this.fileController);
-    }
-
-    @FXML public void handlePause() throws InterruptedException{
-        MusicPlayer musicPlayer = new MusicPlayer();
-        musicPlayer.pause();
-    }
-
-    @FXML public void handlePlay() throws InterruptedException{
-        MusicPlayer musicPlayer = new MusicPlayer();
-        musicPlayer.play();
-    }
-
-    @FXML public void handleResume() throws InterruptedException{
-        MusicPlayer musicPlayer = new MusicPlayer();
-        musicPlayer.resume();
     }
 
     /**

@@ -379,8 +379,15 @@ public class MusicCodeGenVisitor extends Visitor {
             for(int i = 0; i < notes.length; i++){
                 chord += notes[i].toUpperCase().replace(")", "");
                 if(i>0) {
-                    if (this.noteValues.get(notes[i]) <= this.noteValues.get(notes[i - 1])) {
-                        octave++;
+                    String note1 = notes[i].replace(" ", "");
+                    String note2 = notes[i-1].replace(" ", "");
+                    if((this.noteValues.containsKey(note1) || this.noteValues.containsKey(note2))) {
+                        if (this.noteValues.get(note1) <= this.noteValues.get(note2)) {
+                            octave++;
+                        }
+                    }
+                    else{
+                        System.out.println("invalid note");
                     }
                 }
                 chord += octave;

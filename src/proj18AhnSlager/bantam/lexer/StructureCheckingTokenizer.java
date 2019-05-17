@@ -30,7 +30,7 @@ import proj18AhnSlager.bantam.util.Error;
  * @version 1.0
  * @since 11-20-2018
  */
-public class Scanner
+public class StructureCheckingTokenizer
 {
     private SourceFile sourceFile;
     private ErrorHandler errorHandler;
@@ -48,7 +48,7 @@ public class Scanner
      *
      * @param handler an ErrorHandler
      */
-    public Scanner(ErrorHandler handler) {
+    public StructureCheckingTokenizer(ErrorHandler handler) {
         errorHandler = handler;
         currentChar = ' ';
         sourceFile = null;
@@ -60,7 +60,7 @@ public class Scanner
      * @param filename the name of the file that will be passed to the SourceFile
      * @param handler an ErrorHandler
      */
-    public Scanner(String filename, ErrorHandler handler) {
+    public StructureCheckingTokenizer(String filename, ErrorHandler handler) {
         errorHandler = handler;
         currentChar = ' ';
         curString = "";
@@ -84,7 +84,7 @@ public class Scanner
      * @param reader a Reader linked to existing File to be passed to the SourceFile
      * @param handler an ErrorHandler
      */
-    public Scanner(Reader reader, ErrorHandler handler) {
+    public StructureCheckingTokenizer(Reader reader, ErrorHandler handler) {
         errorHandler = handler;
         sourceFile = new SourceFile(reader);
     }
@@ -598,7 +598,7 @@ public class Scanner
     }
 
     /**
-     * Tester Method for the Scanner class.
+     * Tester Method for the StructureCheckingTokenizer class.
      * Prints all the tokens of a file
      *
      * @param args command line file arguments
@@ -606,11 +606,11 @@ public class Scanner
     public static void main (String[] args){
         if(true){
             for(int i = 0; i < 1; i ++){
-                Scanner scanner;
+                StructureCheckingTokenizer structureCheckingTokenizer;
                 ErrorHandler errorHandler = new ErrorHandler();
                 try {
 
-                    scanner = new Scanner("PachelbelCanon.mus", errorHandler);
+                    structureCheckingTokenizer = new StructureCheckingTokenizer("PachelbelCanon.mus", errorHandler);
 
                 }
                 catch(CompilationException e){
@@ -619,12 +619,12 @@ public class Scanner
                 }
 
                 Token nextToken;
-                nextToken = scanner.scan();
+                nextToken = structureCheckingTokenizer.scan();
                 while (nextToken.kind != Token.Kind.EOF) {
                     if(nextToken.kind != Token.Kind.NOTWORD) {
                         System.out.println(nextToken);
                     }
-                    nextToken = scanner.scan();
+                    nextToken = structureCheckingTokenizer.scan();
                 }
 
                 if(errorHandler.getErrorList().size() > 0){

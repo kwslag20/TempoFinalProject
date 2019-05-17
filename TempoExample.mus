@@ -1,0 +1,68 @@
+piece fullTempoExample {
+    sequences{
+        seqOne[
+            in c 4;
+            sn g 5;
+            sn e 5;
+            hn chord(c,c,c) 4;
+            qr;
+        ]
+        seqTwo[
+            hn chord(e,c,e) 4;
+            in chord(g,e,c) 4;
+            qr;
+        ]
+    }
+    verse firstVerse{
+        righthand{
+            wn c 4;
+            hn e 5;
+            qn g 5;
+            ir;
+        }
+        lefthand{
+            sn c 4;
+            tn e 5;
+            xn g 5;
+            hr;
+        }
+    }
+    verse secondVerse{
+        righthand{
+            seqOne(4,piano);
+
+
+        }
+        lefthand{
+            seqTwo(4,flute);
+        }
+    }
+    chorus{
+	righthand{
+        hn a# 4;
+        in e# 5;
+        wn c# 4;
+        ir;
+	}
+	lefthand{
+		hn a# 4;
+        in e# 5;
+        wn c# 4;
+        ir;
+	}
+    }
+    layout{
+        writer: KevinAhn;
+        instrument: flute;
+        tempo: ADAGIO;
+        firstVerse;
+        secondVerse;
+        chorus;
+        instrument: sitar;
+        tempo: ANDANTE;
+        chorus;
+        secondVerse;
+        firstVerse;
+    }
+
+}

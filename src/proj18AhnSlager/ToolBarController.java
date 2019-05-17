@@ -14,9 +14,8 @@ import java.util.concurrent.*;
 import java.util.ArrayList;
 import java.util.List;
 import proj18AhnSlager.bantam.ast.Piece;
-import proj18AhnSlager.bantam.util.Error;
+import proj18AhnSlager.bantam.parser.NodeGeneratorAndChecker;
 import proj18AhnSlager.bantam.codegenmusic.MusicCodeGenerator;
-import proj18AhnSlager.bantam.parser.Parser;
 import proj18AhnSlager.bantam.util.ErrorHandler;
 
 /**
@@ -35,7 +34,7 @@ public class ToolBarController {
         this.fileController = fileController;
         this.console = console;
         this.mutex = new Semaphore(1);
-        this.parser = new Parser(errorHandler);
+        this.nodeGeneratorAndChecker = new NodeGeneratorAndChecker(errorHandler);
     }
     /**
      * Console defined in Main.fxml
@@ -44,7 +43,7 @@ public class ToolBarController {
 
     private ErrorHandler errorHandler = new ErrorHandler();
 
-    private Parser parser;
+    private NodeGeneratorAndChecker nodeGeneratorAndChecker;
     /**
      * Process currently compiling or running a Java file
      */
@@ -86,7 +85,7 @@ public class ToolBarController {
     }
 
 //    public boolean compileRunFile(String fileName){
-//        Piece root = this.parser.parse(fileName);
+//        Piece root = this.nodeGeneratorAndChecker.parse(fileName);
 //        MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
 //        musicCodeGenerator.generate(root, "src/proj18AhnSlager/outputs/"+root.getName().replace(" ", "") + ".java");
 //        musicCodeGenerator.generatePlayerFile("src/proj18AhnSlager/outputs/MusicPlayer.java");
@@ -98,13 +97,12 @@ public class ToolBarController {
      * Helper method for running Tempo Programs.
      */
     public boolean compileRunFile(String fileName) {
-        System.out.println("1");
         try {
-            Piece root = this.parser.parse(fileName);
-            System.out.println("2");
-            MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
+            String userdir = System.getProperty("user.dir");
+            System.out.println(System.getProperty("user.dir"));
+            Piece root = this.nodeGeneratorAndChecker.parse(fileName);
+            MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler, this.nodeGeneratorAndChecker.getAuthorName());
             musicCodeGenerator.generate(root, root.getName().replace(" ", "") + ".java", "GenAndPlay");
-            System.out.println("3");
             Platform.runLater(() -> {
                 this.console.clear();
                 consoleLength = 0;
@@ -113,7 +111,7 @@ public class ToolBarController {
             List<String> processBuilderArgs = new ArrayList<>();
             processBuilderArgs.add("java");
             processBuilderArgs.add("-cp");
-            processBuilderArgs.add(".:/Users/kwslager/Desktop/project16AhnSlagerZhao/src/proj18AhnSlager/bantam/util/jfugue-5.0.9.jar");
+            processBuilderArgs.add(".:"+userdir+"/src/proj18AhnSlager/bantam/util/jfugue-5.0.9.jar");
             processBuilderArgs.add(root.getName().replace(" ", "") + ".java");
             //processBuilderArgs.add(fileName);
             ProcessBuilder builder = new ProcessBuilder(processBuilderArgs);
@@ -165,11 +163,11 @@ public class ToolBarController {
 
     private boolean compileFileOther(String fileName) {
 
-        Piece root = this.parser.parse(fileName);
-        MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
+        Piece root = this.nodeGeneratorAndChecker.parse(fileName);
+        MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler, this.nodeGeneratorAndChecker.getAuthorName());
         musicCodeGenerator.generate(root, "src/MusicPlayer/outputs/" + root.getName().replace(" ", "") + ".java", "OpenPlayer");
         musicCodeGenerator.generatePlayerFile("src/MusicPlayer/IntermediaryPlayer.java");
-//        Piece root = this.parser.parse(filename);
+//        Piece root = this.nodeGeneratorAndChecker.parse(filename);
 //        MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
 //        musicCodeGenerator.generate(root, root.getName().replace(" ", "") + ".java");
         // create and run the compile process

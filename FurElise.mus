@@ -1,4 +1,4 @@
-piece MyNewerSong{
+piece FurElise{
 	verse first{
 		righthand{
 		    sn e 5;
@@ -109,7 +109,7 @@ piece MyNewerSong{
 		}
 	layout{
 		writer: Kyle Slager;
-		instrument: flute;
+		instrument: SYNTH_BASS_1;
 		tempo: adagio;
 		first;
 		second;

@@ -37,12 +37,11 @@
 package proj18AhnSlager.bantam.codegenmusic;
 
 import proj18AhnSlager.bantam.ast.*;
-import proj18AhnSlager.bantam.parser.Parser;
+import proj18AhnSlager.bantam.parser.NodeGeneratorAndChecker;
 import proj18AhnSlager.bantam.util.CompilationException;
 import proj18AhnSlager.bantam.util.Error;
 import proj18AhnSlager.bantam.util.ErrorHandler;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -82,12 +81,18 @@ public class MusicCodeGenerator {
     private String outFile;
 
     /**
+     * Name of author
+     */
+    private String authorName;
+
+    /**
      * MipsCodeGenerator constructor
      *
      * @param errorHandler ErrorHandler to record all errors that occur
      */
-    public MusicCodeGenerator(ErrorHandler errorHandler) {
+    public MusicCodeGenerator(ErrorHandler errorHandler, String authorName) {
         this.errorHandler = errorHandler;
+        this.authorName = authorName;
     }
 
     /**
@@ -152,17 +157,6 @@ public class MusicCodeGenerator {
     }
 
     /**
-     * Method to grab the authors name for the header comment
-     * @param piece
-     * @return
-     */
-    private String getAuthor(Piece piece){
-        String aName;
-        WriterVisitor authorName = new WriterVisitor();
-        aName = authorName.getAuthorName(piece);
-        return aName;
-    }
-    /**
      * Gets the current date and time at which the file is generated
      * @return
      */
@@ -180,7 +174,7 @@ public class MusicCodeGenerator {
      */
     private void genProlog(String name){
         out.println("/** File Generated from Tempo file: " + name + ".mus");
-        //out.println("Author: " + getAuthor());
+        out.println("Author: " + this.authorName);
         out.println("Date Generated: " + getDate() + " **/");
         out.println("package proj18AhnSlager.outputs;");
         out.println("import org.jfugue.player.*;");
@@ -255,12 +249,12 @@ public class MusicCodeGenerator {
      */
     public static void main(String[] args) {
         ErrorHandler errorHandler = new ErrorHandler();
-        Parser parser = new Parser(errorHandler);
+        NodeGeneratorAndChecker nodeGeneratorAndChecker = new NodeGeneratorAndChecker(errorHandler);
         try{
-            Piece piece = parser.parse("test2.txt");
-            MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler);
-            musicCodeGenerator.generate(piece, "src/MusicPlayer/outputs/"+piece.getName().replace(" ", "") + ".java", "OpenPlayer");
-            musicCodeGenerator.generatePlayerFile("src/MusicPlayer/IntermediaryPlayer.java");
+            Piece piece = nodeGeneratorAndChecker.parse("TempoExample.mus");
+            MusicCodeGenerator musicCodeGenerator = new MusicCodeGenerator(errorHandler, nodeGeneratorAndChecker.getAuthorName());
+            musicCodeGenerator.generate(piece, piece.getName().replace(" ", "") + ".java", "GenAndPlay");
+            //musicCodeGenerator.generatePlayerFile("src/MusicPlayer/IntermediaryPlayer.java");
         }
         catch (CompilationException ex) {
             System.out.print(ex);
