@@ -117,7 +117,7 @@ public class ContextMenuController {
      *
      * @param styledJavaCodeArea StyledJavaCodeArea being clicked on
      */
-    public void setupJavaCodeAreaContextMenuHandler(JavaOrMIPSCodeArea styledJavaCodeArea) {
+    public void setupJavaCodeAreaContextMenuHandler(TempoCodeArea styledJavaCodeArea) {
         ContextMenu rightClickMenu = new ContextMenu();
 
         MenuItem UndoItem = new MenuItem("Undo");

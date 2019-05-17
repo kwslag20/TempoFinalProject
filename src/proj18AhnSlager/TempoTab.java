@@ -1,5 +1,5 @@
 /*
- * File: JavaOrMipsTab.java
+ * File: TempoTab.java
  * Names: Kevin Ahn, Lucas DeGraw, Jackie Hang, Kyle Slager
  * Class: CS 361
  * Project 9
@@ -19,17 +19,17 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 /**
- * This is the JavaOrMipsTab class which stores a JavaCodeArea
+ * This is the TempoTab class which stores a JavaCodeArea
  *
  * @author Kevin Ahn, Lucas DeGraw, Jackie Hang, Kyle Slager
  * @version 1.0
  * @since 11-20-2018
  */
-public class JavaOrMipsTab extends Tab {
-    private JavaOrMIPSCodeArea codeArea;
+public class TempoTab extends Tab {
+    private TempoCodeArea codeArea;
 
     /**
-     * Constructor for a JavaOrMipsTab
+     * Constructor for a TempoTab
      *
      * @param fileController
      * @param contextMenuController
@@ -37,8 +37,8 @@ public class JavaOrMipsTab extends Tab {
      * @param filename
      * @param file
      */
-    public JavaOrMipsTab(FileController fileController, ContextMenuController contextMenuController,
-                         JavaTabPane tabPane, String filename, File file) {
+    public TempoTab(FileController fileController, ContextMenuController contextMenuController,
+                    TempoTabPane tabPane, String filename, File file) {
 
         super(filename);
         String extension = "";
@@ -48,16 +48,16 @@ public class JavaOrMipsTab extends Tab {
         }
 
         if(extension.equals(".java")) {
-            codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);;
+            codeArea = new TempoCodeArea(contextMenuController, extension);;
         }
         else if(extension.equals(".asm") || extension.equals(".s")){
-            codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
+            codeArea = new TempoCodeArea(contextMenuController, extension);
         }
         else if(extension.equals(".mus") || extension.equals(".txt")){
-            codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
+            codeArea = new TempoCodeArea(contextMenuController, extension);
         }
         else{
-            codeArea = new JavaOrMIPSCodeArea(contextMenuController, extension);
+            codeArea = new TempoCodeArea(contextMenuController, extension);
         }
 
 

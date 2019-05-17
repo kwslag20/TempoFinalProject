@@ -35,7 +35,7 @@ public class MatchBracketOrParen {
      */
     public void handleBracketOrParenMatching() {
         // get in-focus code area
-        JavaOrMIPSCodeArea curJavaCodeArea = this.editController.getCurJavaCodeArea();
+        TempoCodeArea curJavaCodeArea = this.editController.getCurJavaCodeArea();
 
         // get any highlighted text in the code area
         String highlightedText = curJavaCodeArea.getSelectedText();

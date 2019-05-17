@@ -48,7 +48,7 @@ import proj18AhnSlager.bantam.util.ErrorHandler;
  */
 public class MasterController {
     @FXML private Menu editMenu;
-    @FXML private JavaTabPane javaTabPane;
+    @FXML private TempoTabPane tempoTabPane;
     @FXML private VBox vBox;
     @FXML private MenuItem saveMenuItem;
     @FXML private MenuItem saveAsMenuItem;
@@ -63,6 +63,8 @@ public class MasterController {
     @FXML private Button findNextBtn;
     @FXML private Menu prefMenu;
     @FXML private Button stopButton;
+    @FXML private Button scanButton;
+    @FXML private Button parseButton;
     @FXML private Button compileAndRunButton;
 
     private EditController editController;
@@ -75,18 +77,19 @@ public class MasterController {
     public void initialize(){
 
         // initializes necessary controllers
-        editController = new EditController(javaTabPane, findTextEntry, findPrevBtn, findNextBtn);
-        this.fileController = new FileController(vBox,javaTabPane);
+        editController = new EditController(tempoTabPane, findTextEntry, findPrevBtn, findNextBtn);
+        this.fileController = new FileController(vBox, tempoTabPane);
         this.toolBarController = new ToolBarController(console, fileController);
         this.errorHandler = new ErrorHandler();
 
         // sets up menu items and buttons to be disabled when nothing is open
-        SimpleListProperty<Tab> listProperty = new SimpleListProperty<> (javaTabPane.getTabs());
+        SimpleListProperty<Tab> listProperty = new SimpleListProperty<> (tempoTabPane.getTabs());
         editMenu.disableProperty().bind(listProperty.emptyProperty());
         saveMenuItem.disableProperty().bind(listProperty.emptyProperty());
         saveAsMenuItem.disableProperty().bind(listProperty.emptyProperty());
         closeMenuItem.disableProperty().bind(listProperty.emptyProperty());
-
+        scanButton.disableProperty().bind(listProperty.emptyProperty());
+        parseButton.disableProperty().bind(listProperty.emptyProperty());
         stopButton.disableProperty().bind(listProperty.emptyProperty());
         compileAndRunButton.disableProperty().bind(listProperty.emptyProperty());
 
@@ -122,6 +125,53 @@ public class MasterController {
     @FXML public void handleStop(){
         this.toolBarController.handleStopButtonAction();
         this.toolBarController = new ToolBarController(this.console, this.fileController);
+    }
+
+    /**
+     * This method clears the console, tries to scan
+     * and will write any errors to the console
+     * @param event press of the Scan button triggering this method
+     */
+    @FXML
+    public void handleScan(Event event) {
+        this.console.clear();
+        try {
+            // calls the handleScan method in file controller
+            this.fileController.handleScan(event);
+        } catch (CompilationException e) { // catches a compilation exception
+            this.console.writeLine(e.toString() + "\n", "ERROR");
+            return;
+        }
+
+        // gets the list of scanning errors
+        List<Error> scanningErrors = fileController.getScanningErrors();
+        if (scanningErrors != null) {
+            // loops through the errors in scanningErrors and prints them to the console
+            for (Error e : scanningErrors)
+                this.console.writeLine(e.toString() + "\n", "ERROR");
+            this.console.writeLine(scanningErrors.size() + " illegal tokens were found.", "ERROR");
+        }
+    }
+
+    /**
+     * handles the parsing of a program, catches any compilationExceptions
+     * from scanning
+     * @param event
+     */
+    @FXML
+    public void handleParse(Event event){
+        this.console.clear();
+        List<Error> parsingErrors = new ArrayList<>();
+        try {
+            this.fileController.handleScanAndParse(event);
+            parsingErrors = fileController.getParsingErrors();
+        } catch (CompilationException e) { // catches a scanning error and does not allow piece to be parsed
+            this.console.writeLine("Error Found while scanning: " + e.getMessage() + "\n", "ERROR");
+            for(Error error: parsingErrors){
+                this.console.writeLine(error.toString(), "ERROR");
+            }
+            return;
+        }
     }
 
     /**

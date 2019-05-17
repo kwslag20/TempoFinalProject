@@ -1,6 +1,6 @@
 package proj18AhnSlager;
 /*
- * File: JavaOrMIPSCodeArea.java
+ * File: TempoCodeArea.java
  * Modified by Danqing Zhao for project 15 in Mar. 21 2019
  * Names: Kevin Ahn, Lucas DeGraw, Jackie Hang, Kyle Slager
  * Class: CS 361
@@ -31,12 +31,12 @@ import java.util.regex.Pattern;
  * @since 11-20-2018
  */
 
-public class JavaOrMIPSCodeArea extends CodeArea {
+public class TempoCodeArea extends CodeArea {
 
     private ContextMenuController contextMenuController;
     private String fileType;
     //ContextMenuController contextMenuController
-    public JavaOrMIPSCodeArea(ContextMenuController contextMenuController, String fileType) {
+    public TempoCodeArea(ContextMenuController contextMenuController, String fileType) {
         super();
         this.subscribe();
         this.setParagraphGraphicFactory(LineNumberFactory.get(this));
@@ -131,61 +131,26 @@ public class JavaOrMIPSCodeArea extends CodeArea {
      */
     public static StyleSpans<Collection<String>> computeHighlighting(String text, String fileType) {
         Matcher matcher;
-        if(".mus".equals(fileType) || ".txt".equals(fileType)){
-            matcher = MUS_PATTERN.matcher(text);
-        }
-        else{
-            matcher = PATTERN.matcher(text);
-        }
+        matcher = MUS_PATTERN.matcher(text);
         int lastKwEnd = 0;
         StyleSpansBuilder<Collection<String>> spansBuilder
                 = new StyleSpansBuilder<>();
-        if(".asm".equals(fileType)||".s".equals(fileType)){
+        if (".mus".equals(fileType) || ".txt".equals(fileType)) {
             while (matcher.find()) {
-                String styleClass = matcher.group("INSTRUCTION") != null ? "instruction" :
-                        matcher.group("COMMENT") != null ? "mipsComment" :
-                                matcher.group("REGISTER") != null ? "register" :
-                                        matcher.group("DIRECTIVE") != null ? "directive" :
-                                                null; /* never happens */
-                assert styleClass != null;
-                spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
-                spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
-                lastKwEnd = matcher.end();
-            }
-        }
-        else if(".mus".equals(fileType) || ".txt".equals(fileType)){
-            while(matcher.find()){
                 String styleClass = matcher.group("NOTE") != null ? "note" :
                         matcher.group("PITCH") != null ? "pitch" :
                                 matcher.group("OCTAVE") != null ? "octave" :
                                         matcher.group("CHORD") != null ? "chord" :
                                                 matcher.group("MUSKEYWORD") != null ? "musKeyWord" :
                                                         null;
-                assert  styleClass != null;
+                assert styleClass != null;
                 spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
                 spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
                 lastKwEnd = matcher.end();
 
             }
         }
-        else {
-            while (matcher.find()) {
-                String styleClass = matcher.group("KEYWORD") != null ? "keyword" :
-                        matcher.group("PAREN") != null ? "paren" :
-                                matcher.group("BRACE") != null ? "brace" :
-                                        matcher.group("BRACKET") != null ? "bracket" :
-                                                matcher.group("SEMICOLON") != null ? "semicolon" :
-                                                        matcher.group("STRING") != null ? "string" :
-                                                                matcher.group("COMMENT") != null ? "comment" :
-                                                                        matcher.group("IDENTIFIER") != null ? "identifier" :
-                                                                                matcher.group("INTCONST") != null ? "intconst" :
-                                                                                        null; /* never happens */
-                assert styleClass != null;
-                spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
-                spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
-                lastKwEnd = matcher.end();
-            }
-        }
+
         spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
         return spansBuilder.create();
     }

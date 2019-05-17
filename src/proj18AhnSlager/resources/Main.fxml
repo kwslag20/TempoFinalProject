@@ -25,7 +25,7 @@
 
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TreeView?>
-<?import proj18AhnSlager.JavaTabPane?>
+<?import proj18AhnSlager.TempoTabPane?>
 
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
       minWidth="-Infinity" prefHeight="800.0"
@@ -87,6 +87,8 @@
 
     <ToolBar>
         <Button fx:id="stopButton" onAction="#handleStop" text="Stop"/>
+        <Button fx:id="scanButton" onAction="#handleScan" text="Scan"/>
+        <Button fx:id="parseButton" onAction="#handleParse" text="Parse"/>
         <Button fx:id="compileAndRunButton" onAction="#handleCompileAndRun" text="Compile and Run"/>
         <TextField fx:id="findTextEntry" promptText="Find"/>
         <Button fx:id="findButton" onAction="#handleFindText" text="Find"/>
@@ -97,8 +99,8 @@
 
         <SplitPane orientation="VERTICAL" focusTraversable="true" VBox.vgrow="ALWAYS">
             <items>
-                <JavaTabPane fx:id="javaTabPane" prefHeight="392.0" prefWidth="600.0" VBox.vgrow="ALWAYS">
-                </JavaTabPane>
+                <TempoTabPane fx:id="tempoTabPane" prefHeight="392.0" prefWidth="600.0" VBox.vgrow="ALWAYS">
+                </TempoTabPane>
 
                 <Console fx:id="console" prefHeight="100.0" prefWidth="1200.0" VBox.vgrow="ALWAYS">
                 </Console>

@@ -15,6 +15,8 @@
 package proj18AhnSlager;
 
 import javafx.event.Event;
+
+import java.util.List;
 import java.util.Optional;
 import java.util.HashMap;
 
@@ -38,6 +40,15 @@ import javafx.stage.Window;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
+import proj18AhnSlager.bantam.ast.Piece;
+import proj18AhnSlager.bantam.lexer.StructureCheckingTokenizer;
+import proj18AhnSlager.bantam.lexer.Token;
+import proj18AhnSlager.bantam.parser.NodeGeneratorAndChecker;
+import proj18AhnSlager.bantam.treedrawer.Drawer;
+import proj18AhnSlager.bantam.util.CompilationException;
+import proj18AhnSlager.bantam.util.ErrorHandler;
+import proj18AhnSlager.bantam.util.Error;
+
 
 /**
  * This class contains the handlers for each of the menu options in the IDE.
@@ -52,10 +63,14 @@ import org.fxmisc.richtext.CodeArea;
  */
 public class FileController {
 
-    private JavaTabPane javaTabPane;
+    private TempoTabPane tempoTabPane;
     private String extension;
     private HashMap<Tab, String> tabFilepathMap;
     private VBox vBox;
+    private StructureCheckingTokenizer structureCheckingTokenizer;
+    private NodeGeneratorAndChecker nodeGeneratorAndChecker;
+    private ErrorHandler errorHandler;
+    private ErrorHandler analysisErrors;
 
     /**
      * ContextMenuController handling context menu actions
@@ -66,10 +81,10 @@ public class FileController {
      * Constructor for the class. Intializes the save status
      * and the tabFilepathMap in a HashMap
      */
-    public FileController(VBox vBox, JavaTabPane javaTabPane) {
+    public FileController(VBox vBox, TempoTabPane tempoTabPane) {
         this.vBox = vBox;
         this.extension = "";
-        this.javaTabPane = javaTabPane;
+        this.tempoTabPane = tempoTabPane;
         this.tabFilepathMap = new HashMap<>();
     }
 
@@ -87,7 +102,7 @@ public class FileController {
      * @return The name of the currently open file
      */
     protected String getFilePath(){
-        Tab curTab = this.javaTabPane.getSelectionModel().getSelectedItem();
+        Tab curTab = this.tempoTabPane.getSelectionModel().getSelectedItem();
         return tabFilepathMap.get(curTab);
     }
 
@@ -107,13 +122,156 @@ public class FileController {
     }
 
     /**
+     * Creates a pop-up window which allows the user to select whether they wish to save
+     * the current file or not.
+     * Used by handleClose.
+     *
+     * @param event the tab closing event that may be consumed
+     */
+    private String askSaveAndScan(Event event) {
+        ShowSaveOptionAlert saveOptions = new ShowSaveOptionAlert();
+        Optional<ButtonType> result = saveOptions.getUserSaveDecision();
+
+        if (result.isPresent()) {
+            if (result.get() == saveOptions.getCancelButton()) {
+                event.consume();
+                return "cancel";
+            }
+            else if (result.get() == saveOptions.getYesButton()){
+                boolean saved = this.handleSave();
+                if (saved) return "yes";
+                event.consume();
+                return null;
+            }
+            else {
+                event.consume();
+                return "no";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * this method is called when the Scan button is pressed
+     * if the file is not saved it prompts the user to save before scanning
+     * it will scan the file and display the tokens in a new tab
+     * @param event press of the Scan button triggering the handleScan method
+     */
+    public void handleScan(Event event) {
+        scanOrParseHelper(event, "SCAN_ONLY" );
+    }
+
+    /**
+     * this method is called when the Scan&Parse button is pressed
+     * if the file is not saved it prompts the user to save before scanning
+     * it will scan and parse the file and display an AST if parse
+     * was successful
+     * @param event press of the Scan button triggering the handleScan method
+     */
+    public void handleScanAndParse (Event event) {
+        scanOrParseHelper(event, "SCAN_AND_PARSE" );
+    }
+
+    /**
+     * Assists with calling just scan or scanning and parsing the
+     * file
+     * @param event press of the Scan button triggering the handleScan and Parse method
+     * @param scanOrParse string "SCAN_ONLY" or "SCAN_AND_PARSE" or "PARSE_NO_TREE_DRAWN"
+     */
+    public Piece scanOrParseHelper(Event event, String scanOrParse ){
+
+        // Grabs the current tab open to be scanned or parsed
+        TempoTab curTab = (TempoTab) this.tempoTabPane.getSelectionModel().getSelectedItem();
+        if (this.tempoTabPane.tabIsSaved(curTab)) { // checks if the user needs to save the currently open tab
+            String filename = this.tabFilepathMap.get(curTab);
+            try {
+                this.errorHandler = new ErrorHandler();
+                if(scanOrParse.equals("SCAN_ONLY")) { // user clicked Scan Button
+                    this.structureCheckingTokenizer = new StructureCheckingTokenizer(filename, this.errorHandler);
+                }
+                else{
+                    this.nodeGeneratorAndChecker = new NodeGeneratorAndChecker(this.errorHandler);
+                }
+
+            }
+            catch(CompilationException e){
+                System.out.println(e);
+            }
+
+            // section for SCAN ONLY
+            if(scanOrParse.equals("SCAN_ONLY")) {
+                this.handleNew(null);
+                curTab = (TempoTab) this.tempoTabPane.getSelectionModel().getSelectedItem();
+                Token nextToken; // the next token to be scanned
+                // loops until the end of file
+                while ( (nextToken = structureCheckingTokenizer.scan()).kind != Token.Kind.EOF ) {
+                    if(nextToken.kind != Token.Kind.NOTWORD) { // adds in the next token to the string
+                        curTab.getCodeArea().appendText(nextToken.toString() + "\n");
+                    }
+                }
+                return null;
+            }
+
+            // section for SCAN AND PARSE
+            else{
+                Piece root = this.nodeGeneratorAndChecker.parse(filename);
+                if(scanOrParse.equals("SCAN_AND_PARSE")) { // user clicked Scan and Parse
+                    Drawer drawer = new Drawer(); // creates the drawer
+                    drawer.draw(filename, root);
+                }
+                return root;
+            }
+
+        }
+
+        // used for saving of tabs and user response
+        String saveStatus = this.askSaveAndScan(event);
+        if (saveStatus == "cancel") {
+            this.structureCheckingTokenizer = null;
+            return null;
+        }
+        else if (saveStatus == "no") {
+            if (tabFilepathMap.get(curTab) == null) {
+                return null;
+            }
+        }
+        else if (saveStatus == "yes"){
+            scanOrParseHelper(event, scanOrParse);
+        }
+        return null;
+    }
+
+    /**
+     * @return the list of errors from the most recent scan performed on a file
+     * return value will be null if there is no valid file open to scan
+     */
+    public List<Error> getErrors() {
+        if (this.structureCheckingTokenizer == null) return null;
+            return this.errorHandler.getErrorList();
+    }
+    /**
+     *
+     * @return the list of errors from the most recent scan performed on a file
+     * return value will be null if there is no valid file open to scan
+     */
+    public List<Error> getScanningErrors() {
+        if (this.structureCheckingTokenizer == null) return null;
+        return this.structureCheckingTokenizer.getErrors();
+    }
+
+    public List<Error> getParsingErrors() {
+        if (this.nodeGeneratorAndChecker == null) return null;
+        return this.nodeGeneratorAndChecker.getParseErrors();
+    }
+
+    /**
      * Handler for the "New" menu item in the "File" menu.
      * Adds a new Tab to the TabPane, adds null to the tabFilepathMap HashMap,
      * and false to the saveStatus HashMap
      */
     public void handleNew(File file) {
-        this.javaTabPane.createNewTab(this, contextMenuController, file);
-        JavaOrMipsTab t = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        this.tempoTabPane.createNewTab(this, contextMenuController, file);
+        TempoTab t = (TempoTab)this.tempoTabPane.getSelectionModel().getSelectedItem();
         if (file == null) this.tabFilepathMap.put(t, null);
         else {
             this.tabFilepathMap.put(t, file.getPath());
@@ -146,11 +304,11 @@ public class FileController {
      */
     public void handleClose(Event event) {
 
-        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        TempoTab curTab = (TempoTab)this.tempoTabPane.getSelectionModel().getSelectedItem();
 
         if (tabFilepathMap.get(curTab) != null) {
             // check if any changes were made
-            if (this.javaTabPane.tabIsSaved(curTab))
+            if (this.tempoTabPane.tabIsSaved(curTab))
                 this.closeTab();
             else
                 this.askSaveAndClose(event);
@@ -169,14 +327,14 @@ public class FileController {
      * choose a filename and directory and then store the content of the tab to storage.
      */
     public boolean handleSave() {
-        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        TempoTab curTab = (TempoTab)this.tempoTabPane.getSelectionModel().getSelectedItem();
 
         if (tabFilepathMap.get(curTab) != null){
             File file = new File(tabFilepathMap.get(curTab));    // this is what gets the path
             String name = file.getName();
             this.extension = name.substring(name.lastIndexOf("."));
             writeFile(file);
-            this.javaTabPane.updateTabSavedStatus(curTab, true);
+            this.tempoTabPane.updateTabSavedStatus(curTab, true);
             return true;
         }
         else
@@ -190,7 +348,7 @@ public class FileController {
      * Changes the name of the current tab to match the newly saved file's name.
      */
     public boolean handleSaveAs() {
-        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        TempoTab curTab = (TempoTab)this.tempoTabPane.getSelectionModel().getSelectedItem();
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Save as...");
         Window stage = this.vBox.getScene().getWindow();
@@ -203,7 +361,7 @@ public class FileController {
         else{
             writeFile(file);
             tabFilepathMap.replace(curTab,file.getPath());
-            this.javaTabPane.updateTabSavedStatus(curTab, true);
+            this.tempoTabPane.updateTabSavedStatus(curTab, true);
         }
         curTab.setText(file.getName());
         return true;
@@ -263,7 +421,7 @@ public class FileController {
      * @param file The file object to which the text is written to.
      */
     private void writeFile(File file) {
-        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        TempoTab curTab = (TempoTab)this.tempoTabPane.getSelectionModel().getSelectedItem();
         VirtualizedScrollPane<CodeArea> scrollPane = (VirtualizedScrollPane<CodeArea>) curTab.getContent();
         CodeArea codeArea = scrollPane.getContent();
         String text = codeArea.getText();
@@ -283,7 +441,7 @@ public class FileController {
             return;
         }
 
-        this.javaTabPane.updateTabSavedStatus(curTab, true);
+        this.tempoTabPane.updateTabSavedStatus(curTab, true);
     }
 
     /**
@@ -295,8 +453,8 @@ public class FileController {
         //NOTE: the following three lines has to be in this order removing the tab first would
         //result in calling handleUpdateCurrentTab() because the currently selected tab will
         //change, and thus the wrong File will be removed from the HashMaps
-        JavaOrMipsTab curTab = (JavaOrMipsTab)this.javaTabPane.getSelectionModel().getSelectedItem();
+        TempoTab curTab = (TempoTab)this.tempoTabPane.getSelectionModel().getSelectedItem();
         tabFilepathMap.remove(curTab);
-        javaTabPane.removeTab(curTab);
+        tempoTabPane.removeTab(curTab);
     }
 }

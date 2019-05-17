@@ -1,5 +1,5 @@
 /*
- * File: JavaTabPane.java
+ * File: TempoTabPane.java
  * Names: Kevin Ahn, Lucas DeGraw, Jackie Hang, Kyle Slager
  * Class: CS 361
  * Project 9
@@ -14,18 +14,18 @@ import java.io.File;
 import java.util.HashMap;
 
 /**
- * This is the JavaTabPane class which stores JavaTabs
+ * This is the TempoTabPane class which stores JavaTabs
  *
  * @author Kevin Ahn, Lucas DeGraw, Jackie Hang, Kyle Slager
  * @version 1.0
  * @since 11-20-2018
  */
 
-public class JavaTabPane extends TabPane {
+public class TempoTabPane extends TabPane {
 
-    HashMap<JavaOrMipsTab, Boolean> tabSavedStatusMap;
+    HashMap<TempoTab, Boolean> tabSavedStatusMap;
 
-    public JavaTabPane() {
+    public TempoTabPane() {
         super();
         this.tabSavedStatusMap = new HashMap<>();
     }
@@ -50,7 +50,7 @@ public class JavaTabPane extends TabPane {
             filename = file.getName();
         }
         // create the new tab
-        JavaOrMipsTab newTab = new JavaOrMipsTab(fileController, contextMenuController,
+        TempoTab newTab = new TempoTab(fileController, contextMenuController,
                 this, filename, file);
 
         // add to the list of tabs
@@ -71,7 +71,7 @@ public class JavaTabPane extends TabPane {
      * @param t
      * @param newStatus
      */
-    public void updateTabSavedStatus(JavaOrMipsTab t, Boolean newStatus) {
+    public void updateTabSavedStatus(TempoTab t, Boolean newStatus) {
 
         if (this.tabSavedStatusMap.containsKey(t)) {
             this.tabSavedStatusMap.replace(t, newStatus);
@@ -83,7 +83,7 @@ public class JavaTabPane extends TabPane {
      * @param t
      * @return boolean
      */
-    public boolean getTabSavedStatus(JavaOrMipsTab t) {
+    public boolean getTabSavedStatus(TempoTab t) {
         return this.tabSavedStatusMap.get(t);
     }
 
@@ -92,14 +92,14 @@ public class JavaTabPane extends TabPane {
      * @param t
      * @return
      */
-    public boolean tabIsSaved(JavaOrMipsTab t) {
+    public boolean tabIsSaved(TempoTab t) {
         return this.tabSavedStatusMap.get(t);
     }
 
     /**
-     * Removes a JavaOrMipsTab from the JavaTabPane
+     * Removes a TempoTab from the TempoTabPane
      */
-    public void removeTab(JavaOrMipsTab t) {
+    public void removeTab(TempoTab t) {
         this.getTabs().remove(t);
         this.tabSavedStatusMap.remove(t);
     }
